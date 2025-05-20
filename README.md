@@ -17,11 +17,11 @@ Copy and paste (drone) logistic settings and automatically supply generated item
     - Auto-Launch (in Trade Space Rocket and Interplanetary Exchange Shuttle) and auto-destroy settings (in Shredder Machine)
   - Copied settings are shown in the upper-left corner in the pinned recipes list (works without pin-chip)
     - Note: Logistic settings aren't necessarily deleted/forgotten if they aren't shown in the upper-left corner anymore
-  - Switch between per-machine/crate logistic setting copies and universally pastable copy (config: copyLogisticsPerGroup)
+  - Switch between per-machine/crate logistic setting copies and universally pasteable copy (config: copyLogisticsPerGroup)
     - Per-machine logistic setting copies allow a copied setting per storage object. 
 	  - E.g. T2 Locker and Trade Space Rocket have their own copied setting entry at the same time, but they can't be inserted into each others machine's logistic settings.
     - Universal copy allows to paste T2 Locker Storage logistic settings into Storage Crate logistic settings, 
-	      but also allows to paste Trade Space Rocket logistic settings into Shredder Machine logistic settings. Be carefull.
+	      but also allows to paste Trade Space Rocket logistic settings into Shredder Machine logistic settings. Be careful.
 
 - Automatically supply item groups for generators:
   - When placing a generating machine, it automatically selects it's produced item groups as supplied items (config: enableAddLogistics)
@@ -41,9 +41,10 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 	  - localized item names
 	  - custom item names (config: `synonymes = name1:idOrName1,name2:idOrName2` e.g.: `N2:NitrogenCapsule1,O2:OxygenCapsule1,example:Uranium Rod`)
 	  - ids
-	  - pre-defined names (Element names: Fe -> iron)
+	  - predefined names (Element names: Fe -> iron)
     - List all demanded item groups separated with commas
 	- Append '>' to select all item groups containing this string in their name or id
+	- Use `all` or `everything` (<- localized) in the text field to demand everything
   - Configure priority
     - Uses:
 	  - localized priority name
@@ -61,6 +62,6 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 ### Config:
 - allowAnyValue:
   - Allows to paste-select any group (in e.g. T3 Ore Extractor), even if it isn't produced at that location
-  - Allows to paste-/text-demand any group, including Cocoa Seed or Ore Crushers. Be carefull with this setting
+  - Allows to paste-/text-demand any group, including Cocoa Seed or Ore Crushers. Be careful with this setting
   - Allows priorities below lowest (-3) and above 5
 - enableNotification: Receive notifications for copy and paste operations or invalid text inputs
