@@ -1,10 +1,10 @@
 # PlanetCrafterMods
 
-Auto-Logistics / AutoAddLogistic
+## Auto-Logistics / AutoAddLogistic
 
 Copy and paste (drone) logistic settings and automatically supply generated items.
 
-Features:
+### Features:
 - Copy and paste
   - Copy by holding C (default key, config: 'copyLogisticsKey') while closing the logistics menu or when selecting an item group
   - Paste by holding V (default key, config: 'pasteLogisticsKey') while opening an inventory / a machine
@@ -19,28 +19,27 @@ Features:
     - Note: Logistic settings aren't necessarily deleted/forgotten if they aren't shown in the upper-left corner anymore
   - Switch between per-machine/crate logistic setting copies and universally pastable copy (config: copyLogisticsPerGroup)
     - Per-machine logistic setting copies allow a copied setting per storage object. 
-	  - E.g. T2 Locker and Trade Space Rocket have their own copied setting entry at the same time
-	  -      But they can't be inserted into each others machine's logistic settings.
+	  - E.g. T2 Locker and Trade Space Rocket have their own copied setting entry at the same time, but they can't be inserted into each others machine's logistic settings.
     - Universal copy allows to paste T2 Locker Storage logistic settings into Storage Crate logistic settings, 
 	      but also allows to paste Trade Space Rocket logistic settings into Shredder Machine logistic settings. Be carefull.
 
 - Automatically supply item groups for generators:
   - When placing a generating machine, it automatically selects it's produced item groups as supplied items (config: enableAddLogistics)
-    E.g.:
+    Examples:
     - T2 Beehive automatically supplies Bee Larva and Honey
     - Lake Water Collector automatically supplies Water Bottle
     - ...
   - Shredder Machine is set to priority 'Lowest' / -3 (config: enableAddLogistics)
   - Auto-supply item group when selecting an item group to produce (in e.g. T3 Ore Extractor, ...)
   - Auto-supply crushed ingredients in the output inventory when selecting an item type to be demanded by the input inventory. (Ore Crusher and T2 Recycling Machine)
-    - e.g.: demand Uraninite -> supply Super Alloy, Iridium, Uranium, Iron and Dolomite
+    - Example: demand Uraninite -> supply Super Alloy, Iridium, Uranium, Iron and Dolomite
 	- Change config 'clearOutputOnInputChange' to 'false' to select more than one demand item group and not clear the supply list of the output inventory when selecting/removing a demanded item group 
 
 - Set demanded items in storage lockers via text field:
   - Configure demanded item groups
     - Uses:
 	  - localized item names
-	  - custom item names (config: synonymes = name1:idOrName1,name2:idOrName2 e.g.: N2:NitrogenCapsule1,O2:OxygenCapsule1,example:Uranium Rod)
+	  - custom item names (config: `synonymes = name1:idOrName1,name2:idOrName2` e.g.: `N2:NitrogenCapsule1,O2:OxygenCapsule1,example:Uranium Rod`)
 	  - ids
 	  - pre-defined names (Element names: Fe -> iron)
     - List all demanded item groups separated with commas
@@ -48,18 +47,18 @@ Features:
   - Configure priority
     - Uses:
 	  - localized priority name
-	  - custom priority name (config: priorityGroups = name1:value1,name2:value2 e.g.: storage:2,s:2,AC:0)
+	  - custom priority name (config: `priorityGroups = name1:value1,name2:value2` e.g.: `storage:2,s:2,AC:0`)
 	  - value
 	- Appended after the demanded item group list with a '+' or ':'
-  E.g.:
-    Fe, uranium rod :2    demands iron and uranium rod at priority 2 "Very high"
-    iron +AC              demands iron at custom-configured priority "AC"
-	SUPER ALLOY>          demands super alloy and super alloy rod, does not change priority
-	+storage              sets priority to custom-configured priority "storage", does not change demanded item groups
+  - Examples:
+    - `Fe, uranium rod :2` demands iron and uranium rod at priority 2 "Very high"
+    - `iron +AC` demands iron at custom-configured priority "AC"
+    - `SUPER ALLOY>` demands super alloy and super alloy rod, does not change priority
+    - `+storage` sets priority to custom-configured priority "storage", does not change demanded item groups
   - Allow 1000 characters in the name field of storage container by setting config 'allowLongNames' to 'true'
 - Update 'Supply all' logistic settings if new item groups were added, e.g. by an update or a mod (config: updateSupplyAll)
 
-Config:
+### Config:
 - allowAnyValue:
   - Allows to paste-select any group (in e.g. T3 Ore Extractor), even if it isn't produced at that location
   - Allows to paste-/text-demand any group, including Cocoa Seed or Ore Crushers. Be carefull with this setting
