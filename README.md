@@ -65,3 +65,42 @@ Copy and paste (drone) logistic settings and automatically supply generated item
   - Allows to paste-/text-demand any group, including Cocoa Seed or Ore Crushers. Be careful with this setting
   - Allows priorities below lowest (-3) and above 5
 - enableNotification: Receive notifications for copy and paste operations or invalid text inputs
+
+## Merge
+
+Merge save files with different planet into one combined save file
+
+### Requirements:
+ - Python 3 (tested with Python 3.13, should world with any higher version)
+
+### README / How to use:
+- You can only merge saves which haven't visited the other planet. Use one Prime and one Humble save.
+- Fill primaryFileName and secondaryFileName in the confic section of this script with the file name of the save files that should be combined.
+  - How to get to the save file location:
+    - 1: press F1 in the main menu
+    - 2: open "%USERPROFILE%\AppData\LocalLow\MijuGames\Planet Crafter" in an explorer window
+- Load both worlds in the new version and save them there to convert them to the new save file format.
+- Close all portals.
+- Place the player inventory and equipment of secondaryFileName in a chest (player inventories aren't merged).
+- Run this script with python 3. 
+  - How to run the script: 
+    - Shift-right-click the explorer window that shows the folder this script is in. 
+    - Click on 'open [command/powershell] window here'
+    - Type 'python merge.py' and press enter. if this doesn't work, try 'python3 merge.py', 'py merge.py' or 'py3 merge.py'.
+  - The output file will be called "[name of primary save] - merged.json" and therefore shouldn't override existing saves.
+- The in-game name of the merged file will be "merged_[previous save file name]". 
+  - To change the name, edit the save file, search for "saveDisplayName" and change the text in "" behind it.
+  - Example: "saveDisplayName":"merged_Survival-1" -> "saveDisplayName":"MyNewSaveFileName"
+
+### Restrictions/Warnings: 
+ - The script can take several minutes for huge save files. Put the bigger save file in primaryFileName.
+ - Blue crates, explodable rocks and other objects might respawn
+ - Mod config items (e.g. id=4000 for akarnokd's uihotbar) from secondaryFileName might loose their config behaviour.
+ - Player Inventories aren't merged as discussed above. 
+ - "worldSeed" (current known effect on: not generated wrecks in world, animals in world, random ores, tree position, something 'spawned on floor') 
+     as well as the settings from secondaryFileName can't be merged.
+ - "Message_YouAreAConvict" might appear twice.
+ - PCLayers might get duplicated. Effect not tested.
+ - This script will not work if you placed more than 100000 containers/Inventories. 
+ - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
+       The script can't really filter them out though.
