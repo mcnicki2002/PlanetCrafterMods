@@ -1,5 +1,11 @@
 # PlanetCrafterMods
 
+## Mods
+- [Auto-Logsitics](https://github.com/mcnicki2002/PlanetCrafterMods/edit/main/README.md#auto-logistics--autoaddlogistic)
+
+## Scripts
+- [merge](https://github.com/mcnicki2002/PlanetCrafterMods/edit/main/README.md#merge)
+
 ## Auto-Logistics / AutoAddLogistic
 
 Copy and paste (drone) logistic settings and automatically supply generated items.
