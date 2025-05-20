@@ -1,10 +1,10 @@
 # PlanetCrafterMods
 
 ## Mods
-- [Auto-Logsitics]([https://github.com/mcnicki2002/PlanetCrafterMods/edit/main/README.md#auto-logistics--autoaddlogistic](https://github.com/mcnicki2002/PlanetCrafterMods/tree/main?tab=readme-ov-file#auto-logistics--autoaddlogistic))
+- [Auto-Logsitics](https://github.com/mcnicki2002/PlanetCrafterMods/tree/main?tab=readme-ov-file#auto-logistics--autoaddlogistic)
 
 ## Scripts
-- [merge]([https://github.com/mcnicki2002/PlanetCrafterMods/edit/main/README.md#merge](https://github.com/mcnicki2002/PlanetCrafterMods/tree/main?tab=readme-ov-file#merge))
+- [merge](https://github.com/mcnicki2002/PlanetCrafterMods/tree/main?tab=readme-ov-file#merge)
 
 ## Auto-Logistics / AutoAddLogistic
 
