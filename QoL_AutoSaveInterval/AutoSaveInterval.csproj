@@ -53,7 +53,6 @@
   </ItemGroup>
   <Target Name="CopyDLLs" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\$(Description)" />
-	<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\QoL_AutoSaveInterval\" />
 	<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\QoL_AutoSaveInterval\" />
 	<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\QoL_AutoSaveInterval\" />
   </Target>
