@@ -342,6 +342,8 @@ namespace autoAddLogistic {
 			if (WorldObjectsHandler.Instance.GetHasInitiatedAllObjects()) return;
 			if (!updateSupplyAll.Value) return;
 			
+			if (inventory == null) return;
+			
 			LogisticEntity logisticEntity = inventory.GetLogisticEntity();
 			if (logisticEntity.GetSupplyGroups().Count > 140 && logisticEntity.GetDemandGroups().Count == 0) {
 				if (enableDebug.Value) log.LogInfo("supply all for inventory: " + inventory.GetId());
@@ -463,7 +465,7 @@ namespace autoAddLogistic {
 			foreach (Group group in allGroups) {
 				if (!subset && string.Compare(possibleId, group.id, StringComparison.OrdinalIgnoreCase) == 0 // compares full string
 						|| subset && ((group.id.IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0)
-							|| (Localization.GetLocalizedString(GameConfig.localizationGroupNameId + group.id).IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0))) { // finds subset (if string ends with >)
+							|| (Readable.GetGroupName(group).IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0))) { // finds subset (if string ends with >)
 					if (allowAnyValue.Value || ((group.GetGroupData() is GroupDataItem) && ((GroupDataItem) group.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)) {
 						foundGroups.Add(group);
 						if (!subset) break;
@@ -504,7 +506,7 @@ namespace autoAddLogistic {
 		
 		// --- Logistics to String --->
 		private static string LogisticsToString(LogisticEntity entity) {
-			return string.Join(",", entity.GetDemandGroups().Select(g => g.GetId()).Select(id => Localization.GetLocalizedString(GameConfig.localizationGroupNameId + id)).ToArray()) + (" +" + entity.GetPriority());
+			return string.Join(",", entity.GetDemandGroups().Select(group => Readable.GetGroupName(group)).ToArray()) + (" +" + entity.GetPriority());
 		}
 		// <--- Logistics to String ---
 		
