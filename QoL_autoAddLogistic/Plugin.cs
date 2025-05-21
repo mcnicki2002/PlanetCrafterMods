@@ -346,15 +346,25 @@ namespace autoAddLogistic {
 			
 			LogisticEntity logisticEntity = inventory.GetLogisticEntity();
 			if (logisticEntity.GetSupplyGroups().Count > 140 && logisticEntity.GetDemandGroups().Count == 0) {
-				if (enableDebug.Value) log.LogInfo("supply all for inventory: " + inventory.GetId());
-				if (enableNotification.Value) {
-					if ((DateTime.Now - lastUpdatedTimeStamp).TotalSeconds > 30) {
-						lastUpdatedTimeStamp = DateTime.Now;
-						SendNotification("Updated all 'Supply all' logistic settings", timeShown: 5f); // [missing translation]
-					}
-				}
+				bool hasAddedGroup = false;
+				
+				HashSet<Group> logisticSupplyGroups = logisticEntity.GetSupplyGroups();
+				
 				foreach (Group g in Managers.GetManager<LogisticManager>().GetItemsToDisplayForLogistics(true)) {
+					if (logisticSupplyGroups.Contains(g)) continue;
+					hasAddedGroup = true;
 					logisticEntity.AddSupplyGroup(g);
+				}
+				
+				if (hasAddedGroup) {
+					if (enableDebug.Value) log.LogInfo("supply all for inventory: " + inventory.GetId());
+					
+					if (enableNotification.Value) {
+						if ((DateTime.Now - lastUpdatedTimeStamp).TotalSeconds > 30) {
+							lastUpdatedTimeStamp = DateTime.Now;
+							SendNotification("Updated all 'Supply all' logistic settings", timeShown: 5f); // [missing translation]
+						}
+					}
 				}
 			}
 		}
