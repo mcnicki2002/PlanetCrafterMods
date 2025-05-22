@@ -31,7 +31,7 @@ namespace HideObjects
 			
 			occulsionNames = Config.Bind<string>("Config", "namesOfObjectsToHide", "TreesSpreader", "comma separated list of objects to hide when far away. For specific tree spreaders, use TreesSpreader0,TreesSpreader1,TreesSpreader2");
 			occulsionDistance = Config.Bind<int>("Config", "hideDistance", 15, "Distance from player to object to show it.");
-			occulsionKey = Config.Bind<Key>("Config", "keyShow", Key.LeftCtrl, "Hold this key while opening an inventory to paste the inventory logistics settings.");
+			occulsionKey = Config.Bind<Key>("Config", "keyShow", Key.LeftCtrl, "Hold this key to show all objects again.");
 			occulsionPrevent = Config.Bind<bool>("Config", "preventOcculsion", false, "Prevent occulsion in occulsion colliders (e.g. in the maze and the region north of it)");
 			
 			UpdateStrings();
