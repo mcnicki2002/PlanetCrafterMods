@@ -28,27 +28,9 @@ namespace autoAddLogistic {
 		
 		/* TODO
 			Localization for all texts
-			
-			Auto add supply all on load
-			
-			support Planet selected: UiWindowInterplanetaryExchange.OnPlanetClicked()
-			see: ActionOpenUi.OnAction()
-			base.GetComponent<LinkedPlanetProxy>().SetLinkedPlanet(num);
-			
-			
-			MachineGenerator::SetMiningRayGeneration
-			ActionGroupSelector actionGroupSelector;
-			if (base.gameObject.TryGetComponent<ActionGroupSelector>(out actionGroupSelector))
-			{
-				actionGroupSelector.AddGroupToList(groupData);
-			}
-			
 		*/
 		
 		static ManualLogSource log;
-		
-		enum SpriteType { logistic, demand, supply, supplyAll, setting }
-		static Dictionary<SpriteType, Sprite> sprites = new Dictionary<SpriteType, Sprite>();
 		
 		static AccessTools.FieldRef<CanvasPinedRecipes, List<Group>> field_CanvasPinedRecipes_groupsAdded;
 		static AccessTools.FieldRef<CanvasPinedRecipes, List<InformationDisplayer>> field_CanvasPinedRecipes_informationDisplayers;
@@ -61,6 +43,7 @@ namespace autoAddLogistic {
 		public static ConfigEntry<bool> enableDebug;
 		public static ConfigEntry<bool> enableNotification;
 		public static ConfigEntry<bool> allowAnyValue;
+		
 		public static ConfigEntry<bool> clearOutputOnInputChange;
 		public static ConfigEntry<bool> allowLongNames;
 		public static ConfigEntry<string> logisticGroupSynonymesList;
@@ -70,6 +53,8 @@ namespace autoAddLogistic {
 		public static ConfigEntry<Key> copyLogisticsKey;
 		public static ConfigEntry<Key> pasteLogisticsKey;
 		public static ConfigEntry<bool> updateSupplyAll;
+		public static ConfigEntry<bool> logisticMenuIgnoreLockingConditions;
+		public static ConfigEntry<string> logisticMenuAdditionalGroups;
 		
 		private static List<string> staticSynonymesList = new List<string>() {
 			"Al:Aluminium",
@@ -83,113 +68,7 @@ namespace autoAddLogistic {
 			"Se:Selenium",
 			"Os:Osmium",
 			"Ir:Iridium",
-			"U:Uranim"/*,
-			
-			"Fertilizer T1:Fertilizer1",
-			"Fertilizer T2:Fertilizer2",
-			"Fertilizer T3:Fertilizer3",
-			"Mutagen T1:Mutagen1",
-			"Mutagen T2:Mutagen2",
-			"Mutagen T3:Mutagen3",
-			"Mutagen T4:Mutagen4",
-			"Drone T1:Drone1",
-			"Drone T2:Drone2",
-			"Animal food T1:AnimalFood1",
-			"Animal food T2:AnimalFood2",
-			"Animal food T3:AnimalFood3",
-			"Rocket Engine T1:RocketReactor",
-			"Rocket Engine T2:RocketReactor2",
-			
-			"Azurae:Butterfly1Larvae",
-			"Leani:Butterfly2Larvae",
-			"Fensea:Butterfly3Larvae",
-			"Galaxe:Butterfly4Larvae",
-			"Abstreus:Butterfly5Larvae",
-			"Empalio:Butterfly6Larvae",
-			"Penga:Butterfly7Larvae",
-			"Chevrone:Butterfly8Larvae",
-			"Aemel:Butterfly9Larvae",
-			"Liux:Butterfly10Larvae",
-			"Nere:Butterfly11Larvae",
-			"Lorpen:Butterfly12Larvae",
-			"Fiorente:Butterfly13Larvae",
-			"Alben:Butterfly14Larvae",
-			"Futura:Butterfly15Larvae",
-			"Imeo:Butterfly16Larvae",
-			"Serena:Butterfly17Larvae",
-			//"Golden Butterfly:Butterfly18Larvae",
-			"Faleria:Butterfly19Larvae",
-			"Oesbe:Butterfly20Larvae",
-
-			"Provios:Fish1Eggs",
-			"Vilnus:Fish2Eggs",
-			"Gerrero:Fish3Eggs",
-			"Khrom:Fish4Eggs",
-			"Ulani:Fish5Eggs",
-			"Aelera:Fish6Eggs",
-			"Tegede:Fish7Eggs",
-			"Ecaru:Fish8Eggs",
-			"Buyu:Fish9Eggs",
-			"Tiloo:Fish10Eggs",
-			//"Golden Fish:Fish11Eggs",
-			"Velkia:Fish12Eggs",
-			"Galbea:Fish13Eggs",
-			"Stabu:Fish14Eggs",
-			"Atabu:Fish15Eggs",
-
-			//"Generic Frog:Frog1Eggs",
-			"Huli:Frog2Eggs",
-			"Felicianna:Frog3Eggs",
-			"Strabo:Frog4Eggs",
-			"Trajuu:Frog5Eggs",
-			"Aiolus:Frog6Eggs",
-			"Afae:Frog7Eggs",
-			"Cillus:Frog8Eggs",
-			"Amedo:Frog9Eggs",
-			"Kenjoss:Frog10Eggs",
-			"Lavaum:Frog11Eggs",
-			"Leglus:Frog12Eggs",
-			"Jumi:Frog13Eggs",
-			"Seren:Frog14Eggs",
-			"Acuzzi:Frog15Eggs",
-			//"Golden Frog:FrogGoldEggs",
-
-			//"Common:LarvaeBase1",
-			//"Uncommon:LarvaeBase2",
-			//"Rare:LarvaeBase3",
-			"Bee:Bee1Larvae",
-
-			"Lirma:Seed0",
-			"Shanga:Seed1",
-			"Pestera:Seed2",
-			"Nulna:Seed3",
-			"Tuska:Seed4",
-			"Orema:Seed5",//Orema plant
-			"Volnus:Seed6",//Volnus plant
-			"Snepea:Seed7Humble",
-			"Brelea:Seed8Humble",
-			"Seleus:Seed9Humble",
-			"Furteo:Seed10Humble",
-			"Humblea:Seed11Humble",
-			//"Golden Seed:SeedGold",
-
-			"Iterra:Tree0Seed",
-			"Linifolia:Tree1Seed",
-			"Aleatus:Tree2Seed",
-			"Cernea:Tree3Seed",
-			"Elegea:Tree4Seed",
-			"Humelora:Tree5Seed",
-			"Aemora:Tree6Seed",
-			"Pleom:Tree7Seed",
-			"Soleus:Tree8Seed",
-			"Shreox:Tree9Seed",
-			"Rosea:Tree10Seed",
-			"Lillia:Tree11Seed",
-			"Prunea:Tree12Seed",
-			"Ruberu:Tree13Seed",
-			"Malissea:Tree14Seed",
-			"Redwo:Tree15Seed",
-			"Pamelia:Tree16Seed"*/
+			"U:Uranim"
 		};
 		
         void Awake() {
@@ -210,13 +89,15 @@ namespace autoAddLogistic {
 			
 			clearOutputOnInputChange = Config.Bind<bool>("Config_OreBreaker", "clearOutputOnInputChange", true, "Clear output-inventory supply list if other item is selected in ore crusher's or recycler T2's input-inventory's demand list. Only one item can be selected as demand input.");
 			allowLongNames = Config.Bind<bool>("Config_LogisticsByText", "allowLongNames", false, "Allows 1000 characters in container name to make setting logistics by text actually usefull. Long text will show outside of the text field.");
-			logisticGroupSynonymesList = Config.Bind<string>("Config_LogisticsByText", "synonymes", "N2:NitrogenCapsule1,O2:OxygenCapsule1,CH4:MethanCapsule1,H2O:WaterBottle1,Water:WaterBottle1", "List of synonymes");
+			logisticGroupSynonymesList = Config.Bind<string>("Config_LogisticsByText", "synonymes", "N2:NitrogenCapsule1,O2:OxygenCapsule1,CH4:MethanCapsule1,H2O:WaterBottle1,Water:WaterBottle1", "List of synonymes");//Fertilizer T1:Fertilizer1,Fertilizer T2:Fertilizer2,Fertilizer T3:Fertilizer3,Mutagen T1:Mutagen1,Mutagen T2:Mutagen2,Mutagen T3:Mutagen3,Mutagen T4:Mutagen4,Drone T1:Drone1,Drone T2:Drone2,Animal food T1:AnimalFood1,Animal food T2:AnimalFood2,Animal food T3:AnimalFood3,Rocket Engine T1:RocketReactor,Rocket Engine T2:RocketReactor2,Azurae:Butterfly1Larvae,Leani:Butterfly2Larvae,Fensea:Butterfly3Larvae,Galaxe:Butterfly4Larvae,Abstreus:Butterfly5Larvae,Empalio:Butterfly6Larvae,Penga:Butterfly7Larvae,Chevrone:Butterfly8Larvae,Aemel:Butterfly9Larvae,Liux:Butterfly10Larvae,Nere:Butterfly11Larvae,Lorpen:Butterfly12Larvae,Fiorente:Butterfly13Larvae,Alben:Butterfly14Larvae,Futura:Butterfly15Larvae,Imeo:Butterfly16Larvae,Serena:Butterfly17Larvae,Golden Butterfly:Butterfly18Larvae,Faleria:Butterfly19Larvae,Oesbe:Butterfly20Larvae,Provios:Fish1Eggs,Vilnus:Fish2Eggs,Gerrero:Fish3Eggs,Khrom:Fish4Eggs,Ulani:Fish5Eggs,Aelera:Fish6Eggs,Tegede:Fish7Eggs,Ecaru:Fish8Eggs,Buyu:Fish9Eggs,Tiloo:Fish10Eggs,Golden Fish:Fish11Eggs,Velkia:Fish12Eggs,Galbea:Fish13Eggs,Stabu:Fish14Eggs,Atabu:Fish15Eggs,Generic Frog:Frog1Eggs,Huli:Frog2Eggs,Felicianna:Frog3Eggs,Strabo:Frog4Eggs,Trajuu:Frog5Eggs,Aiolus:Frog6Eggs,Afae:Frog7Eggs,Cillus:Frog8Eggs,Amedo:Frog9Eggs,Kenjoss:Frog10Eggs,Lavaum:Frog11Eggs,Leglus:Frog12Eggs,Jumi:Frog13Eggs,Seren:Frog14Eggs,Acuzzi:Frog15Eggs,Golden Frog:FrogGoldEggs,Common:LarvaeBase1,Uncommon:LarvaeBase2,Rare:LarvaeBase3,Bee:Bee1Larvae,Lirma:Seed0,Shanga:Seed1,Pestera:Seed2,Nulna:Seed3,Tuska:Seed4,Orema:Seed5,Volnus:Seed6,Snepea:Seed7Humble,Brelea:Seed8Humble,Seleus:Seed9Humble,Furteo:Seed10Humble,Humblea:Seed11Humble,Golden Seed:SeedGold,Iterra:Tree0Seed,Linifolia:Tree1Seed,Aleatus:Tree2Seed,Cernea:Tree3Seed,Elegea:Tree4Seed,Humelora:Tree5Seed,Aemora:Tree6Seed,Pleom:Tree7Seed,Soleus:Tree8Seed,Shreox:Tree9Seed,Rosea:Tree10Seed,Lillia:Tree11Seed,Prunea:Tree12Seed,Ruberu:Tree13Seed,Malissea:Tree14Seed,Redwo:Tree15Seed,Pamelia:Tree16Seed
 			priorityNamesList = Config.Bind<string>("Config_LogisticsByText", "priorityGroups", "override:3,storage:2,s:2,backup:1,AC:0,overflow:-1,tradeAC:-1,rocket:-2,genOverflow:-2,trash:-3", "Names for priorities");//override:5,storage:4,s:4,backup:3,AC:2,overflow:1,pulsar:1,rocket:0,genOverflow:-2,trash:-3
 			enableGeneratorAddLogistics = Config.Bind<bool>("Config_GeneratorLogistics", "enableAddLogistics", true, "Enable automatic supply of generated items in machines when build. For example, Bee hives automatically supply honey and bee larva. Shredders are automatically set to the lowest priority.");
 			copyLogisticsPerGroup = Config.Bind<bool>("Config_Copy", "copyLogisticsPerGroup", true, "Not recommended to disable. Copy unique logistic menu settings per group. Disabling might lead to unexpected results.");
 			copyLogisticsKey = Config.Bind<Key>("Config_Copy", "keyCopy", Key.C, "Hold this key while closing the logistics menu to copy the inventory logistics settings.");
 			pasteLogisticsKey = Config.Bind<Key>("Config_Copy", "keyPaste", Key.V, "Hold this key while opening an inventory to paste the inventory logistics settings.");
 			updateSupplyAll = Config.Bind<bool>("Config_UpdateSupplyAll", "updateSupplyAll", false, "Will update the 'supply all' item groups when new items are available, e.g. after an update. Only logistic settings that don't demand any group are updated.");
+			logisticMenuIgnoreLockingConditions = Config.Bind<bool>("Config_ShowLogisticsItemGroups", "ignoreLockingConditions", false, "Ignore lock condition and show groups from additionalGroups.");
+			logisticMenuAdditionalGroups = Config.Bind<string>("Config_ShowLogisticsItemGroups", "additionalGroups", "CookCocoaSeed,CookWheatSeed", "Additional item groups to show in the logistics menu if ignoreLockingConditions=true. allowAnyValue is ignored by this setting. Requires restart to apply.");
 			
 			Harmony.CreateAndPatchAll(typeof(Plugin));
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -369,6 +250,32 @@ namespace autoAddLogistic {
 			}
 		}
 		// <--- Update supply all ---
+		
+		// --- Show Logistic Menu Items --->
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(LogisticManager), nameof(LogisticManager.GetItemsToDisplayForLogistics))]
+		public static void Prefix_LogisticManager_GetItemsToDisplayForLogistics(ref bool ignoreLockingConditions, ref List<GroupItem> __result) {
+			if (!enableMod.Value) return;
+			
+			if (logisticMenuIgnoreLockingConditions.Value) {
+				ignoreLockingConditions = true;
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
+		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
+			if (!enableMod.Value) return;
+			
+			if (!logisticMenuIgnoreLockingConditions.Value) return;
+			
+			List<string> allGroupsToShow = logisticMenuAdditionalGroups.Value.Split(',').Select(e => e.Trim()).ToList();
+			foreach (GroupData gd in ___groupsData) {
+				if (gd is GroupDataItem && allGroupsToShow.Any(e => e == gd.id)) {
+					((GroupDataItem)gd).displayInLogisticType = DataConfig.LogisticDisplayType.Display;
+				}
+			}
+		}
+		// <--- Show Logistic Menu Items ---
 		
 		// --- Add Name to logistic entities --->
 		static List<Group> allGroups;
@@ -527,6 +434,7 @@ namespace autoAddLogistic {
 			public int priority;
 			public int setting = 0;
 			public Group groupSelected = null;
+			public int linkedPlanet = 0;
 		}
 		private static Group defaultCopiedLogisticsGroup = null;
 		private static Dictionary<Group, LogisticsSettingsAttrib> copiedLogistics = new Dictionary<Group, LogisticsSettingsAttrib>();
@@ -549,9 +457,9 @@ namespace autoAddLogistic {
 			// build pin entry
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(cpr.informationDisplayerGameObject, cpr.grid.transform);
 			InformationDisplayer component = gameObject.GetComponent<InformationDisplayer>();
-			LoadSprites(component);
+			LoadDefaultSprites(component);
 			component.SetDisplay("", _group.GetImage(), DataConfig.UiInformationsType.OutInventory);
-			component.iconContainer.sprite = sprites[SpriteType.logistic];
+			component.iconContainer.sprite = GetSprite(SpriteType.logistic);
 			component.SetGroupList(InfoGroupList(lsa), false);
 			gameObject.GetComponentInChildren<GroupList>().SetGridCellSize(new Vector2(42f, 42f), new Vector2(1f, 1f));
 			EventsHelpers.AddTriggerEvent(gameObject, EventTriggerType.PointerClick, new Action<EventTriggerCallbackData>(delegate(EventTriggerCallbackData eventTriggerCallbackData){
@@ -567,12 +475,50 @@ namespace autoAddLogistic {
 			copiedLogistics[_group] = lsa;
 		}
 		// load temporary/default sprites if logistic selector wasn't opened yet.
-		private static void LoadSprites(InformationDisplayer id) {
-			if (!sprites.ContainsKey(SpriteType.logistic)) sprites[SpriteType.logistic] = id.spriteOutInventory;
-			if (!sprites.ContainsKey(SpriteType.demand)) sprites[SpriteType.demand] = id.spriteOutInventory;
-			if (!sprites.ContainsKey(SpriteType.supply)) sprites[SpriteType.supply] = id.spriteInInventory;
-			if (!sprites.ContainsKey(SpriteType.setting)) sprites[SpriteType.setting] = id.spriteTutorial;
-			if (!sprites.ContainsKey(SpriteType.supplyAll)) sprites[SpriteType.supplyAll] = id.spriteTutorial;// shouldn't show anyway
+		enum SpriteType { logistic, demand, supply, supplyAll, setting, Planet }
+		static Dictionary<SpriteType, Sprite> sprites = new Dictionary<SpriteType, Sprite>();
+		private static Dictionary<SpriteType, Sprite> defaultSprites = new Dictionary<SpriteType, Sprite>();
+		private static Sprite GetSprite(SpriteType st) {
+			if (sprites.ContainsKey(st)) return sprites[st];
+			LoadSprites();
+			if (sprites.ContainsKey(st)) return sprites[st];
+			
+			if (defaultSprites.ContainsKey(st)) return defaultSprites[st];
+			if (enableDebug.Value) log.LogWarning("Sprite not found");
+			return Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 4, 4), new Vector2(0f, 0f));
+		}
+		private static void LoadSprites() {
+			if (!sprites.ContainsKey(SpriteType.setting) && defaultSprites.ContainsKey(SpriteType.setting)) sprites[SpriteType.setting] = defaultSprites[SpriteType.setting];
+			
+			Transform lsTransform = UnityEngine.Object.FindFirstObjectByType<LogisticSelector>().transform;
+			if (!sprites.ContainsKey(SpriteType.logistic)) {
+				Transform tObj = lsTransform.Find("Button/OpenButton"); // "MainScene/BaseStack/UI/WindowsHandler/[UiWindowContainer,UiWindowGenetics,UiWindowDNAExtractor,UiWindowGroupSelector]/ContainerInventoryContainer/InventoryDisplayer(Clone)/IconsContainer/LogisticSelector/Button/OpenButton"
+				if (tObj != null) sprites[SpriteType.logistic] = tObj.GetComponent<Image>().sprite;
+			}
+			if (!sprites.ContainsKey(SpriteType.demand)) {
+				Transform tObj = lsTransform.Find("Window/ListDemand/GroupSelectorDemand/GroupDisplayer (1)/Background");
+				if (tObj != null) sprites[SpriteType.demand] = tObj.GetComponent<Image>().sprite;
+			}
+			if (!sprites.ContainsKey(SpriteType.supply)) {
+				Transform tObj = lsTransform.Find("Window/ListSupply/GroupSelectorSupply/GroupDisplayer (1)/Background");
+				if (tObj != null) sprites[SpriteType.supply] = tObj.GetComponent<Image>().sprite;
+			}
+			if (!sprites.ContainsKey(SpriteType.supplyAll)) {
+				Transform tObj = lsTransform.Find("Window/ListSupply/SupplyAll");
+				if (tObj != null) sprites[SpriteType.supplyAll] = tObj.GetComponent<Image>().sprite;
+			}
+			if (!sprites.ContainsKey(SpriteType.Planet)) {
+				GameObject obj = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon");
+				if (obj != null) sprites[SpriteType.Planet] = obj.GetComponent<Image>().sprite;
+			}
+		}
+		private static void LoadDefaultSprites(InformationDisplayer id) {
+			if (!defaultSprites.ContainsKey(SpriteType.logistic)) defaultSprites[SpriteType.logistic] = id.spriteOutInventory;
+			if (!defaultSprites.ContainsKey(SpriteType.demand)) defaultSprites[SpriteType.demand] = id.spriteOutInventory;
+			if (!defaultSprites.ContainsKey(SpriteType.supply)) defaultSprites[SpriteType.supply] = id.spriteInInventory;
+			if (!defaultSprites.ContainsKey(SpriteType.setting)) defaultSprites[SpriteType.setting] = id.spriteTutorial;
+			if (!defaultSprites.ContainsKey(SpriteType.supplyAll)) defaultSprites[SpriteType.supplyAll] = id.spriteTutorial;
+			if (!defaultSprites.ContainsKey(SpriteType.Planet)) defaultSprites[SpriteType.Planet] = id.spriteTutorial;
 		}
 		// build info-groups
 		private static List<Group> InfoGroupList(LogisticsSettingsAttrib lsa) {
@@ -584,19 +530,22 @@ namespace autoAddLogistic {
 			}
 			
 			if (lsa.demandGroups.Count > 0) {
-				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_demand"), sprites[SpriteType.demand]));
+				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_demand"), GetSprite(SpriteType.demand)));
 				ingredientsGroupInRecipe.AddRange(lsa.demandGroups.ToList());
 			}
 			if (lsa.supplyGroups.Count > 140) {
-				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_supply") + ": " + Localization.GetLocalizedString("Ui_Logistics_AllGroups"), sprites[SpriteType.supplyAll]));
+				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_supply") + ": " + Localization.GetLocalizedString("Ui_Logistics_AllGroups"), GetSprite(SpriteType.supplyAll)));
 			} else if (lsa.supplyGroups.Count > 0) {
-				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_supply"), sprites[SpriteType.supply]));
+				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_supply"), GetSprite(SpriteType.supply)));
 				ingredientsGroupInRecipe.AddRange(lsa.supplyGroups.ToList());
 			}
 			Texture2D textureWithString = DrawText(lsa.priority.ToString(), System.Drawing.SystemFonts.DefaultFont, System.Drawing.Color.White, System.Drawing.Color.Transparent);
 			ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_priority") + ": " + (lsa.priority > 3 ? lsa.priority : Localization.GetLocalizedString("Ui_Logistics_Priority" + lsa.priority)), Sprite.Create(textureWithString, new Rect(0.0f, 0.0f, textureWithString.width, textureWithString.height), new Vector2(0.5f, 0.5f), 100.0f)));
-			
-			if (lsa.setting > 0) ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Ui_settings_title") + ": " + Localization.GetLocalizedString("Ui_settings_on")/*"Auto launch: active"*/, sprites[SpriteType.setting]));
+			if (lsa.setting > 0) ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Ui_settings_title") + ": " + Localization.GetLocalizedString("Ui_settings_on")/*"Auto launch: active"*/, GetSprite(SpriteType.setting)));
+			if (lsa.linkedPlanet != 0) {
+				PlanetData linkedPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet);
+				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("UI_InterplanetaryExchange_selectedPlanet") + " " + (linkedPlanetData != null ? Readable.GetPlanetLabel(linkedPlanetData) : ""), GetSprite(SpriteType.Planet)));
+			}
 			
 			return ingredientsGroupInRecipe;
 		}
@@ -648,19 +597,7 @@ namespace autoAddLogistic {
 			
 			return t;
 		}
-		// load correct sprites when opening the logistic selector from it's components. Mind that this doesn't have to happen before a selected group is copied.
-		private static bool spritesInitialized = false;
-		[HarmonyPostfix]
-		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnOpenLogisticSelector))]
-		public static void LogisticSelector_OnOpenLogisticSelector(LogisticSelector __instance) {
-			if (spritesInitialized) return;
-			sprites[SpriteType.logistic] = ((Image)__instance.transform.Find("Button/OpenButton").GetComponent<Image>()).sprite;
-			sprites[SpriteType.demand] = ((Image)__instance.transform.Find("Window/ListDemand/GroupSelectorDemand/GroupDisplayer (1)/Background").GetComponent<Image>()).sprite;
-			sprites[SpriteType.supply] = ((Image)__instance.transform.Find("Window/ListSupply/GroupSelectorSupply/GroupDisplayer (1)/Background").GetComponent<Image>()).sprite;
-			sprites[SpriteType.supplyAll] = ((Image)__instance.transform.Find("Window/ListSupply/SupplyAll").GetComponent<Image>()).sprite;
-			// Use tutorial sprite (from LoadSprites): //sprites[SpriteType.setting] = GroupsHandler.GetGroupViaId("HudChipCleanConstruction").GetImage();
-			spritesInitialized = true;
-		}
+		
 		// Copy logistics when closing the menu
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnCloseLogisticSelector))]
@@ -680,16 +617,27 @@ namespace autoAddLogistic {
 				lsa.supplyGroups.UnionWith(logisticEntity.GetSupplyGroups());
 				lsa.setting = worldObject.GetSetting();
 				lsa.groupSelected = selectedGroup;
+				lsa.linkedPlanet = linkedPlanetWhenOpened; // Set in ActionOpenable_OpenInventories
 				
 				AddLogisticsSettingsCopy(group, lsa);
-				if (enableNotification.Value) SendNotification("Copied logistics", sprites[SpriteType.supply]); // [missing translation]
+				if (enableNotification.Value) SendNotification("Copied logistics", GetSprite(SpriteType.supply)); // [missing translation]
 			}
 		}
 		// Paste logistics settings for demand, supply, priority and settings (auto-launch / auto-shredding)
+		private static int linkedPlanetWhenOpened = 0;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionOpenable), "OpenInventories")]
 		public static void ActionOpenable_OpenInventories(ActionOpenable __instance, Inventory objectInventory, WorldObject worldObject) {
 			if (!enableMod.Value) return;
+			
+			// prepare copy --->
+			LinkedPlanetProxy lpp = __instance.GetComponentInParent<LinkedPlanetProxy>();
+			if (lpp != null) {
+				linkedPlanetWhenOpened = lpp.GetLinkedPlanet();
+			} else {
+				linkedPlanetWhenOpened = 0;
+			}
+			// <--- prepare copy
 			
 			if (Keyboard.current[pasteLogisticsKey.Value].isPressed) {
 				Group group = worldObject.GetGroup();
@@ -716,7 +664,9 @@ namespace autoAddLogistic {
 							);
 					SettingProxy sp = __instance.GetComponentInParent<SettingProxy>();
 					if (sp != null) sp.SetSetting(lsa.setting);
-					if (enableNotification.Value) SendNotification("Inserted logistics", sprites[SpriteType.demand]); // [missing translation]
+					MachineRocketBackAndForthInterplanetaryExchange exchangeRocket = __instance.GetComponentInParent<MachineRocketBackAndForthInterplanetaryExchange>();
+					if (exchangeRocket != null) exchangeRocket.SetLinkedPlanet(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet));
+					if (enableNotification.Value) SendNotification("Inserted logistics", GetSprite(SpriteType.demand)); // [missing translation]
 					InventoriesHandler.Instance.UpdateLogisticEntity(objectInventory);
 				}
 			}
@@ -737,7 +687,7 @@ namespace autoAddLogistic {
 					return;
 				}
 				AccessTools.Method(typeof(UiWindowGroupSelector), "OnGroupSelected").Invoke(__instance, new object[]{lsa.groupSelected});
-				if (enableNotification.Value) SendNotification("Set selected Group", sprites[SpriteType.demand]); // [missing translation]
+				if (enableNotification.Value) SendNotification("Set selected Group", GetSprite(SpriteType.demand)); // [missing translation]
 			}
 		}
 		[HarmonyPrefix] // OnOpen or SetGroupSelectorWorldObject not possible because ActionGroupSelector.OpenInventories calls SetInventories after them
