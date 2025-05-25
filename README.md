@@ -52,6 +52,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
     - List all demanded item groups separated with commas
     - Append '>' to select all item groups containing this string in their name or id
     - Use `all` or `everything` (<- localized) in the text field to demand everything
+    - Define lists to demand all groups from a list (config: lists).
   - Configure priority
     - Uses:
       - localized priority name
