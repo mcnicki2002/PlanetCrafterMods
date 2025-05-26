@@ -28,6 +28,8 @@ namespace autoAddLogistic {
 		
 		/* TODO
 			Localization for all texts
+			
+			bug: "group not selectable here" for basic ores...
 		*/
 		
 		static ManualLogSource log;
@@ -673,12 +675,12 @@ namespace autoAddLogistic {
 					if (lsa.demandGroups.Count > 0) foreach (Group g in lsa.demandGroups) LogisticSelector_OnGroupDemandSelected(g, objectInventory);
 					logisticEntity.SetDemandGroups(
 							allowAnyValue.Value ?
-								lsa.demandGroups :
+								new HashSet<Group>(lsa.demandGroups) :
 								new HashSet<Group>(lsa.demandGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))
 							); // must run after LogisticSelector_OnGroupDemandSelected
 					logisticEntity.SetSupplyGroups(
 							allowAnyValue.Value ?
-								lsa.supplyGroups :
+								new HashSet<Group>(lsa.supplyGroups) :
 								new HashSet<Group>(lsa.supplyGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))
 							);
 					SettingProxy sp = __instance.GetComponentInParent<SettingProxy>();
@@ -701,7 +703,7 @@ namespace autoAddLogistic {
 				if ((!copyLogisticsPerGroup.Value) && (lsa.groupSelected == null)) { // Note: Can't clear selected group when copyLogisticsPerGroup is false
 					return;
 				}
-				if (!allowAnyValue.Value && !allowedGroups.Contains(group.GetGroupData())) {
+				if (!allowAnyValue.Value && lsa.groupSelected != null && allowedGroups != null && !allowedGroups.Contains(lsa.groupSelected.GetGroupData())) {
 					if (enableNotification.Value) SendNotification("Group not selectable here"); // [missing translation]
 					return;
 				}
@@ -717,7 +719,10 @@ namespace autoAddLogistic {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowGroupSelector), nameof(UiWindowGroupSelector.OnOpenOreExtractor))]
 		public static void UiWindowGroupSelector_OnOpenOreExtractor(UiWindowGroupSelector __instance, Inventory ____inventoryRight, List<GroupData> groupsData) {
-			SetSelectedGroupFromCopy(__instance, ____inventoryRight, groupsData);
+			List<GroupData> availableGroups = new List<GroupData>();
+			availableGroups.AddRange(groupsData);
+			availableGroups.AddRange(__instance.groupSelector.GetAddedGroups().Select(e => e.GetGroupData()));
+			SetSelectedGroupFromCopy(__instance, ____inventoryRight, availableGroups);
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowGroupSelector), nameof(UiWindowGroupSelector.OnOpenInterplanetaryDepot))]
