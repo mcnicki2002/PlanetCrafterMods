@@ -28,8 +28,6 @@ namespace autoAddLogistic {
 		
 		/* TODO
 			Localization for all texts
-			
-			bug: "group not selectable here" for basic ores...
 		*/
 		
 		static ManualLogSource log;
@@ -401,10 +399,25 @@ namespace autoAddLogistic {
 			
 			// find id in allGroups case insensitive
 			foreach (Group group in allGroups) {
-				if (!subset && string.Compare(possibleId, group.id, StringComparison.OrdinalIgnoreCase) == 0 // compares full string
-						|| subset && ((group.id.IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0)
-							|| (Readable.GetGroupName(group).IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0))) { // finds subset (if string ends with >)
-					if (allowAnyValue.Value || ((group.GetGroupData() is GroupDataItem) && ((GroupDataItem) group.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)) {
+				if (group == null || group.GetId() == null) continue;
+				if (
+						(
+							!subset
+							&& 
+							string.Compare(possibleId, group.GetId(), StringComparison.OrdinalIgnoreCase) == 0
+						) // compares full string
+						||
+						(
+							subset
+							&& 
+							(
+								group.GetId().IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0
+								|| 
+								(Readable.GetGroupName(group) ?? "").IndexOf(possibleId, StringComparison.OrdinalIgnoreCase) >= 0
+							)
+						) // finds subset (if string ends with >)
+					) {
+					if (allowAnyValue.Value || ((group.GetGroupData() is GroupDataItem) && (((GroupDataItem) group.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))) {
 						foundGroups.Add(group);
 						if (!subset) break;
 					}
@@ -444,7 +457,7 @@ namespace autoAddLogistic {
 		
 		// --- Logistics to String --->
 		private static string LogisticsToString(LogisticEntity entity) {
-			return string.Join(",", entity.GetDemandGroups().Select(group => Readable.GetGroupName(group)).ToArray()) + (" +" + entity.GetPriority());
+			return string.Join(",", entity.GetDemandGroups().Select(group => (Readable.GetGroupName(group) ?? group.GetId())).ToArray()) + (" +" + entity.GetPriority());
 		}
 		// <--- Logistics to String ---
 		
@@ -561,7 +574,7 @@ namespace autoAddLogistic {
 				ingredientsGroupInRecipe.AddRange(lsa.supplyGroups.ToList());
 			}
 			Texture2D textureWithString = DrawText(lsa.priority.ToString(), System.Drawing.SystemFonts.DefaultFont, System.Drawing.Color.White, System.Drawing.Color.Transparent);
-			ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_priority") + ": " + (lsa.priority > 3 ? lsa.priority : Localization.GetLocalizedString("Ui_Logistics_Priority" + lsa.priority)), Sprite.Create(textureWithString, new Rect(0.0f, 0.0f, textureWithString.width, textureWithString.height), new Vector2(0.5f, 0.5f), 100.0f)));
+			ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_priority") + ": " + ((lsa.priority < -3 || lsa.priority > 3) ? lsa.priority : Localization.GetLocalizedString("Ui_Logistics_Priority" + lsa.priority)), Sprite.Create(textureWithString, new Rect(0.0f, 0.0f, textureWithString.width, textureWithString.height), new Vector2(0.5f, 0.5f), 100.0f)));
 			if (lsa.setting > 0) ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Ui_settings_title") + ": " + Localization.GetLocalizedString("Ui_settings_on")/*"Auto launch: active"*/, GetSprite(SpriteType.setting)));
 			if (lsa.linkedPlanet != 0) {
 				PlanetData linkedPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet);
@@ -673,7 +686,21 @@ namespace autoAddLogistic {
 				if (GetCopiedLogistics(group, out LogisticsSettingsAttrib lsa)) {
 					logisticEntity.SetPriority(lsa.priority);
 					if (lsa.demandGroups.Count > 0) foreach (Group g in lsa.demandGroups) LogisticSelector_OnGroupDemandSelected(g, objectInventory);
-					logisticEntity.SetDemandGroups(
+					
+					
+					logisticEntity.GetDemandGroups().Clear();
+					logisticEntity.GetDemandGroups().UnionWith(
+							allowAnyValue.Value ?
+								lsa.demandGroups :
+								lsa.demandGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)
+							); // must run after LogisticSelector_OnGroupDemandSelected
+					logisticEntity.GetSupplyGroups().Clear();
+					logisticEntity.GetSupplyGroups().UnionWith(
+							allowAnyValue.Value ?
+								lsa.supplyGroups :
+								lsa.supplyGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)
+							);
+					/*logisticEntity.SetDemandGroups(
 							allowAnyValue.Value ?
 								new HashSet<Group>(lsa.demandGroups) :
 								new HashSet<Group>(lsa.demandGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))
@@ -682,7 +709,7 @@ namespace autoAddLogistic {
 							allowAnyValue.Value ?
 								new HashSet<Group>(lsa.supplyGroups) :
 								new HashSet<Group>(lsa.supplyGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem) g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))
-							);
+							);*/
 					SettingProxy sp = __instance.GetComponentInParent<SettingProxy>();
 					if (sp != null) sp.SetSetting(lsa.setting);
 					MachineRocketBackAndForthInterplanetaryExchange exchangeRocket = __instance.GetComponentInParent<MachineRocketBackAndForthInterplanetaryExchange>();
