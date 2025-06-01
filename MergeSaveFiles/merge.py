@@ -32,14 +32,14 @@ import os
 # - "worldSeed" (current known effect on: not generated wrecks in world, animals in world, random ores, tree position, something 'spawned on floor') 
 #     as well as the settings from secondaryFileName can't be merged.
 # - "Message_YouAreAConvict" might appear twice.
-# - PCLayers might get duplicated. Effect not tested.
+# - PCLayers from the second save file are only merged if they are from a merged planet. Duplicated layers are a problem.
 # - This script will not work if you placed more than 100000 containers/Inventories. 
 # - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
 #       The script can't really filter them out though.
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
 #
 # Script author: Nicki0
-# Version: 3
+# Version: 4
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -47,6 +47,9 @@ import os
 #
 # Changelog v3:
 # - planet progress will be merged
+#
+# Changelog v4:
+# - layer merge fixed
 #
 
 # - start config
@@ -154,9 +157,22 @@ for i in range(len(itemsS[3])):
 			itemsS[3][i] = itemsS[3][i].replace("\"siIds\":\"" + key + "\"", "\"siIds\":\"" + dictLiIdsSChange[key] + "\"")
 			dictMod[i] = True;
 			
-
-
 print("collision counter:", ctr)
+
+# Combine Layers
+itemsS9AfterLayersRemoved = []
+layerPlanetIDsFoundInItemsP9 = set()
+for i in range(len(itemsP[9])):
+	if 'planet":' in itemsP[9][i]:
+		planetIdOfLayer = itemsP[9][i].split('planet":', 1)[1].split(',', 1)[0]
+		layerPlanetIDsFoundInItemsP9.add(planetIdOfLayer)
+for i in range(len(itemsS[9])):
+	if 'planet":' in itemsS[9][i]:
+		planetIdOfLayer = itemsS[9][i].split('planet":', 1)[1].split(',', 1)[0]
+		if planetIdOfLayer not in layerPlanetIDsFoundInItemsP9:
+			itemsS9AfterLayersRemoved.append(itemsS[9][i])
+itemsS[9] = itemsS9AfterLayersRemoved
+	
 
 items = []
 for el in itemsP:
