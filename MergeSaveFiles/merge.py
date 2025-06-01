@@ -6,7 +6,7 @@ import os
 # - Python 3 (tested with Python 3.13, should world with any higher version)
 #
 # README / How to use:
-# - You can only merge saves which haven't visited the other planet. Use one Prime and one Humble save.
+# - You can only reliably merge saves which haven't visited the other planet. Use one Prime and one Humble save.
 # - Fill primaryFileName and secondaryFileName in the confic section of this script with the file name of the save files that should be combined.
 #       How to get to the save file location:
 #           1: press F1 in the main menu
@@ -18,8 +18,8 @@ import os
 #       How to run the script: 
 #           - Shift-right-click the explorer window that shows the folder this script is in. 
 #           - Click on 'open [command/powershell] window here'
-#           - Type 'python merge.py' and press enter. if this doesn't work, try 'python3 merge.py', 'py merge.py' or 'py3 merge.py'.
-#       The output file will be called "[name of primary save] - merged.json" and therefore shouldn't override existing saves.
+#           - Type 'python merge.py' and press enter. if this doesn't work, try 'py merge.py', 'python3 merge.py' or 'py3 merge.py'.
+#       The output file will be called "[name of primary save]-merged.json" and therefore shouldn't override existing saves.
 # - The in-game name of the merged file will be "merged_[previous save file name]". 
 #       To change the name, edit the save file, search for "saveDisplayName" and change the text in "" behind it.
 #       E.g.: "saveDisplayName":"merged_Survival-1" -> "saveDisplayName":"MyNewSaveFileName"
@@ -36,13 +36,17 @@ import os
 # - This script will not work if you placed more than 100000 containers/Inventories. 
 # - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
 #       The script can't really filter them out though.
+# - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
 #
 # Script author: Nicki0
-# Version: 2
+# Version: 3
 # 
-# Change log v2:
+# Changelog v2:
 # - fixed drone inventories not being merged properly
 # - added sanitization
+#
+# Changelog v3:
+# - planet progress will be merged
 #
 
 # - start config
@@ -157,7 +161,7 @@ print("collision counter:", ctr)
 items = []
 for el in itemsP:
 	items.append(el)
-for i in [1,3,4,6,7,9,10]:
+for i in [3,4,6,7,9,10]:
 	itemsP[i][-1] = itemsP[i][-1].strip()
 	items[i] = itemsP[i] + itemsS[i]
 
@@ -170,6 +174,38 @@ ttS = ttsplitS[0][15:]
 tttotalS = ttsplitS[1][21:]
 items[0][0] = items[0][0].replace(ttP, str(int(ttP) + int(ttS)))
 items[0][0] = items[0][0].replace(tttotalP, str(int(tttotalP) + int(tttotalS)))
+
+# Combine Planets
+planets = []
+for i in range(len(itemsP[1])):
+	planetId = itemsP[1][i].split('"planetId":"', 1)[1].split('"', 1)[0]
+	unitOxygenLevel = itemsP[1][i].split('unitOxygenLevel":', 1)[1].split(',', 1)[0]
+	unitHeatLevel = itemsP[1][i].split('unitHeatLevel":', 1)[1].split(',', 1)[0]
+	unitPressureLevel = itemsP[1][i].split('unitPressureLevel":', 1)[1].split(',', 1)[0]
+	unitPlantsLevel = itemsP[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
+	unitInsectsLevel = itemsP[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
+	unitAnimalsLevel = itemsP[1][i].split('unitAnimalsLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel]
+	planets.append(planet)
+for i in range(len(itemsS[1])):
+	planetId = itemsS[1][i].split('"planetId":"', 1)[1].split('"', 1)[0]
+	unitOxygenLevel = itemsS[1][i].split('unitOxygenLevel":', 1)[1].split(',', 1)[0]
+	unitHeatLevel = itemsS[1][i].split('unitHeatLevel":', 1)[1].split(',', 1)[0]
+	unitPressureLevel = itemsS[1][i].split('unitPressureLevel":', 1)[1].split(',', 1)[0]
+	unitPlantsLevel = itemsS[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
+	unitInsectsLevel = itemsS[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
+	unitAnimalsLevel = itemsS[1][i].split('unitAnimalsLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel]
+	planetExistsInPlanets = False
+	for j in range(len(planets)):
+		if planets[j][0] == planetId:
+			planetExistsInPlanets = True
+			print("Merging Planet Progress for Planet " + planetId)
+			for k in range(1, len(planet)):
+				planets[j][k] = str(float(planets[j][k]) + float(planet[k]))
+	if not planetExistsInPlanets:
+		planets.append(planet)
+items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + '}' for i in range(len(planets))]
 
 # Combine crafted item count
 #{"craftedObjects":1043463
@@ -194,7 +230,7 @@ items[8][0] = items[8][0][:20] + "merged_" + items[8][0][20:]
 for key in dictIdsP.keys():
 	pass
 	#print(key, dictIdsP[key])
-with open(primaryFilePath[:-5] + " - merged.json", 'w') as outputFile:
+with open(primaryFilePath[:-5] + "-merged.json", 'w') as outputFile:
 	outputFile.write('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))]))
 
 print("done")
