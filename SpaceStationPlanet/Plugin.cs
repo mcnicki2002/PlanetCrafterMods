@@ -1,0 +1,391 @@
+using BepInEx;
+using BepInEx.Logging;
+using BepInEx.Configuration;
+
+using HarmonyLib;
+using SpaceCraft;
+
+using TMPro;
+
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using Unity.Mathematics;
+using Unity.Netcode;
+
+using System;
+using System.Collections;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
+using UnityEngine.SceneManagement;
+
+namespace SpaceStationPlanet {
+	
+	[BepInPlugin("nicki0.theplanetcraftermods.SpaceStationPlanet", "(Feat) Space Station", PluginInfo.PLUGIN_VERSION)]
+	public class Plugin : BaseUnityPlugin {
+		
+		static ManualLogSource log;
+		
+		static MethodInfo method_Asteroid_SetFxStatuts;
+		
+		static readonly string planetName = "SpaceStation";
+		static readonly string planetSceneName = "SpaceStation_EmptyScene";
+		static readonly Vector3 planetPosition = new Vector3(2000, 200, 2000);
+		static readonly Dictionary<string, string[]> planetNameLocalized = new() {
+			{ "english", new string[] { "Space Station", "Terraform Space! Or at least create a livable environment inside your space station." } }
+		};
+
+		public void Awake() {
+			log = Logger;
+			
+			method_Asteroid_SetFxStatuts = AccessTools.Method(typeof(Asteroid), "SetFxStatuts");
+			
+			Harmony.CreateAndPatchAll(typeof(Plugin));
+			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+		}
+		
+		
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlanetList), "InitPlanetList")]
+		public static void PlanetList_InitPlanetList(ref PlanetData[] ____planets) {
+			foreach (PlanetData pd in ____planets) if (pd.id == planetName) return;
+			
+			
+			foreach (MeteoEventData med in Array.Find(____planets, e => e.id == "Prime").meteoEvents) {
+				List<GroupDataItem> meteorMaterialGroups = med?.asteroidEventData?.asteroidGameObject?.GetComponent<Asteroid>()?.groupsSelected;
+				if (meteorMaterialGroups == null) continue;
+				foreach (GroupDataItem gdi in meteorMaterialGroups) {
+					asteroidOresForHarvestingRobot.Add(gdi);
+				}
+			}
+			
+			
+			List<PlanetData> newPlanetList = new List<PlanetData>();
+			foreach (PlanetData pd in ____planets) {
+				newPlanetList.Add(pd);
+				log.LogInfo(pd.id + " : " + pd.steamAppId);
+			}
+			
+			PlanetData newPlanet = PlanetData.Instantiate(Array.Find(____planets, e => e.id == "Selenea"));
+			DontDestroyOnLoad(newPlanet); // Taken from FlatLands mod by akarnokd
+			newPlanetList.Add(newPlanet);
+			
+			log.LogInfo(____planets[1].steamAppId);
+			
+			newPlanet.id = planetName;
+			newPlanet.name = planetName;
+			newPlanet.steamAppId = 0;
+			newPlanet.sceneName = planetSceneName;
+			newPlanet.showInBuild = true;
+			newPlanet.startingPlanet = false;
+			
+			
+			
+			newPlanet.allTerraStages.RemoveRange(1, newPlanet.allTerraStages.Count - 2);
+			
+			TerraformStage neverStage = new TerraformStage();
+			AccessTools.FieldRefAccess<TerraformStage, string>(neverStage, "id") = "Never";
+			AccessTools.FieldRefAccess<TerraformStage, DataConfig.WorldUnitType>(neverStage, "unitType") = DataConfig.WorldUnitType.Terraformation;
+			AccessTools.FieldRefAccess<TerraformStage, double>(neverStage, "startValue") = double.MaxValue;
+			AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);;
+			
+			newPlanet.skyChangeTerraStage = neverStage;
+			newPlanet.startCloudsTerraStage = neverStage;
+			newPlanet.fullCloudsTerraStage = neverStage;
+			newPlanet.startMossTerraStage = neverStage;
+			newPlanet.endMossTerraStage = neverStage;
+			newPlanet.startBreathMoreStage = neverStage;
+			newPlanet.noNeedForOxygenStage = neverStage;
+			
+			EnvironmentVolumeVariables envEmpty = Instantiate(newPlanet.envDataStart);
+			envEmpty.fogColor = Color.black;
+			
+			newPlanet.envDataStart = envEmpty;
+			newPlanet.envDataEnd = envEmpty;
+			newPlanet.envDataNight = envEmpty;
+			
+			
+			newPlanet.layersToMoss.Clear();
+			newPlanet.mossPotentialColors.Clear();
+			//newPlanet.meteoEvents.Clear();
+			newPlanet.evolutionners.Clear();
+			newPlanet.disableMusicsSectorsLimitations = true;
+			newPlanet.availableGeneticTraits.Clear();
+			newPlanet.tutorialSteps.Clear();
+			newPlanet.spawnPositions = new PlanetData.SpawnPositions[] {
+				new PlanetData.SpawnPositions {
+					id = "Standard", 
+					positions = new List<PositionAndRotation>() {
+						new PositionAndRotation(
+							planetPosition, 
+							Quaternion.identity
+						) 
+					} 
+				} 
+			};
+			newPlanet.availableStoryEvents.Clear();
+			newPlanet.manualStoryEvents.Clear();
+			
+			
+			//RenderSettings.skybox = new Material(Material.GetDefaultParticleMaterial());
+			//RenderSettings.skybox.color = Color.black;
+			//RenderSettings.skybox.mainTexture = Texture2D.blackTexture;
+			//RenderSettings.skybox.SetFloat("_Exposure",100);
+			
+			____planets = newPlanetList.ToArray();
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlanetLoader), "LoadScene")]
+		public static void PlanetLoader_LoadScene(PlanetData planetToLoad) {
+			if (planetToLoad.id == planetName) {
+				//RenderSettings.skybox = new Material(Material.GetDefaultParticleMaterial());
+				//RenderSettings.skybox.color = Color.black;
+				
+				if (!SceneManager.GetSceneByName(planetSceneName).IsValid()) {
+					Scene newScene = SceneManager.CreateScene(planetSceneName);
+				}
+			}
+		}
+		
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlanetUnlocker), nameof(PlanetUnlocker.LoadUnlockedPlanets))]
+		static void PlanetUnlocker_LoadUnlockedPlanets() {// From Akarnokd "FlatLands"
+			// make sure planetlist is initialized
+			Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(true);
+		}
+		
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(Localization), "LoadLocalization")]
+		private static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary) {
+			foreach (KeyValuePair<string, string[]> translation in planetNameLocalized) {
+				if (___localizationDictionary.TryGetValue(translation.Key, out var dictionary)) {
+					dictionary["Planet_" + planetName] = translation.Value[0];
+					dictionary["Planet_Desc_" + planetName] = translation.Value[1];
+				}
+			}
+		}
+		
+		
+		/*[HarmonyPrefix]
+		[HarmonyPatch(typeof(ConstraintOnSurfaces), "Start")]
+		private static void ConstraintOnSurfaces_Start(ConstraintOnSurfaces __instance) {
+			
+			if (!__instance.allowedTaggedSurfaces.Contains(DataConfig.HomemadeTag.SurfaceFloor)) __instance.allowedTaggedSurfaces.Add(DataConfig.HomemadeTag.SurfaceFloor);
+			if (!__instance.allowedTaggedSurfaces.Contains(DataConfig.HomemadeTag.SurfaceGrid)) __instance.allowedTaggedSurfaces.Add(DataConfig.HomemadeTag.SurfaceGrid);
+		}*/
+		
+		private static List<GroupData> asteroidOresForHarvestingRobot = new List<GroupData>();
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(ActionGroupSelector), "OpenInventories")]
+		private static void ActionGroupSelector_OpenInventories(WorldObject worldObject, List<GroupData> ___oreList) {
+			if (worldObject?.GetGroup()?.GetId() == "HarvestingRobot1" &&
+				worldObject?.GetPlanetHash() == planetName.GetStableHashCode()
+			) {
+				if (asteroidOresForHarvestingRobot.Count == 0) {
+					log.LogWarning("asteroid list is empty!!!");
+				}
+				___oreList.AddRange(asteroidOresForHarvestingRobot);
+			}
+		}
+		
+		private static List<string> lockedGroupsOnNewPlanet = new List<string>() {
+			"Drill0",
+			"Drill1",
+			"Drill2",
+			"Drill3",
+			"Drill4",
+			"OreExtractor1",
+			"OreExtractor2",
+			"OreExtractor3",
+			"GasExtractor1",
+			"GasExtractor2",
+			"WindTurbine1",
+			"PortalGenerator1"
+		};
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
+		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
+			
+			PlanetData newPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromId(planetName);
+			
+			foreach (GroupData groupData in ___groupsData) {
+				if (groupData != null && groupData is GroupDataConstructible && lockedGroupsOnNewPlanet.Contains(groupData.id)) {
+					GroupDataConstructible gdc = (GroupDataConstructible) groupData;
+					if (gdc.notAllowedPlanetsRequirement == null) gdc.notAllowedPlanetsRequirement = new List<PlanetData>() {};
+					gdc.notAllowedPlanetsRequirement.Add(newPlanetData);
+				}
+			}
+		}
+		
+		private static PlanetLoader planetLoader = null;
+		private static bool isOnPlanet() {
+			if (planetLoader == null) {
+				planetLoader = Managers.GetManager<PlanetLoader>();
+			}
+			return planetLoader.GetCurrentPlanetData()?.GetPlanetId() == planetName;
+		}
+		
+		// --- Player Movement --->
+		private static float lastJetpackFactor = 1;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlayerMovable), nameof(PlayerMovable.UpdatePlayerMovement))]
+		static void pre_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, float ___jetpackFactor, ref float ___JumpImpulse, int ___jumpStatusInAir) {
+			__state = new float[] {___PlayerWeight, ___JumpImpulse};
+			lastJetpackFactor = ___jetpackFactor;
+			
+			if (isOnPlanet()) {
+				___PlayerWeight *= 0.1f;
+				if (___jumpStatusInAir == 2) ___JumpImpulse *= 0.2f;
+			}
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PlayerMovable), nameof(PlayerMovable.UpdatePlayerMovement))]
+		static void post_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, ref float ___JumpImpulse) {
+			___PlayerWeight = __state[0];
+			___JumpImpulse = __state[1];
+		}
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlayerGroundRelation), nameof(PlayerGroundRelation.GetGroundDistance))]
+		static bool PlayerGroundRelation_GetGroundDistance(ref float __result) {
+			if (isOnPlanet()) {
+				__result = 3.5f + 2f * lastJetpackFactor - 0.1f;
+				return false;
+			}
+			return true;
+		}
+		// <--- Player Movement ---
+		
+		// --- Meteors --->
+		static readonly Vector3 meteorCenter = new Vector3(planetPosition.x, planetPosition.y + 1000, planetPosition.z);
+		static readonly Vector3 meteorSize = new Vector3(500, 5, 500);
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(AsteroidsHandler), nameof(AsteroidsHandler.InitAsteroidsHandler))]
+		static void AsteroidsHandler_InitAsteroidsHandler(List<Collider> ___spawnBoxes, List<Collider> ___authorizedPlaces) {
+			if (isOnPlanet()) {
+				GameObject goSpawn = new GameObject();
+				goSpawn.AddComponent<BoxCollider>();
+				BoxCollider spawnCollider = goSpawn.GetComponent<BoxCollider>();
+				//spawnCollider.enabled = false;
+				spawnCollider.isTrigger = true;
+				spawnCollider.providesContacts = false;
+				spawnCollider.center = meteorCenter;
+				spawnCollider.size = meteorSize;
+				___spawnBoxes.Add(spawnCollider);
+				
+				log.LogInfo(spawnCollider.bounds.min + " :: " + spawnCollider.bounds.max);
+				
+				/*GameObject goPlace = new GameObject();
+				goPlace.AddComponent<SphereCollider>();
+				SphereCollider placeCollider = goPlace.GetComponent<SphereCollider>();
+				//placeCollider.enabled = false;
+				//placeCollider.isTrigger = true;
+				//placeCollider.providesContacts = false;
+				placeCollider.center = new Vector3(planetPosition.x, planetPosition.y, planetPosition.z);
+				placeCollider.radius = 20;
+				___authorizedPlaces.Add(placeCollider);*/
+			}
+		}
+		
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(AsteroidsHandler), "IsInAuthorizedBounds")]
+		static bool AsteroidsHandler_IsInAuthorizedBounds(ref bool __result, Vector3 position) {
+			if (isOnPlanet()) {
+				__result = true;
+				log.LogInfo("Called IsInAuthorizedBounds: " + position);
+				return false;
+			}
+			return true;
+		}
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(Asteroid), "Start")]
+		static bool Asteroid_Start(
+					Asteroid __instance,
+					ref Vector3 ____startPoint,
+					ref Vector3 ____impactPoint,
+					float ___maxLiveTime,
+					List<GroupItem> ___associatedGroups
+				) {
+			if (!isOnPlanet()) {
+				return true;
+			}
+			RaycastHit raycastHit;
+			bool hitSpot = Physics.Raycast(__instance.transform.position, __instance.transform.forward, out raycastHit, 10000f, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater));
+			if (hitSpot) return true;
+			
+			____startPoint = __instance.transform.position;
+			____impactPoint = __instance.transform.position + __instance.transform.forward * 4000;
+			
+			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[]{__instance.fxContainerTail, true}); //this.SetFxStatuts(__instance.fxContainerTail, true);
+			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[]{__instance.fxContainerImpact, false}); //this.SetFxStatuts(__instance.fxContainerImpact, false);
+			UnityEngine.Object.Destroy(__instance.gameObject, ___maxLiveTime);
+			if (__instance.audioExplosion != null)
+			{
+				__instance.audioExplosion.Stop();
+			}
+			if (__instance.audioTrail != null)
+			{
+				__instance.audioTrail.Play();
+			}
+			foreach (GroupDataItem groupDataItem in __instance.groupsSelected)
+			{
+				___associatedGroups.Add((GroupItem)GroupsHandler.GetGroupViaId(groupDataItem.id));
+			}
+			PlanetLoader manager = Managers.GetManager<PlanetLoader>();
+			//manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, new Action(__instance.Destroy));
+			manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, new Action(delegate(){UnityEngine.Object.Destroy(__instance.gameObject);}));
+			return false;
+		}
+		
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(AsteroidEventData), nameof(AsteroidEventData.GetMaxAsteroidsTotal))]
+		static void AsteroidEventData_GetMaxAsteroidsTotal(ref int __result) {
+			if (isOnPlanet()) {
+				__result *= 10;
+			}
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(AsteroidEventData), nameof(AsteroidEventData.GetMaxAsteroidsSimultaneous))]
+		static void AsteroidEventData_GetMaxAsteroidsSimultaneous(ref int __result) {
+			if (isOnPlanet()) {
+				__result *= 10;
+			}
+		}
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MeteoHandler), "UpdateCurrentMeteoEvent")]
+		static bool MeteoHandler_UpdateCurrentMeteoEvent() {
+			if (isOnPlanet()) {
+				return false;
+			}
+			return true;
+		}
+		// <--- Meteors ---
+		
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(GaugesConsumptionHandler), nameof(GaugesConsumptionHandler.GetOxygenConsumptionRate))]
+		private static void GaugesConsumptionHandler_GetOxygenConsumptionRate(ref float __result) {
+			if (isOnPlanet()) {
+				__result *= 5;
+			}
+		}
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(bool), typeof(float), typeof(float)})]
+		static void PlayerCameraShake_SetShaking(ref float _shakeValue) {
+			if (isOnPlanet()) {
+				_shakeValue *= 0.2f;
+			}
+		}
+		
+		
+	}
+}
