@@ -63,12 +63,12 @@
   </ItemGroup>
   <Target Name="CopyDLLs" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\$(Description)" />
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\nicki0 - $(Description)" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
     <Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
     <Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
     <ZipDirectory
     SourceDirectory="$(TargetDir)\$(AssemblyName)"
-    DestinationFile="$(OutputPath)\..\..\..\..\nicki0-$(AssemblyName).zip"
+    DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip"
     Overwrite="true" />
   </Target>
 </Project>

@@ -88,7 +88,7 @@ namespace SpaceStationPlanet {
 			
 			newPlanet.allTerraStages.RemoveRange(1, newPlanet.allTerraStages.Count - 2);
 			
-			TerraformStage neverStage = new TerraformStage();
+			TerraformStage neverStage = ScriptableObject.CreateInstance<TerraformStage>();//new TerraformStage();
 			AccessTools.FieldRefAccess<TerraformStage, string>(neverStage, "id") = "Never";
 			AccessTools.FieldRefAccess<TerraformStage, DataConfig.WorldUnitType>(neverStage, "unitType") = DataConfig.WorldUnitType.Terraformation;
 			AccessTools.FieldRefAccess<TerraformStage, double>(neverStage, "startValue") = double.MaxValue;
@@ -212,7 +212,8 @@ namespace SpaceStationPlanet {
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
 			
-			PlanetData newPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromId(planetName);
+			PlanetData newPlanetData = Managers.GetManager<PlanetLoader>()?.planetList?.GetPlanetFromId(planetName);
+			if (newPlanetData == null) return;
 			
 			foreach (GroupData groupData in ___groupsData) {
 				if (groupData != null && groupData is GroupDataConstructible && lockedGroupsOnNewPlanet.Contains(groupData.id)) {
@@ -386,6 +387,30 @@ namespace SpaceStationPlanet {
 			}
 		}
 		
-		
+		/*[HarmonyPostfix]
+		[HarmonyPatch(typeof(SystemViewHandler), "Start")]
+		private static void SystemViewHandler_Start(List<SpacePlanetView> ___spacePlanetViews) {
+			SpacePlanetView spacePlanet;
+			spacePlanet.InitPlanetSpaceView(planetName);
+			___spacePlanetViews.Add(spacePlanet);
+		}*/
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(SystemViewHandler), nameof(SystemViewHandler.ZoomOnPlanet))]
+		static bool SystemViewHandler_ZoomOnPlanet(PlanetData planetData, SystemViewHandler __instance, int ___zoomValueOnPlanets, List<SpacePlanetView> ___spacePlanetViews) {
+			if (planetData == null) return true;
+			if (planetData.GetPlanetId() != planetName) return true;
+			
+			//foreach (SpacePlanetView spacePlanetView in ___spacePlanetViews) log.LogInfo(spacePlanetView.transform.position);
+			
+			Vector3 vector = new Vector3(-5049.94f, -4000.50f, 15.13f);//spacePlanetView.transform.position; //(-5049.94, -3994.29, 17.13)-3992.50
+			vector += new Vector3((float)___zoomValueOnPlanets, 0f, 0f);
+			log.LogInfo(vector + " is the space station zoom spot");
+			AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] {vector});
+			return false;
+		}
+		//[Error  :  HarmonyX] Failed to patch void SpaceCraft.SystemViewHandler::ZoomOnPlanet(SpaceCraft.PlanetData planetData): HarmonyLib.InvalidHarmonyPatchArgumentException: (static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews)): Return type of pass through postfix static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews) does not match type of its first parameter
+		//at HarmonyLib.Public.Patching.HarmonyManipulator.WritePostfixes (HarmonyLib.Internal.Util.ILEmitter+Label returnLabel) [0x0035a] in <474744d65d8e460fa08cd5fd82b5d65f>:0
+		//at HarmonyLib.Public.Patching.HarmonyManipulator.WriteImpl () [0x00234] in <474744d65d8e460fa08cd5fd82b5d65f>:0
+		//[Error  : Unity Log] InvalidHarmonyPatchArgumentException: (static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews)): Return type of pass through postfix static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews) does not match type of its first parameter
 	}
 }
