@@ -29,8 +29,17 @@ using UnityEngine.Networking;
 
 namespace FeatPortalTeleport {
 	
-    [BepInPlugin("Nicki0.theplanetcraftermods.featPortalTeleport", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin("Nicki0.theplanetcraftermods.FeatPortalTeleport", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin {
+		
+		/*
+			TODO:
+			UI
+			Create the portal
+			only teleport when the correct portal is set
+		*/
+		
+		
 		static ManualLogSource log;
 		
         private void Awake() {
@@ -86,6 +95,19 @@ namespace FeatPortalTeleport {
 					//PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
 					
 					planetToTeleportToHash = pd.GetPlanetHash();
+					
+					//foreach (Component c in __instance.GetComponentsInChildren(typeof(Component))) log.LogInfo(c);
+					//MachinePortalGenerator mpg = __instance.GetComponentInParent<MachinePortalGenerator>();
+					//if (mpg != null) mpg.machinePortal.gameObject.SetActive(true);//mpg.OpenPortal(null, null, false);
+					
+					log.LogInfo("bla");
+					List<MachinePortalGenerator> allMachinePortalGenerators = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>(Managers.GetManager<WorldInstanceHandler>(), "_allMachinePortalGenerator");
+					foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
+						log.LogInfo("bli");
+						//mpg.machinePortal.gameObject.SetActive(true);
+						GameObject go = new GameObject();
+						mpg.OpenPortal(null, go, false);
+					}
 					
 					Managers.GetManager<WindowsHandler>().CloseAllWindows();
 				}), false);
