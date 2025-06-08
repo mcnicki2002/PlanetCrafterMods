@@ -39,7 +39,7 @@ import os
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
 #
 # Script author: Nicki0
-# Version: 4
+# Version: 5
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -50,6 +50,9 @@ import os
 #
 # Changelog v4:
 # - layer merge fixed
+#
+# Changelog v5:
+# - save files are loaded with UTF-8 encoding to support characters from other languages
 #
 
 # - start config
@@ -70,9 +73,9 @@ if not os.path.exists(secondaryFilePath):
 	print("File " + secondaryFileName + " not found")
 	exit()
 
-with open(primaryFilePath, 'r') as filePrimary:
+with open(primaryFilePath, 'r', encoding="utf8") as filePrimary:
 	sectionsP = filePrimary.read().replace("\r", "").replace("\n", "").split('@')
-with open(secondaryFilePath, 'r') as fileSecundary:
+with open(secondaryFilePath, 'r', encoding="utf8") as fileSecundary:
 	sectionsS = fileSecundary.read().replace("\r", "").replace("\n", "").split('@')
 
 if not "{\"terraTokens\":" in sectionsP[0]:
@@ -246,7 +249,7 @@ items[8][0] = items[8][0][:20] + "merged_" + items[8][0][20:]
 for key in dictIdsP.keys():
 	pass
 	#print(key, dictIdsP[key])
-with open(primaryFilePath[:-5] + "-merged.json", 'w') as outputFile:
+with open(primaryFilePath[:-5] + "-merged.json", 'w', encoding="utf8") as outputFile:
 	outputFile.write('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))]))
 
 print("done")
