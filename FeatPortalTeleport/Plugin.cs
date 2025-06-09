@@ -35,8 +35,11 @@ namespace FeatPortalTeleport {
 		/*
 			TODO:
 			UI
-			Create the portal
-			only teleport when the correct portal is set
+			do portals have to be closed when teleporting???
+			
+			bugs:
+			long wait when opening portal... why???
+			
 		*/
 		
 		
@@ -67,6 +70,7 @@ namespace FeatPortalTeleport {
 		static void AddPortals(UiWindowPortalGenerator __instance) {
 			PlayerMainController pmc = Managers.GetManager<PlayersManager>().GetActivePlayerController();
 			WorldUnitsHandler wuh = Managers.GetManager<WorldUnitsHandler>();
+			Group groupPortalGenerator = GroupsHandler.GetGroupViaId("PortalGenerator1");
 			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
 				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId()) continue;
 				
@@ -84,6 +88,9 @@ namespace FeatPortalTeleport {
 				
 				double completeTi = terraformStages.First().GetStageStartValue();
 				if (wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
+				
+				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(groupPortalGenerator, pd.GetPlanetHash());
+				if (woPortalGenerator == null) continue;
 				
 				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
 				Recipe recipe = new Recipe(new List<GroupDataItem>());
@@ -103,16 +110,26 @@ namespace FeatPortalTeleport {
 					log.LogInfo("bla");
 					List<MachinePortalGenerator> allMachinePortalGenerators = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>(Managers.GetManager<WorldInstanceHandler>(), "_allMachinePortalGenerator");
 					foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
+						if (!mpg.gameObject.activeInHierarchy) continue;
 						log.LogInfo("bli");
 						//mpg.machinePortal.gameObject.SetActive(true);
 						GameObject go = new GameObject();
 						mpg.OpenPortal(null, go, false);
+						portalCreatedByMod = true;
 					}
 					
 					Managers.GetManager<WindowsHandler>().CloseAllWindows();
 				}), false);
 			}
 		}
+		
+		private static bool portalCreatedByMod = false;
+		[HarmonyPrefix]
+        [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpenInstance))]
+        private static void UiWindowPortalGenerator_OnOpenInstance() {
+			portalCreatedByMod = false;
+		}
+		
 		private static bool semaphoreActive = false;
 		[HarmonyPrefix]
         [HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
@@ -141,11 +158,11 @@ namespace FeatPortalTeleport {
 			___rarity.text = "";
 		}
 		
-		[HarmonyPrefix]
+		[HarmonyPrefix] // do not execute 
         [HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
         private static void Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state) {
 			__state = ____enterPortal;
-			____enterPortal = false;
+			if (portalCreatedByMod) ____enterPortal = false;
 		}
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
@@ -155,6 +172,7 @@ namespace FeatPortalTeleport {
 		[HarmonyPrefix]
         [HarmonyPatch(typeof(MachinePortal), "GoToFinalPosition")]
         private static bool MachinePortal_GoToFinalPosition(ref bool ____playerInTunel, InputActionReference[] ___inputsToDisableInTunnel) {
+			if (!portalCreatedByMod) return true;
 			
 			if (____playerInTunel) {
 				____playerInTunel = false;
@@ -177,11 +195,51 @@ namespace FeatPortalTeleport {
 			
 			return false;
 		}
-				
-				
-				
-				
 		
+		
+		
+		// --- Prevent the creation and deletion of capsules --->
+		static bool disablePlanetListGetPlanetIndex = false;
+		static int? planetIndexFromGetPlanetIndex = null;
+		[HarmonyPrefix]
+        [HarmonyPatch(typeof(PlanetNetworkLoader), "SwitchToPlanetServerRpc")]
+        private static void Pre_PlanetNetworkLoader_SwitchToPlanetServerRpc() {
+			if (portalCreatedByMod) {
+				disablePlanetListGetPlanetIndex = true;
+			}
+		}
+		[HarmonyPostfix]
+        [HarmonyPatch(typeof(PlanetList), nameof(PlanetList.GetPlanetIndex))]
+        private static void PlanetList_GetPlanetIndex(ref int __result) {
+			if (disablePlanetListGetPlanetIndex) {
+				planetIndexFromGetPlanetIndex = __result;
+				__result = -1; // return result as if planet doesn't exist
+			}
+		}
+		[HarmonyPostfix]
+        [HarmonyPatch(typeof(PlanetNetworkLoader), "SwitchToPlanetServerRpc")]
+        private static void Post_PlanetNetworkLoader_SwitchToPlanetServerRpc(int planetHash, PlanetNetworkLoader __instance, ref NetworkVariable<short> ____planetIndex) {
+			disablePlanetListGetPlanetIndex = false;
+			if (planetIndexFromGetPlanetIndex != null) {
+				____planetIndex.Value = (short)planetIndexFromGetPlanetIndex;
+				planetIndexFromGetPlanetIndex = null;
+				
+				Vector3 pos = Vector3.zero;
+				Quaternion rot = Quaternion.identity;
+				
+				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash);
+				
+				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash());
+				if (woPortalGenerator != null) { // should never be null as the portal should only show if there is a portal generator on the planet
+					pos = woPortalGenerator.GetPosition();
+					rot = woPortalGenerator.GetRotation();
+				}
+				
+				//this.SwitchToPlanetClientRpc(____planetIndex.Value, vector + new Vector3(0f, 1f, 0f), (int)quaternion.eulerAngles.y);
+				AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc").Invoke(__instance, new object[] {____planetIndex.Value, pos + new Vector3(0, 7, 0), (int)rot.eulerAngles.y + 90});
+			}
+		}
+		// <--- Prevent the creation and deletion of capsules ---
 		
 		/*
 		// Token: 0x06000D51 RID: 3409 RVA: 0x00056A00 File Offset: 0x00054C00
