@@ -29,12 +29,11 @@ using UnityEngine.Networking;
 
 namespace FeatPortalTeleport {
 	
-    [BepInPlugin("Nicki0.theplanetcraftermods.FeatPortalTeleport", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin("Nicki0.theplanetcraftermods.FeatPortalTeleport", "(Feat) Portal Travel", PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin {
 		
 		/*
 			TODO:
-			
 		*/
 		
 		
@@ -42,22 +41,28 @@ namespace FeatPortalTeleport {
 		
 		static ManualLogSource log;
 		
+		public static ConfigEntry<bool> configEnableDebug;
 		public static ConfigEntry<bool> configRequireCost;
+		public static ConfigEntry<bool> configRequireFullTerraformation;
 		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
 		
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
 		static AccessTools.FieldRef<Recipe, List<Group>> field_Recipe_recipe;
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
+		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
 		
         private void Awake() {
 			log = Logger;
 			
-			configRequireCost = Config.Bind<bool>("Config", "requireCost", false, "Teleport costs one Fusion Energy Cell");
-			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Config", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded.");
+			configEnableDebug = Config.Bind<bool>("General", "enableDebug", false, "Enable debug messages");
+			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
+			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
+			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("General", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
 			
 			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
+			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
 			
             // Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -66,15 +71,15 @@ namespace FeatPortalTeleport {
 		
 		private static int planetToTeleportToHash = 0;
 		
-		static GameObject buttonA = null;
-		static GameObject buttonB = null;
+		static GameObject buttonTabProceduralInstance = null;
+		static GameObject buttonTabPortalTravel = null;
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), "Start")]
         static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance) {
-			buttonA = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(110, 880, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon"); //(100, 860, 0)
-			buttonB = CreateButton(__instance, "ButtonPortalTravel", new Vector3(110, 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
+			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(110, 880, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon"); //(100, 860, 0)
+			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(110, 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
 			// Top Button
-			buttonA.GetComponent<Button>().onClick.AddListener(delegate() {
+			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate() {
 				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 					return;
 				}
@@ -85,16 +90,17 @@ namespace FeatPortalTeleport {
 						if (!onExcludedPlanet) {
 							transform.gameObject.SetActive(true);
 						}
-					} else if (transform.name ==  "UiWorldInstanceSelector_PlanetTravel") {
+					} else if (transform.name.Contains("UiWorldInstanceSelector_PlanetTravel")) {
 						transform.gameObject.SetActive(false);
 					}
 				}
 				
+				SetUiVisibility(true, __instance);
 				__instance.btnScan.SetActive(true);
 			});
 			
 			// Bottom Button
-			buttonB.GetComponent<Button>().onClick.AddListener(delegate() {
+			buttonTabPortalTravel.GetComponent<Button>().onClick.AddListener(delegate() {
 				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 					return;
 				}
@@ -103,13 +109,14 @@ namespace FeatPortalTeleport {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
 						transform.gameObject.SetActive(false);
-					} else if (transform.name ==  "UiWorldInstanceSelector_PlanetTravel") {
+					} else if (transform.name.Contains("UiWorldInstanceSelector_PlanetTravel")) {
 						transform.gameObject.SetActive(true);
 						foundPlanetInstanceSelector = true;
 					}
 				}
 				if (!foundPlanetInstanceSelector) AddPortals(__instance);
 				
+				SetUiVisibility(false, __instance);
 				__instance.btnScan.SetActive(false);
 			});
         }
@@ -135,62 +142,97 @@ namespace FeatPortalTeleport {
 			return button;
 		}
 		
+		private static string originalTitle = "";
+		private static void SetUiVisibility(bool active, UiWindowPortalGenerator __instance) {
+			__instance.transform.Find("Container/UiPortalList/InstancesList/CategoryTitles/RarityLevel").gameObject.SetActive(active);
+			__instance.transform.Find("Container/UiPortalList/InstancesList/CategoryTitles/DifficultyLevel").gameObject.SetActive(active);
+			__instance.transform.Find("Container/UiPortalList/InstancesList/CategoryTitles/Recipe").gameObject.SetActive(active || configRequireCost.Value);
+			TMPro.TextMeshProUGUI tmp = __instance.transform.Find("Container/Title").GetComponent<TMPro.TextMeshProUGUI>();
+			if (string.IsNullOrEmpty(originalTitle)) originalTitle = tmp.text;
+			tmp.text = active ? originalTitle : "Portal travel";
+		}
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpen))]
         static void UiWindowPortalGenerator_OnOpen(UiWindowPortalGenerator __instance) {
 			__instance.StartCoroutine(hideButtonBOnOpen());
 			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-				if (buttonB != null) buttonB.SetActive(false);
+				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
 			}
+			
+			SetUiVisibility(true, __instance);
         }
-		private static IEnumerator hideButtonBOnOpen() { // Hide buttonB because on first load, buttonB == null
+		private static IEnumerator hideButtonBOnOpen() { // Hide buttonTabPortalTravel because on first load, buttonTabPortalTravel == null
 			yield return new WaitForSeconds(0.01f);
 			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-				if (buttonB != null) buttonB.SetActive(false);
+				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
 			}
 		}
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.ShowOpenedInstance))]
         static void UiWindowPortalGenerator_ShowOpenedInstance() {
-			if (buttonB != null) buttonB.SetActive(false);
+			if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
         }
 		
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
         static void UiWindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance) {
-			if (buttonA != null && buttonB != null) {
-				buttonA.SetActive(!__instance.uiOnScanning.activeSelf);
-				buttonB.SetActive(!__instance.uiOnScanning.activeSelf);
+			if (buttonTabProceduralInstance != null && buttonTabPortalTravel != null) {
+				buttonTabProceduralInstance.SetActive(!__instance.uiOnScanning.activeSelf);
+				buttonTabPortalTravel.SetActive(!__instance.uiOnScanning.activeSelf);
 			}
 			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0)) {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
 						transform.gameObject.SetActive(false);
+						SetUiVisibility(false, __instance);
 					}
 				}
 			}
         }
 		
-		
+		private static GameObject gameObjectForOpeningPortals;
 		static void AddPortals(UiWindowPortalGenerator __instance) {
 			PlayerMainController pmc = Managers.GetManager<PlayersManager>().GetActivePlayerController();
 			WorldUnitsHandler wuh = Managers.GetManager<WorldUnitsHandler>();
 			Group groupPortalGenerator = GroupsHandler.GetGroupViaId("PortalGenerator1");
+			
+			bool worldInstanceSelectorAdded = false;
+			
+			bool isCurrentPlanetTerraformed = false;
+			if (configRequireFullTerraformation.Value) {
+				PlanetData pd = Managers.GetManager<PlanetLoader>().GetCurrentPlanetData();
+				if (wuh.AreUnitsInited(pd.GetPlanetId())) {
+					List<TerraformStage> terraformStages = pd.GetPlanetTerraformationStages().Where(stage => stage.GetTerraId() == "Complete").ToList();
+					if (terraformStages.Count() > 0) {
+						isCurrentPlanetTerraformed = wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() >= terraformStages.First().GetStageStartValue();
+					} else {
+						if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Does not have a \"Complete\" stage");
+					}
+				} else if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Units not initialized"); 
+			} else {
+				isCurrentPlanetTerraformed = true;
+			}
+			
+			
 			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
+				if (!isCurrentPlanetTerraformed) break;
+				
 				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId()) continue;
 				
 				if (!wuh.AreUnitsInited(pd.GetPlanetId())) {
-					log.LogInfo(pd.GetPlanetId() + " Units not initialized"); 
+					if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Units not initialized"); 
 					continue;
 				}
 				
 				double completeTi = 0;
 				
-				List<TerraformStage> terraformStages = pd.GetPlanetTerraformationStages().Where(stage => stage.GetTerraId() == "Complete").ToList();
-				if (terraformStages.Count() > 0) {
-					completeTi = terraformStages.First().GetStageStartValue();
-				} else {
-					log.LogInfo(pd.GetPlanetId() + " Does not have a \"Complete\" stage");
+				if (configRequireFullTerraformation.Value) {
+					List<TerraformStage> terraformStages = pd.GetPlanetTerraformationStages().Where(stage => stage.GetTerraId() == "Complete").ToList();
+					if (terraformStages.Count() > 0) {
+						completeTi = terraformStages.First().GetStageStartValue();
+					} else {
+						if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Does not have a \"Complete\" stage");
+					}
 				}
 				
 				if (wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
@@ -221,13 +263,26 @@ namespace FeatPortalTeleport {
 					List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 					foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 						if (!mpg.gameObject.activeInHierarchy) continue;
-						GameObject go = new GameObject();
-						mpg.OpenPortal(null, go, false);
+						if (gameObjectForOpeningPortals == null) gameObjectForOpeningPortals = new GameObject();
+						mpg.OpenPortal(null, gameObjectForOpeningPortals, false);
 						portalCreatedByMod = true;
 					}
 					
 					Managers.GetManager<WindowsHandler>().CloseAllWindows();
 				}), false);
+				
+				worldInstanceSelectorAdded = true;
+			}
+			if (!worldInstanceSelectorAdded) {
+				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
+				gameObject.name = "UiWorldInstanceSelector_PlanetTravelInfo";
+				Recipe recipe = new Recipe(new List<GroupDataItem>());
+				List<bool> list = new List<bool>() {};
+				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(new WorldInstanceData("PlanetTravelInfo", -10, 0, recipe, 0, 0), recipe.GetIngredientsGroupInRecipe(), list, new Action<UiWorldInstanceSelector>(delegate(UiWorldInstanceSelector uiWorldInstanceSelector) {}), false);
+				
+				gameObject.transform.Find("ContentContainer/Name").GetComponent<RectTransform>().sizeDelta = new Vector2(1000, 80);
+				gameObject.GetComponent<UiWorldInstanceSelector>().buttonOpen.transform.position = new Vector3(10000, 0, 0);
+				gameObject.GetComponent<UiWorldInstanceSelector>().buttonClose.transform.position = new Vector3(10000, 0, 0);
 			}
 		}
 		
@@ -251,6 +306,11 @@ namespace FeatPortalTeleport {
 		[HarmonyPrefix]
         [HarmonyPatch(typeof(WorldInstanceData), nameof(WorldInstanceData.GetSeedLabel))]
         private static bool WorldInstanceData_GetSeedLabel(int ____seed, ref string __result) {
+			if (____seed == -10) {
+				__result = Localization.GetLocalizedString("PortalTeleport_InfoNoPlanetsAvailable") ?? "";
+				return false;
+			}
+			
 			PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(____seed);
 			if (pd == null) return true;
 			__result = pd.GetPlanetId();
@@ -262,7 +322,7 @@ namespace FeatPortalTeleport {
         [HarmonyPatch(typeof(UiWorldInstanceSelector), nameof(UiWorldInstanceSelector.SetValues))]
         private static void UiWorldInstanceSelector_SetValues(WorldInstanceData worldInstanceData, TextMeshProUGUI ___difficulty, TextMeshProUGUI ___rarity) {
 			PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(worldInstanceData.GetSeed());
-			if (pd == null) return;
+			if (pd == null && worldInstanceData.GetSeed() != -10) return;
 			___difficulty.text = "";
 			___rarity.text = "";
 		}
@@ -297,11 +357,9 @@ namespace FeatPortalTeleport {
 					mpg.ClosePortal();
 				}
 				
-				Managers.GetManager<SavedDataHandler>().DecrementSaveLock();
-				
+				//Managers.GetManager<SavedDataHandler>().DecrementSaveLock();
 				// ^v will lift each other, but for testing, keeping both: top from game code, bottom from own planet switch
-				
-				Managers.GetManager<SavedDataHandler>().IncrementSaveLock(); // semaphore lock saving
+				//Managers.GetManager<SavedDataHandler>().IncrementSaveLock(); // semaphore lock saving
 				semaphoreActive = true;
 				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetToTeleportToHash);
 				if (pd != null) PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
@@ -363,7 +421,7 @@ namespace FeatPortalTeleport {
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
 			GroupDataConstructible portalGroupDataContructible = ___groupsData.Find(e => e.id == "PortalGenerator1") as GroupDataConstructible;
 			if (portalGroupDataContructible == null) {
-				log.LogError("PortalGenerator1 not found");
+				if (configEnableDebug.Value) log.LogError("PortalGenerator1 not found");
 				return;
 			}
 			foreach (PlanetData pd in portalGroupDataContructible.notAllowedPlanetsRequirement) planetsExcludingPortalGenerator.Add(pd.GetPlanetHash());
@@ -379,6 +437,19 @@ namespace FeatPortalTeleport {
 					}
 				}
 			}
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), "OnChoicesUpdated")]
+		static void UiWindowPortalGenerator_OnChoicesUpdated(UiWindowPortalGenerator __instance) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0)) {
+				field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData(
+						Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f), 
+						Localization.GetLocalizedString("Ui_Alert_buildConstraint_portalsOnMoons"), 
+						5f, 
+						true));
+			}
+			
+			SetUiVisibility(true, __instance);
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "CreateMapMarker")]
@@ -409,41 +480,17 @@ namespace FeatPortalTeleport {
 		}
 		// <--- prevent loading of portals on moons ---
 		
-		/*
-		// Token: 0x06000D51 RID: 3409 RVA: 0x00056A00 File Offset: 0x00054C00
-		private void OnTriggerEnter(Collider other)
-		{
-			PlayerMainController component = other.gameObject.GetComponent<PlayerMainController>();
-			if (component == null || component != Managers.GetManager<PlayersManager>().GetActivePlayerController())
-			{
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(Localization), "GetLocalizedString")]
+		private static void Localization_GetLocalizedString(string stringCode, ref string __result) {
+			if (stringCode == "PortalTeleport_InfoNoPlanetsAvailable") {
+				__result = "Travel requirements not met. Source and destination planet need a portal" + (configRequireFullTerraformation.Value ? " and a portal travel license (issued by " + Localization.GetLocalizedString("MessageSender_GalacticTribunal") + " at full terraformation)" : "") + ".";
 				return;
 			}
-			Vector3 positionToTeleport = this._positionToTeleport;
-			this.GoInsidePortal();
+			if (stringCode == "UI_portals_Instructions1") {
+				__result = __result + ". Portal travel requires a portal on source and destination planet and no other portal may be open.";
+				return;
+			}
 		}
-
-		// Token: 0x06000D52 RID: 3410 RVA: 0x00056A44 File Offset: 0x00054C44
-		private void GoInsidePortal()
-		{
-			GameObject portalTunnelGameObject = Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject();
-			PlayerMainController activePlayerController = Managers.GetManager<PlayersManager>().GetActivePlayerController();
-			GameObject gameObject = Object.Instantiate<GameObject>(portalTunnelGameObject, null);
-			gameObject.transform.position = new Vector3(1000f, 1000f);
-			activePlayerController.SetPlayerPlacement(gameObject.transform.position, gameObject.transform.rotation, true);
-			Managers.GetManager<SavedDataHandler>().IncrementSaveLock();
-			InputActionReference[] array = this.inputsToDisableInTunnel;
-			for (int i = 0; i < array.Length; i++)
-			{
-				array[i].action.Disable();
-			}
-			base.Invoke("GoToFinalPosition", this._timeInTunnel);
-			Object.Destroy(gameObject, this._timeInTunnel);
-			MachineBeaconUpdater.HideBeacons = true;
-			if (this._enterPortal)
-			{
-				Managers.GetManager<WorldInstanceHandler>().SetWorldInstanceActive(true);
-			}
-			this._playerInTunel = true;
-		}*/
     }
 }

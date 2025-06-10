@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>FeatPortalTeleport</AssemblyName>
-    <Description>(Feat) Portal Teleport</Description>
-    <Version>1.1.0</Version>
+    <Description>(Feat) Portal Travel</Description>
+    <Version>1.1.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
