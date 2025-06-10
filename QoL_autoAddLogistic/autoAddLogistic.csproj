@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>autoAddLogistic</AssemblyName>
-    <Description>Nicki0.autoAddLogistic</Description>
-    <Version>1.0.6</Version>
+    <Description>(QoL) AutoAddLogistic</Description>
+    <Version>1.0.7</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -52,8 +52,13 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
   <Target Name="CopyDLLs" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\$(Description)" />
 	<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\QoL_autoAddLogistic\" />
 	<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\QoL_autoAddLogistic\" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\$(Description)" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
+    <ZipDirectory
+    SourceDirectory="$(TargetDir)\$(AssemblyName)"
+    DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip"
+    Overwrite="true" />
   </Target>
 </Project>

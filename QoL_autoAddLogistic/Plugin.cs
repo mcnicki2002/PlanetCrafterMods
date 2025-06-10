@@ -23,11 +23,13 @@ using TMPro;
 
 namespace autoAddLogistic {
 	
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin(PluginInfo.PLUGIN_GUID, "(QoL) Auto Add Logistic", PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin {
 		
 		/* TODO
 			Localization for all texts
+			
+			Multiplayer compatibility
 		*/
 		
 		static ManualLogSource log;
@@ -280,27 +282,28 @@ namespace autoAddLogistic {
 		// <--- Show Logistic Menu Items ---
 		
 		// --- Add Name to logistic entities --->
-		static List<Group> allGroups;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowTextInput), nameof(UiWindowTextInput.OnClose))]
 		public static void UiWindowTextInput_OnClose(ref WorldObjectText ___worldObjectText, ref TMP_InputField ___inputField, ref UiWindowTextInput __instance) {
 			if (!enableMod.Value) return;
 			
-			allGroups = GroupsHandler.GetAllGroups();
-			
 			TextProxy textProxy = (TextProxy)field_WorldObjectText_proxy.GetValue(___worldObjectText);
 			WorldObject worldObject = textProxy.GetComponent<WorldObjectAssociated>().GetWorldObject();
 			if (!worldObject.HasLinkedInventory()) return;
 			Inventory inventory = InventoriesHandler.Instance.GetInventoryById(worldObject.GetLinkedInventoryId());
-			LogisticEntity logisticEntity = inventory.GetLogisticEntity();
+			SetLogisticsByName(ref inventory, ___inputField.text);
+		}
+		
+		static List<Group> allGroups;
+		private static void SetLogisticsByName(ref Inventory pInventory, string pText) {
+			allGroups = GroupsHandler.GetAllGroups();
 			
-			string textModified = ___inputField.text;
-			
+			LogisticEntity logisticEntity = pInventory.GetLogisticEntity();
+			string textModified = pText;
 			if (string.IsNullOrEmpty(textModified)) {
 				logisticEntity.ClearDemandGroups();
 				logisticEntity.SetPriority(0);
 			}
-			
 			// Split id list and priority
 			string[] textComponents = textModified.Split(new[]{'+', ':'});
 			if (textComponents.Count() == 2) {
@@ -371,7 +374,7 @@ namespace autoAddLogistic {
 				logisticEntity.AddDemandGroup(group);
 			}
 			
-			InventoriesHandler.Instance.UpdateLogisticEntity(inventory);
+			InventoriesHandler.Instance.UpdateLogisticEntity(pInventory);
 		}
 		
 		private static List<Group> GetGroupsFromString(string possibleId, List<string> logisticGroupSynonymesListSplit) {
