@@ -34,17 +34,30 @@ namespace FeatPortalTeleport {
 		
 		/*
 			TODO:
-			do portals have to be closed when teleporting???
-			override placing portals not possible
-			disable scan on planets without portal
 			
 		*/
 		
 		
+		
+		
 		static ManualLogSource log;
+		
+		public static ConfigEntry<bool> configRequireCost;
+		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
+		
+		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
+		static AccessTools.FieldRef<Recipe, List<Group>> field_Recipe_recipe;
+		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		
         private void Awake() {
 			log = Logger;
+			
+			configRequireCost = Config.Bind<bool>("Config", "requireCost", false, "Teleport costs one Fusion Energy Cell");
+			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Config", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded.");
+			
+			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
+			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
+			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
 			
             // Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -66,7 +79,7 @@ namespace FeatPortalTeleport {
 					return;
 				}
 				
-				bool onExcludedPlanet = planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId());
+				bool onExcludedPlanet = planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0);
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
 						if (!onExcludedPlanet) {
@@ -129,10 +142,6 @@ namespace FeatPortalTeleport {
 			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 				if (buttonB != null) buttonB.SetActive(false);
 			}
-			
-			/*if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
-				Managers.GetManager<WorldInstanceHandler>().UpdateChoices(0);//AccessTools.Method(typeof(UiWindowPortalGenerator), "CleanContainers").Invoke(__instance, new object[]{});
-			}*/
         }
 		private static IEnumerator hideButtonBOnOpen() { // Hide buttonB because on first load, buttonB == null
 			yield return new WaitForSeconds(0.01f);
@@ -145,11 +154,6 @@ namespace FeatPortalTeleport {
         static void UiWindowPortalGenerator_ShowOpenedInstance() {
 			if (buttonB != null) buttonB.SetActive(false);
         }
-		/*[HarmonyPostfix] // Will show after scan animation
-        [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnCloseInstance))]
-        static void UiWindowPortalGenerator_OnCloseInstance() {
-			if (buttonB != null) buttonB.SetActive(true);
-        }*/
 		
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
@@ -158,7 +162,7 @@ namespace FeatPortalTeleport {
 				buttonA.SetActive(!__instance.uiOnScanning.activeSelf);
 				buttonB.SetActive(!__instance.uiOnScanning.activeSelf);
 			}
-			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0)) {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
 						transform.gameObject.SetActive(false);
@@ -199,7 +203,7 @@ namespace FeatPortalTeleport {
 				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
 				gameObject.name = "UiWorldInstanceSelector_PlanetTravel";
 				Recipe recipe = new Recipe(new List<GroupDataItem>());
-				//AccessTools.FieldRefAccess<Recipe, List<Group>>(recipe, "_ingredientsGroups").Add(GroupsHandler.GetGroupViaId("Iron"));
+				if (configRequireCost.Value) field_Recipe_recipe(recipe).Add(GroupsHandler.GetGroupViaId("FusionEnergyCell"));
 				List<bool> list = pmc.GetPlayerBackpack().GetInventory().ItemsContainsStatus(recipe.GetIngredientsGroupInRecipe());
 				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(
 							new WorldInstanceData(pd.GetPlanetId(), pd.GetPlanetHash(), 0, recipe, 0, 0), 
@@ -207,9 +211,14 @@ namespace FeatPortalTeleport {
 							list, 
 							new Action<UiWorldInstanceSelector>(delegate(UiWorldInstanceSelector uiWorldInstanceSelector) {
 					
+					InventoriesHandler.Instance.RemoveItemsFromInventory(
+							uiWorldInstanceSelector.GetAssociatedWorldInstanceData().GetRecipe().GetIngredientsGroupInRecipe(), 
+							Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerBackpack().GetInventory(), 
+							true, true, null);
+					
 					planetToTeleportToHash = pd.GetPlanetHash();
 					
-					List<MachinePortalGenerator> allMachinePortalGenerators = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>(Managers.GetManager<WorldInstanceHandler>(), "_allMachinePortalGenerator");
+					List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 					foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 						if (!mpg.gameObject.activeInHierarchy) continue;
 						GameObject go = new GameObject();
@@ -282,7 +291,7 @@ namespace FeatPortalTeleport {
 					array[i].action.Enable();
 				}
 				
-				List<MachinePortalGenerator> allMachinePortalGenerators = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>(Managers.GetManager<WorldInstanceHandler>(), "_allMachinePortalGenerator");
+				List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 				foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 					if (!mpg.gameObject.activeInHierarchy) continue;
 					mpg.ClosePortal();
@@ -340,7 +349,7 @@ namespace FeatPortalTeleport {
 				}
 				// ClientRpc has to be manually invoked as it isn't executed because the planetIndex returns -1 (see PlanetList.GetPlanetIndex patch)
 				//this.SwitchToPlanetClientRpc(____planetIndex.Value, vector + new Vector3(0f, 1f, 0f), (int)quaternion.eulerAngles.y);
-				AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc").Invoke(__instance, new object[] {____planetIndex.Value, pos + new Vector3(0, 7, 0), (int)rot.eulerAngles.y + 90});
+				method_PlanetNetworkLoader_SwitchToPlanetClientRpc.Invoke(__instance, new object[] {____planetIndex.Value, pos + new Vector3(0, 7, 0), (int)rot.eulerAngles.y + 90});
 				
 				portalCreatedByMod = false;
 			}
@@ -348,7 +357,7 @@ namespace FeatPortalTeleport {
 		// <--- Prevent the creation and deletion of capsules ---
 		
 		// --- Activate Portal everywhere --->
-		private static HashSet<string> planetsExcludingPortalGenerator = new HashSet<string>();
+		private static HashSet<int> planetsExcludingPortalGenerator = new HashSet<int>();
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
@@ -357,13 +366,13 @@ namespace FeatPortalTeleport {
 				log.LogError("PortalGenerator1 not found");
 				return;
 			}
-			foreach (PlanetData pd in portalGroupDataContructible.notAllowedPlanetsRequirement) planetsExcludingPortalGenerator.Add(pd.GetPlanetId());
+			foreach (PlanetData pd in portalGroupDataContructible.notAllowedPlanetsRequirement) planetsExcludingPortalGenerator.Add(pd.GetPlanetHash());
 			portalGroupDataContructible.notAllowedPlanetsRequirement = new List<PlanetData>();
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
 		static void UiWindowPortalGenerator_SelectFirstButtonInGrid(UiWindowPortalGenerator __instance) {
-			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0)) {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
 						transform.gameObject.SetActive(false);
@@ -374,12 +383,31 @@ namespace FeatPortalTeleport {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "CreateMapMarker")]
 		static bool UiWindowPortalGenerator_CreateMapMarker(UiWindowPortalGenerator __instance) {
-			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0)) {
 				return false;
 			}
 			return true;
 		}
 		// <--- Activate Portal everywhere ---
+		
+		// --- prevent loading of portals on moons --->
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(JsonablesHelper), "WorldObjectToJsonable")]
+		static void JsonablesHelper_WorldObjectToJsonable(JsonableWorldObject __result) {
+			if (!planetsExcludingPortalGenerator.Contains(__result.planet)) return;
+			if (__result.gId != "PortalGenerator1") return;
+			if (!configDeletePortalsFromMoonsWhenModIsLost.Value) return;
+			__result.gId = "PortalGenerator1_OnMoon";
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(JSONExport), nameof(JSONExport.LoadFromJson))]
+		static void JSONExport_LoadFromJson(List<JsonableWorldObject> ____worldObjects) {
+			foreach (JsonableWorldObject jwo in ____worldObjects) {
+				if (jwo.gId == "PortalGenerator1_OnMoon") jwo.gId = "PortalGenerator1";
+			}
+			
+		}
+		// <--- prevent loading of portals on moons ---
 		
 		/*
 		// Token: 0x06000D51 RID: 3409 RVA: 0x00056A00 File Offset: 0x00054C00
