@@ -54,10 +54,10 @@ namespace FeatPortalTeleport {
         private void Awake() {
 			log = Logger;
 			
-			configEnableDebug = Config.Bind<bool>("General", "enableDebug", false, "Enable debug messages");
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
-			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("General", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
+			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
+			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Debug", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
 			
 			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
