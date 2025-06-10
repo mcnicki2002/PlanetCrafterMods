@@ -35,7 +35,8 @@ namespace FeatPortalTeleport {
 		/*
 			TODO:
 			do portals have to be closed when teleporting???
-			
+			override placing portals not possible
+			disable scan on planets without portal
 			
 		*/
 		
@@ -65,9 +66,12 @@ namespace FeatPortalTeleport {
 					return;
 				}
 				
+				bool onExcludedPlanet = planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId());
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
-						transform.gameObject.SetActive(true);
+						if (!onExcludedPlanet) {
+							transform.gameObject.SetActive(true);
+						}
 					} else if (transform.name ==  "UiWorldInstanceSelector_PlanetTravel") {
 						transform.gameObject.SetActive(false);
 					}
@@ -95,104 +99,6 @@ namespace FeatPortalTeleport {
 				
 				__instance.btnScan.SetActive(false);
 			});
-			return;
-			
-			// Top Button
-			TMP_DefaultControls.Resources resourcesA = new TMP_DefaultControls.Resources();
-			buttonA = TMP_DefaultControls.CreateButton(resourcesA);
-			
-			buttonA.name = "ButtonProceduralInstance";
-			buttonA.transform.SetParent(__instance.transform, false);
-			buttonA.transform.position = new Vector3(110, 880, 0)/*(100, 860, 0)*/;
-			buttonA.GetComponent<RectTransform>().sizeDelta = new Vector2(60, 60);
-			buttonA.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
-			buttonA.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
-			buttonA.GetComponent<Image>().sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon").GetComponent<Image>().sprite;
-			buttonA.GetComponent<Button>().onClick.AddListener(delegate() {
-				log.LogInfo("buttonA pressed");
-				//AddPortals(__instance);
-				//__instance.transform.Find("Container/UiPortalList/ScanButton/ScanDestinationsBtn").gameObject.SetActive(true);
-				
-				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-					return;
-				}
-				
-				__instance.btnScan.SetActive(true);
-				
-				//foreach (GameObject go in listAllAddedInstanceSelectorGOs) go.SetActive(false);
-				
-				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
-					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
-						transform.gameObject.SetActive(true);
-					} else if (transform.name ==  "UiWorldInstanceSelector_PlanetTravel") {
-						transform.gameObject.SetActive(false);
-					}
-					//log.LogInfo(transform + " : " + transform.name);//"UiWorldInstanceLine(Clone)"
-				}
-				
-				//WorldInstanceHandler.InstanceChoices? currentChoices = Managers.GetManager<WorldInstanceHandler>().GetCurrentChoices();
-				//if (currentChoices != null) __instance.StartCoroutine(__instance.DisplayInstances(currentChoices.Value));
-				
-				
-			});
-			
-			GameObject backgroundImageGameObjectA = new GameObject("BackgroundHexagonImage");
-			backgroundImageGameObjectA.transform.SetParent(buttonA.transform, false);
-			backgroundImageGameObjectA.transform.localScale = new Vector3(1f*0.85f, 1.15f*0.85f, 1f*0.85f)/*(1.1f, 1.28f, 1.1f)*/;
-			//backgroundImageGameObjectA.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
-			Image backgroundImageA = backgroundImageGameObjectA.AddComponent<Image>();
-			backgroundImageA.sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/CloseUiButton").GetComponentInChildren<Image>().sprite;//obj.GetComponent<Image>().sprite;
-			
-			buttonA.SetActive(true);
-			
-			
-			
-			
-			
-			// Bottom Button
-			TMP_DefaultControls.Resources resourcesB = new TMP_DefaultControls.Resources();
-			buttonB = TMP_DefaultControls.CreateButton(resourcesB);
-			
-			buttonB.name = "ButtonPortalTravel";
-			buttonB.transform.SetParent(__instance.transform, false);
-			buttonB.transform.position = new Vector3(110, 780, 0)/*(100, 680, 0)*/;
-			buttonB.GetComponent<RectTransform>().sizeDelta = new Vector2(60, 60);
-			buttonB.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
-			buttonB.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
-			buttonB.GetComponent<Image>().sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image").GetComponent<Image>().sprite;
-			buttonB.GetComponent<Button>().onClick.AddListener(delegate() {
-				log.LogInfo("buttonB pressed");
-				
-				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-					return;
-				}
-				
-				bool foundPlanetInstanceSelector = false;
-				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
-					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
-						transform.gameObject.SetActive(false);
-					} else if (transform.name ==  "UiWorldInstanceSelector_PlanetTravel") {
-						transform.gameObject.SetActive(true);
-						foundPlanetInstanceSelector = true;
-					}
-				}
-				if (!foundPlanetInstanceSelector) AddPortals(__instance);
-				
-				
-				__instance.btnScan.SetActive(false);
-			});
-			
-			GameObject backgroundImageGameObjectB = new GameObject("BackgroundHexagonImage");
-			backgroundImageGameObjectB.transform.SetParent(buttonB.transform, false);
-			backgroundImageGameObjectB.transform.localScale = new Vector3(1f*0.83f, 1.15f*0.83f, 1f*0.83f)/*(1.1f, 1.28f, 1.1f)*/;
-			//backgroundImageGameObjectB.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
-			Image backgroundImageB = backgroundImageGameObjectB.AddComponent<Image>();
-			backgroundImageB.sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/CloseUiButton").GetComponent<Image>().sprite;//obj.GetComponent<Image>().sprite;
-			
-			buttonB.SetActive(true);
-			
-			
-			//AddPortals(__instance);
         }
 		private static GameObject CreateButton(UiWindowPortalGenerator __instance, string name, Vector3 pos, string imagePath) {
 			TMP_DefaultControls.Resources resourcesA = new TMP_DefaultControls.Resources();
@@ -215,6 +121,7 @@ namespace FeatPortalTeleport {
 			
 			return button;
 		}
+		
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpen))]
         static void UiWindowPortalGenerator_OnOpen(UiWindowPortalGenerator __instance) {
@@ -222,24 +129,27 @@ namespace FeatPortalTeleport {
 			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 				if (buttonB != null) buttonB.SetActive(false);
 			}
+			
+			/*if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+				Managers.GetManager<WorldInstanceHandler>().UpdateChoices(0);//AccessTools.Method(typeof(UiWindowPortalGenerator), "CleanContainers").Invoke(__instance, new object[]{});
+			}*/
         }
 		private static IEnumerator hideButtonBOnOpen() { // Hide buttonB because on first load, buttonB == null
 			yield return new WaitForSeconds(0.01f);
 			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 				if (buttonB != null) buttonB.SetActive(false);
 			}
-			yield break;
 		}
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.ShowOpenedInstance))]
         static void UiWindowPortalGenerator_ShowOpenedInstance() {
 			if (buttonB != null) buttonB.SetActive(false);
         }
-		[HarmonyPostfix]
+		/*[HarmonyPostfix] // Will show after scan animation
         [HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnCloseInstance))]
         static void UiWindowPortalGenerator_OnCloseInstance() {
 			if (buttonB != null) buttonB.SetActive(true);
-        }
+        }*/
 		
 		[HarmonyPostfix]
         [HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
@@ -247,6 +157,13 @@ namespace FeatPortalTeleport {
 			if (buttonA != null && buttonB != null) {
 				buttonA.SetActive(!__instance.uiOnScanning.activeSelf);
 				buttonB.SetActive(!__instance.uiOnScanning.activeSelf);
+			}
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
+					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
+						transform.gameObject.SetActive(false);
+					}
+				}
 			}
         }
 		
@@ -364,6 +281,13 @@ namespace FeatPortalTeleport {
 				for (int i = 0; i < array.Length; i++) {
 					array[i].action.Enable();
 				}
+				
+				List<MachinePortalGenerator> allMachinePortalGenerators = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>(Managers.GetManager<WorldInstanceHandler>(), "_allMachinePortalGenerator");
+				foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
+					if (!mpg.gameObject.activeInHierarchy) continue;
+					mpg.ClosePortal();
+				}
+				
 				Managers.GetManager<SavedDataHandler>().DecrementSaveLock();
 				
 				// ^v will lift each other, but for testing, keeping both: top from game code, bottom from own planet switch
@@ -417,9 +341,45 @@ namespace FeatPortalTeleport {
 				// ClientRpc has to be manually invoked as it isn't executed because the planetIndex returns -1 (see PlanetList.GetPlanetIndex patch)
 				//this.SwitchToPlanetClientRpc(____planetIndex.Value, vector + new Vector3(0f, 1f, 0f), (int)quaternion.eulerAngles.y);
 				AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc").Invoke(__instance, new object[] {____planetIndex.Value, pos + new Vector3(0, 7, 0), (int)rot.eulerAngles.y + 90});
+				
+				portalCreatedByMod = false;
 			}
 		}
 		// <--- Prevent the creation and deletion of capsules ---
+		
+		// --- Activate Portal everywhere --->
+		private static HashSet<string> planetsExcludingPortalGenerator = new HashSet<string>();
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
+		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
+			GroupDataConstructible portalGroupDataContructible = ___groupsData.Find(e => e.id == "PortalGenerator1") as GroupDataConstructible;
+			if (portalGroupDataContructible == null) {
+				log.LogError("PortalGenerator1 not found");
+				return;
+			}
+			foreach (PlanetData pd in portalGroupDataContructible.notAllowedPlanetsRequirement) planetsExcludingPortalGenerator.Add(pd.GetPlanetId());
+			portalGroupDataContructible.notAllowedPlanetsRequirement = new List<PlanetData>();
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
+		static void UiWindowPortalGenerator_SelectFirstButtonInGrid(UiWindowPortalGenerator __instance) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
+					if (transform.name ==  "UiWorldInstanceLine(Clone)") {
+						transform.gameObject.SetActive(false);
+					}
+				}
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), "CreateMapMarker")]
+		static bool UiWindowPortalGenerator_CreateMapMarker(UiWindowPortalGenerator __instance) {
+			if (planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetId())) {
+				return false;
+			}
+			return true;
+		}
+		// <--- Activate Portal everywhere ---
 		
 		/*
 		// Token: 0x06000D51 RID: 3409 RVA: 0x00056A00 File Offset: 0x00054C00
