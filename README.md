@@ -1,7 +1,9 @@
 # PlanetCrafterMods
 
 ## Mods
-- [Auto-Logsitics](#auto-logistics--autoaddlogistic)
+- [Auto-Logistics](#auto-logistics--autoaddlogistic)
+- [(Feat) Portal Travel](#feat-portal-travel)
+- [(Feat) Space Station](#feat-space-station)
 
 ## Scripts
 - [merge](#merge)
@@ -76,6 +78,44 @@ Copy and paste (drone) logistic settings and automatically supply generated item
   - Allows to paste-/text-demand any group, including Cocoa Seed or Ore Crushers. Be careful with this setting
   - Allows priorities below lowest (-3) and above 5
 - enableNotification: Receive notifications for copy and paste operations or invalid text inputs
+
+## (Feat) Portal Travel
+Adds the ability to travel from the portal of one planet to the portal of another planet without any cost.
+
+### Features:
+- Travel between fully terraformed planets without any cost (\*configurable) with the portal
+  - Portal-traveling is only possible if the procedural instance portal is closed
+  - How to use:
+    - Press the lower button on the upper-left side in the portal generator display
+    - Select the planet to travel to by pressig `Open`
+    - Walk into the opened portal
+
+Note: 
+- Portals on moons, which shouldn't exist in the base game, will get removed if the mod is removed. This is a savety machanism to prevent that procedural instances can be opened on the moons after the mod is removed/isn't functional anymore.
+- This mod is not fully multiplayer compatible. It only works for the host.
+
+### Config
+- configurable:
+  - `requireFullTerraformation`: set to false: travel before full terraformation is reached
+  - `requireCost`: set to true: opening a portal costs 1 fusion energy cell
+  
+## (Feat) Space Station
+Adds a new "Planet": space
+Build your own space station and terraform it's internal biosphere.
+
+Note: 
+- I am aware of the absurdity of terraforming space. Just imagine that you are terraforming the atmosphere in your space station.
+- It isn't finished or balanced yet, but I currently don't have the time or knowledge to create what I imagined for this. 
+
+### Features:
+- Lower Gravity
+- Higher Oxygen consumption
+- Meteor resources can be harvested
+- more meteors
+- Free jetpack movement
+- Everlasting Darkness
+- High dependence on starting planet
+- Many machines are disabled (e.g. drills, as it wouldn't make sense to *drill* from pressure and ores)
 
 ## Merge
 
