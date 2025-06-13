@@ -303,18 +303,20 @@ namespace FeatPortalTeleport {
 			}
 		}
 		
-		[HarmonyPrefix]
+		[HarmonyPostfix]
         [HarmonyPatch(typeof(WorldInstanceData), nameof(WorldInstanceData.GetSeedLabel))]
-        private static bool WorldInstanceData_GetSeedLabel(int ____seed, ref string __result) {
+        private static void WorldInstanceData_GetSeedLabel(int ____seed, ref string ____seedLabel, ref string __result) {
 			if (____seed == -10) {
-				__result = Localization.GetLocalizedString("PortalTeleport_InfoNoPlanetsAvailable") ?? "";
-				return false;
+				string labelString = Localization.GetLocalizedString("PortalTeleport_InfoNoPlanetsAvailable") ?? "";
+				____seedLabel = labelString;
+				__result = labelString.ToString();
+				return;
 			}
 			
 			PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(____seed);
-			if (pd == null) return true;
+			if (pd == null) return;
+			____seedLabel = pd.GetPlanetId();
 			__result = pd.GetPlanetId();
-			return false;
 		}
 		
 		// prevent difficulty and rarity strings from displaying
@@ -340,11 +342,9 @@ namespace FeatPortalTeleport {
 		}
 		[HarmonyPrefix]
         [HarmonyPatch(typeof(MachinePortal), "GoToFinalPosition")]
-        private static bool MachinePortal_GoToFinalPosition(ref bool ____playerInTunel, InputActionReference[] ___inputsToDisableInTunnel) {
-			if (!portalCreatedByMod) return true;
-			
-			if (____playerInTunel) {
-				____playerInTunel = false;
+        private static void MachinePortal_GoToFinalPosition(ref bool ____playerInTunel, InputActionReference[] ___inputsToDisableInTunnel) {
+			if (portalCreatedByMod && ____playerInTunel) {
+				____playerInTunel = false; // also prevents the execution of GoToFinalPosition instead of return false;
 				MachineBeaconUpdater.HideBeacons = false;
 				InputActionReference[] array = ___inputsToDisableInTunnel;
 				for (int i = 0; i < array.Length; i++) {
@@ -364,7 +364,6 @@ namespace FeatPortalTeleport {
 				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetToTeleportToHash);
 				if (pd != null) PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
 			}
-			return false;
 		}
 		
 		
