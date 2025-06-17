@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>droneSpeed</AssemblyName>
+    <AssemblyName>CheatDroneSpeed</AssemblyName>
     <Description>(Cheat) Drone Speed</Description>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

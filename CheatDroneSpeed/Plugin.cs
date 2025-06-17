@@ -5,7 +5,7 @@ using SpaceCraft;
 using System;
 using UnityEngine;
 
-namespace droneSpeed
+namespace CheatDroneSpeed
 {
 	[BepInPlugin("Nicki0.theplanetcraftermods.CheatDroneSpeed", "(Cheat) Drone Speed", PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
