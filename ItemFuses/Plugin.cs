@@ -129,6 +129,7 @@ namespace ItemFuses
 			groupDataItem.unlockingValue = (float) Math.Pow(1000, fuseId + 1); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: ZTi
 			groupDataItem.tradeValue *= (int) Math.Pow(itemConfig.recipeQuantity,fuseId - 1);
 			groupDataItem.tradeCategory = ((groupDataItem.tradeValue > 0) && (fuseId >= 5) && (groupDataItem.tradeCategory == DataConfig.TradeCategory.Null || groupDataItem.tradeCategory == DataConfig.TradeCategory.tier1)) ? DataConfig.TradeCategory.tier1 : DataConfig.TradeCategory.Null;
+			if (fuseId <= 3 && !groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftStationT3)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftStationT3);
 			if (!groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftQuartzT1)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftQuartzT1);
 			groupDataItem.recipeIngredients = new List<GroupDataItem> {};
 			for (int i = 0; i < itemConfig.recipeQuantity; i++) {
