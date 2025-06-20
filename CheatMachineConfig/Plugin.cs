@@ -48,10 +48,10 @@ namespace CheatMachineConfig {
 		private void Awake() {
 			log = Logger;
 			
-			t2recycler_time = Config.Bind<int>("Config_T2Recycler", "Recycler_time", 45, "Time to recycle an item (in seconds)");
-			t1orebreaker_time = Config.Bind<int>("Config_T1OreCrusher", "OreCrusher_time", 130, "Time to break an item (in seconds)");
-			t2orebreaker_time = Config.Bind<int>("Config_T2OreCrusher", "OreCrusher_time", 90, "Time to break an item (in seconds)");
-			t3orebreaker_time = Config.Bind<int>("Config_T3OreCrusher", "OreCrusher_time", 70, "Time to break an item (in seconds)");
+			t2recycler_time = Config.Bind<int>("Config_Recycler", "T2Recycler_time", 45, "Time to recycle an item (in seconds)");
+			t1orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T1OreCrusher_time", 130, "Time to break an item (in seconds)");
+			t2orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T2OreCrusher_time", 90, "Time to break an item (in seconds)");
+			t3orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T3OreCrusher_time", 70, "Time to break an item (in seconds)");
 			autocrafter_time = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_time", 5f, "Time to craft an item (in seconds)");
 			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 20f, "Range of auto crafter");
 			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 1f, "Time to incubate an item (in minutes)");
