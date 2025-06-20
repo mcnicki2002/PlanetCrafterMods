@@ -39,6 +39,7 @@ namespace CheatMachineConfig {
 		public static ConfigEntry<float> autocrafter_range;
 		public static ConfigEntry<float> incubator_time;
 		public static ConfigEntry<float> dnaManipulator_time;
+		public static ConfigEntry<float> drone_speed;
 		
 		private void Awake() {
 			log = Logger;
@@ -51,6 +52,7 @@ namespace CheatMachineConfig {
 			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 20f, "Range of auto crafter");
 			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 1f, "Time to incubate an item (in minutes)");
 			dnaManipulator_time = Config.Bind<float>("Config_DNA-Manipulator", "DnaManipulator_time", 4f, "Time to dna-manipulate an item (in minutes)");
+			drone_speed = Config.Bind<float>("Config_Drone", "Drone_SpeedMultiplier", 1f, "Speed multiplier of drones");
 			
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -80,6 +82,46 @@ namespace CheatMachineConfig {
 		public static void MachineGrowerIfLinkedGroup_Awake(ref float ___timeToGrow) {
 			if (Math.Abs(___timeToGrow - 1f) < 0.01) ___timeToGrow = incubator_time.Value;
 			else if (Math.Abs(___timeToGrow - 4f) < 0.01) ___timeToGrow = dnaManipulator_time.Value;
+		}
+		
+		private static bool enabledDroneFix = true;
+		private static bool baseInitialized = false;
+		private static float baseForwardSpeed;
+		private static float baseDistanceMinToTarget;
+		private static float baseRotationSpeed;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(Drone), "Awake")]
+		public static void Drone_Awake(ref float ___forwardSpeed, ref float ___distanceMinToTarget, ref float ___rotationSpeed) {
+			
+			if (!baseInitialized) {
+				baseForwardSpeed = ___forwardSpeed;
+				baseDistanceMinToTarget = ___distanceMinToTarget;
+				baseRotationSpeed = ___rotationSpeed;
+				baseInitialized = true;
+			}
+			
+			if (drone_speed.Value == 1f) {
+				enabledDroneFix = false;
+				return;
+			}
+			
+			float multiplier = drone_speed.Value;
+			___forwardSpeed = multiplier * baseForwardSpeed;
+			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
+			___rotationSpeed = multiplier * baseRotationSpeed;
+		}
+		
+		// "look rotation viewing vector is zero"-fix
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
+		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
+			if (!enabledDroneFix) return true;
+			targetPosition += Vector3.up * 2f;
+			____droneRoot.transform.Translate(0f, 0f, Time.deltaTime * ___forwardSpeed);
+			if ((double)(targetPosition - ____droneRoot.transform.position).sqrMagnitude > float.Epsilon) {
+				____droneRoot.transform.rotation = Quaternion.Slerp(____droneRoot.transform.rotation, Quaternion.LookRotation(targetPosition - ____droneRoot.transform.position), ___rotationSpeed * Time.deltaTime);
+			}
+			return false;
 		}
 	}
 }
