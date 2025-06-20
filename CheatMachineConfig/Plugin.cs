@@ -48,19 +48,19 @@ namespace CheatMachineConfig {
 		private void Awake() {
 			log = Logger;
 			
-			t2recycler_time = Config.Bind<int>("Config_T2Recycler", "T2Recycler_time", 45, "Time to recycle an item (in seconds)");
-			t1orebreaker_time = Config.Bind<int>("Config_T1OreCrusher", "T1OreCrusher_time", 130, "Time to break an item (in seconds)");
-			t2orebreaker_time = Config.Bind<int>("Config_T2OreCrusher", "T2OreCrusher_time", 90, "Time to break an item (in seconds)");
-			t3orebreaker_time = Config.Bind<int>("Config_T3OreCrusher", "T3OreCrusher_time", 70, "Time to break an item (in seconds)");
+			t2recycler_time = Config.Bind<int>("Config_T2Recycler", "Recycler_time", 45, "Time to recycle an item (in seconds)");
+			t1orebreaker_time = Config.Bind<int>("Config_T1OreCrusher", "OreCrusher_time", 130, "Time to break an item (in seconds)");
+			t2orebreaker_time = Config.Bind<int>("Config_T2OreCrusher", "OreCrusher_time", 90, "Time to break an item (in seconds)");
+			t3orebreaker_time = Config.Bind<int>("Config_T3OreCrusher", "OreCrusher_time", 70, "Time to break an item (in seconds)");
 			autocrafter_time = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_time", 5f, "Time to craft an item (in seconds)");
 			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 20f, "Range of auto crafter");
 			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 1f, "Time to incubate an item (in minutes)");
 			dnaManipulator_time = Config.Bind<float>("Config_DNA-Manipulator", "DnaManipulator_time", 4f, "Time to dna-manipulate an item (in minutes)");
 			drone_speed = Config.Bind<float>("Config_Drone", "Drone_SpeedMultiplier", 1f, "Speed multiplier of drones");
-			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_T1MachineOptimizer", "T1MachineOptimizer_MachineCount", 5, "Optimization Capacity / Max amount of machines per fuse");
-			t1machineOptimizer_range = Config.Bind<float>("Config_T1MachineOptimizer", "T1MachineOptimizer_range", 120, "Range of machine optimizer");
-			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_T2MachineOptimizer", "T2MachineOptimizer_MachineCount", 8, "Optimization Capacity / Max amount of machines per fuse");
-			t2machineOptimizer_range = Config.Bind<float>("Config_T2MachineOptimizer", "T2MachineOptimizer_range", 250, "Range of machine optimizer");
+			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T1MachineOptimizer_MachineCount", 5, "Optimization Capacity / Max amount of machines per fuse");
+			t1machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T1MachineOptimizer_range", 120, "Range of machine optimizer");
+			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T2MachineOptimizer_MachineCount", 8, "Optimization Capacity / Max amount of machines per fuse");
+			t2machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T2MachineOptimizer_range", 250, "Range of machine optimizer");
 			
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
