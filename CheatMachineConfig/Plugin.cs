@@ -40,6 +40,10 @@ namespace CheatMachineConfig {
 		public static ConfigEntry<float> incubator_time;
 		public static ConfigEntry<float> dnaManipulator_time;
 		public static ConfigEntry<float> drone_speed;
+		public static ConfigEntry<int> t1machineOptimizer_affectedMachineCount;
+		public static ConfigEntry<float> t1machineOptimizer_range;
+		public static ConfigEntry<int> t2machineOptimizer_affectedMachineCount;
+		public static ConfigEntry<float> t2machineOptimizer_range;
 		
 		private void Awake() {
 			log = Logger;
@@ -53,6 +57,10 @@ namespace CheatMachineConfig {
 			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 1f, "Time to incubate an item (in minutes)");
 			dnaManipulator_time = Config.Bind<float>("Config_DNA-Manipulator", "DnaManipulator_time", 4f, "Time to dna-manipulate an item (in minutes)");
 			drone_speed = Config.Bind<float>("Config_Drone", "Drone_SpeedMultiplier", 1f, "Speed multiplier of drones");
+			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_T1MachineOptimizer", "T1MachineOptimizer_MachineCount", 5, "Optimization Capacity / Max amount of machines per fuse");
+			t1machineOptimizer_range = Config.Bind<float>("Config_T1MachineOptimizer", "T1MachineOptimizer_range", 120, "Range of machine optimizer");
+			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_T2MachineOptimizer", "T2MachineOptimizer_MachineCount", 8, "Optimization Capacity / Max amount of machines per fuse");
+			t2machineOptimizer_range = Config.Bind<float>("Config_T2MachineOptimizer", "T2MachineOptimizer_range", 250, "Range of machine optimizer");
 			
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -122,6 +130,21 @@ namespace CheatMachineConfig {
 				____droneRoot.transform.rotation = Quaternion.Slerp(____droneRoot.transform.rotation, Quaternion.LookRotation(targetPosition - ____droneRoot.transform.position), ___rotationSpeed * Time.deltaTime);
 			}
 			return false;
+		}
+		
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachineOptimizer), nameof(MachineOptimizer.SetOptimizerInventory))]
+		public static void MachineOptimizer_SetOptimizerInventory(Inventory inventory, ref int ___maxWorldObjectPerFuse, ref float ___range) {
+			WorldObject wo = WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory);
+			if (wo.GetGroup().GetId() == "Optimizer1") {
+				___maxWorldObjectPerFuse = t1machineOptimizer_affectedMachineCount.Value;
+				___range = t1machineOptimizer_range.Value;
+				
+			}
+			if (wo.GetGroup().GetId() == "Optimizer2") {
+				___maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;
+				___range = t2machineOptimizer_range.Value;
+			}
 		}
 	}
 }
