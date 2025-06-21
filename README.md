@@ -53,6 +53,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
       - predefined names (Element names: Fe -> iron)
     - List all demanded item groups separated with commas
     - Append '>' to select all item groups containing this string in their name or id
+      - Append `[substring]>` to exclude substrings from item names found by searching for the substring. Example: `larva>butterfly>` will only find common-, uncommon-, rare- and bee-larvae (added in v1.0.8)
     - Use `all` or `everything` (<- localized) in the text field to demand everything
     - Define lists to demand all groups from a list (config: lists).
   - Configure priority
