@@ -1,4 +1,7 @@
-﻿using SpaceCraft;
+﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+// Licensed under Apache License, Version 2.0
+
+using SpaceCraft;
 
 using BepInEx;
 using BepInEx.Logging;

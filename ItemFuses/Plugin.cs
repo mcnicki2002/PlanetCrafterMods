@@ -1,4 +1,7 @@
-﻿using BepInEx;
+﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+// Licensed under Apache License, Version 2.0
+
+using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Configuration;
 using HarmonyLib;
