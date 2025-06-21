@@ -29,7 +29,8 @@ namespace autoAddLogistic {
 		/* TODO
 			Localization for all texts
 			
-			Multiplayer compatibility
+			- Multiplayer compatibility
+			
 		*/
 		
 		static ManualLogSource log;
@@ -371,6 +372,8 @@ namespace autoAddLogistic {
 				logisticEntity.ClearDemandGroups();
 			}
 			foreach (Group group in foundGroups) {
+				LogisticSelector_OnGroupDemandSelected(group, pInventory);
+				
 				logisticEntity.AddDemandGroup(group);
 			}
 			
@@ -382,6 +385,16 @@ namespace autoAddLogistic {
 			
 			bool subset = possibleId.EndsWith(">");
 			if (subset) possibleId = possibleId.Remove(possibleId.Length - 1);
+			
+			// subset exclusion
+			string[] splitIDsForSubsetExclusion = possibleId.Split('>');
+			List<string> substringsToExclude = new List<string>();
+			if (splitIDsForSubsetExclusion.Count() > 1) {
+				possibleId = splitIDsForSubsetExclusion[0];
+				foreach (string groupToExcludeString in splitIDsForSubsetExclusion.Skip(1)) {
+					substringsToExclude.Add(groupToExcludeString);
+				}
+			}
 			
 			// Convert synonyme name to name
 			foreach (string pair in logisticGroupSynonymesListSplit) {
@@ -421,7 +434,16 @@ namespace autoAddLogistic {
 						) // finds subset (if string ends with >)
 					) {
 					if (allowAnyValue.Value || ((group.GetGroupData() is GroupDataItem) && (((GroupDataItem) group.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display))) {
-						foundGroups.Add(group);
+						
+						//foundGroups.Add(group);
+						bool addGroup = true;
+						foreach (string subS in substringsToExclude) {
+							if (group.GetId().IndexOf(subS, StringComparison.OrdinalIgnoreCase) >= 0 || (Readable.GetGroupName(group) ?? "").IndexOf(subS, StringComparison.OrdinalIgnoreCase) >= 0) {
+								addGroup = false;
+							}
+						}
+						if (addGroup) foundGroups.Add(group);
+						
 						if (!subset) break;
 					}
 				}
