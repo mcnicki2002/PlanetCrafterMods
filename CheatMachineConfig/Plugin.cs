@@ -2,38 +2,22 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
-using BepInEx.Logging;
 using BepInEx.Configuration;
-
+using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
-
-using TMPro;
-
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using UnityEngine.EventSystems;
-using Unity.Mathematics;
-using Unity.Netcode;
-
 using System;
-using System.Collections;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+using UnityEngine;
 
-using UnityEngine.SceneManagement;
+namespace Nicki0.CheatMachineConfig {
 
-namespace CheatMachineConfig {
-	
-	[BepInPlugin("nicki0.theplanetcraftermods.CheatMachineConfig", "(Cheat) Machine Config", PluginInfo.PLUGIN_VERSION)]
+	[BepInPlugin("Nicki0.theplanetcraftermods.CheatMachineConfig", "(Cheat) Machine Config", PluginInfo.PLUGIN_VERSION)]
 	public class Plugin : BaseUnityPlugin {
-		
+
 		static ManualLogSource log;
-		
-		
+
+		public static ConfigEntry<bool> enableMod;
+
 		public static ConfigEntry<int> t2recycler_time;
 		public static ConfigEntry<int> t1orebreaker_time;
 		public static ConfigEntry<int> t2orebreaker_time;
@@ -47,10 +31,12 @@ namespace CheatMachineConfig {
 		public static ConfigEntry<float> t1machineOptimizer_range;
 		public static ConfigEntry<int> t2machineOptimizer_affectedMachineCount;
 		public static ConfigEntry<float> t2machineOptimizer_range;
-		
+
 		private void Awake() {
 			log = Logger;
-			
+
+			enableMod = Config.Bind<bool>("General", "enable", true, "Enable Mod");
+
 			t2recycler_time = Config.Bind<int>("Config_Recycler", "T2Recycler_time", 45, "Time to recycle an item (in seconds)");
 			t1orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T1OreCrusher_time", 130, "Time to break an item (in seconds)");
 			t2orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T2OreCrusher_time", 90, "Time to break an item (in seconds)");
@@ -64,13 +50,19 @@ namespace CheatMachineConfig {
 			t1machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T1MachineOptimizer_range", 120, "Range of machine optimizer");
 			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T2MachineOptimizer_MachineCount", 8, "Optimization Capacity / Max amount of machines per fuse");
 			t2machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T2MachineOptimizer_range", 250, "Range of machine optimizer");
-			
+
 			// Plugin startup logic
+
+			if (!enableMod.Value) {
+				log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is DISABLED!");
+				return;
+			}
+
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 		}
-		
-		
+
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineDisintegrator), nameof(MachineDisintegrator.SetDisintegratorInventory))]
 		public static void MachineDisintegrator_SetDisintegratorInventory(Inventory inventory, ref int ___breakEveryXSec) {
@@ -80,21 +72,21 @@ namespace CheatMachineConfig {
 			if (wo.GetGroup().GetId() == "OreBreaker2") ___breakEveryXSec = t1orebreaker_time.Value;
 			if (wo.GetGroup().GetId() == "OreBreaker3") ___breakEveryXSec = t1orebreaker_time.Value;
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineAutoCrafter), "Awake")]
 		public static void MachineAutoCrafter_Awake(ref float ___craftEveryXSec, ref float ___range) {
 			___craftEveryXSec = autocrafter_time.Value;
 			___range = autocrafter_range.Value;
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineGrowerIfLinkedGroup), "Awake")]
 		public static void MachineGrowerIfLinkedGroup_Awake(ref float ___timeToGrow) {
 			if (Math.Abs(___timeToGrow - 1f) < 0.01) ___timeToGrow = incubator_time.Value;
 			else if (Math.Abs(___timeToGrow - 4f) < 0.01) ___timeToGrow = dnaManipulator_time.Value;
 		}
-		
+
 		private static bool enabledDroneFix = true;
 		private static bool baseInitialized = false;
 		private static float baseForwardSpeed;
@@ -103,25 +95,25 @@ namespace CheatMachineConfig {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(Drone), "Awake")]
 		public static void Drone_Awake(ref float ___forwardSpeed, ref float ___distanceMinToTarget, ref float ___rotationSpeed) {
-			
+
 			if (!baseInitialized) {
 				baseForwardSpeed = ___forwardSpeed;
 				baseDistanceMinToTarget = ___distanceMinToTarget;
 				baseRotationSpeed = ___rotationSpeed;
 				baseInitialized = true;
 			}
-			
+
 			if (drone_speed.Value == 1f) {
 				enabledDroneFix = false;
 				return;
 			}
-			
+
 			float multiplier = drone_speed.Value;
 			___forwardSpeed = multiplier * baseForwardSpeed;
 			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
 			___rotationSpeed = multiplier * baseRotationSpeed;
 		}
-		
+
 		// "look rotation viewing vector is zero"-fix
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
@@ -134,7 +126,7 @@ namespace CheatMachineConfig {
 			}
 			return false;
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineOptimizer), nameof(MachineOptimizer.SetOptimizerInventory))]
 		public static void MachineOptimizer_SetOptimizerInventory(Inventory inventory, ref int ___maxWorldObjectPerFuse, ref float ___range) {
@@ -142,7 +134,7 @@ namespace CheatMachineConfig {
 			if (wo.GetGroup().GetId() == "Optimizer1") {
 				___maxWorldObjectPerFuse = t1machineOptimizer_affectedMachineCount.Value;
 				___range = t1machineOptimizer_range.Value;
-				
+
 			}
 			if (wo.GetGroup().GetId() == "Optimizer2") {
 				___maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;

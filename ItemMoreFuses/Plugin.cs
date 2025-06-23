@@ -3,22 +3,18 @@
 
 using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Configuration;
 using HarmonyLib;
 using SpaceCraft;
-using UnityEngine;
-using Unity.Netcode;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
+using UnityEngine;
 
-namespace ItemFuses
-{
-	[BepInPlugin("Nicki0.theplanetcraftermods.ItemFuses", "(Item) More Fuses", MyPluginInfo.PLUGIN_VERSION)]
-	public class Plugin : BaseUnityPlugin
-	{
+namespace Nicki0.ItemMoreFuses {
+	[BepInPlugin("Nicki0.theplanetcraftermods.ItemMoreFuses", "(Item) More Fuses", PluginInfo.PLUGIN_VERSION)]
+	public class Plugin : BaseUnityPlugin {
 		class ItemConfig {
 			public string gId;
 			public int count;
@@ -67,13 +63,13 @@ namespace ItemFuses
 			new RocketItemConfig("RocketInsects2"),
 			new RocketItemConfig("RocketAnimals1")
 		};
-		
-		
-		
+
+
+
 		static readonly string prefix = "Nicki0ModItem_";
 		static readonly string prefixFuse = prefix + "Fuse-";
 		static readonly string prefixRocket = prefix + "Rocket-";
-		
+
 		static string dir;
 
 		static ManualLogSource log;
@@ -82,7 +78,7 @@ namespace ItemFuses
 			Logger.LogInfo($"Plugin is enabled.");
 
 			log = Logger;
-			
+
 			Assembly me = Assembly.GetExecutingAssembly();
 			dir = Path.GetDirectoryName(me.Location);
 
@@ -90,25 +86,25 @@ namespace ItemFuses
 
 			Logger.LogInfo("Plugin is loaded!");
 		}
-		
+
 		static string GetNameFuse(string pName, int pLevel, bool addPrefix = true) {
 			return ((pLevel <= 1 || !addPrefix ? "" : prefixFuse) + pName + pLevel);
 		}
-		
+
 		static GroupDataItem GetFuseGroupDataItem(List<GroupData> ___groupsData, ItemConfig itemConfig, int pLevel) {
 			// Extract infos from item name strings
 			string fuseName = itemConfig.gId;
 			int fuseId = pLevel;
-			
-			
-			
+
+
+
 			// Create / Config Item
 			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find((GroupData data) => data.id == GetNameFuse(fuseName, 1)));
 			groupDataItem.name = GetNameFuse(fuseName, fuseId);
 			groupDataItem.id = GetNameFuse(fuseName, fuseId);
-			
+
 			// Apply Multiplier dependent of type of effect
-			int efficiencyMultiplier = (int) Math.Pow(itemConfig.baseEfficiencyMultiplierValue, fuseId - 1);
+			int efficiencyMultiplier = (int)Math.Pow(itemConfig.baseEfficiencyMultiplierValue, fuseId - 1);
 			if (fuseName.Contains("Production") || fuseName.Contains("Trade") || fuseName.Contains("Growth")) {
 				groupDataItem.value *= efficiencyMultiplier;
 			} else if (fuseName.Contains("Energy")) {
@@ -126,23 +122,23 @@ namespace ItemFuses
 			} else if (fuseName.Contains("Animal")) {
 				groupDataItem.unitMultiplierAnimals *= efficiencyMultiplier;
 			}
-			
+
 			groupDataItem.terraformStageUnlock = null;
 			groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
-			groupDataItem.unlockingValue = (float) Math.Pow(1000, fuseId + 1); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: ZTi
-			groupDataItem.tradeValue *= (int) Math.Pow(itemConfig.recipeQuantity,fuseId - 1);
+			groupDataItem.unlockingValue = (float)Math.Pow(1000, fuseId + 1); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: ZTi
+			groupDataItem.tradeValue *= (int)Math.Pow(itemConfig.recipeQuantity, fuseId - 1);
 			groupDataItem.tradeCategory = ((groupDataItem.tradeValue > 0) && (fuseId >= 5) && (groupDataItem.tradeCategory == DataConfig.TradeCategory.Null || groupDataItem.tradeCategory == DataConfig.TradeCategory.tier1)) ? DataConfig.TradeCategory.tier1 : DataConfig.TradeCategory.Null;
 			if (fuseId <= 3 && !groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftStationT3)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftStationT3);
 			if (!groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftQuartzT1)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftQuartzT1);
-			groupDataItem.recipeIngredients = new List<GroupDataItem> {};
+			groupDataItem.recipeIngredients = new List<GroupDataItem> { };
 			for (int i = 0; i < itemConfig.recipeQuantity; i++) {
 				groupDataItem.recipeIngredients.Add(Instantiate((GroupDataItem)___groupsData.Find((GroupData data) => data.id == GetNameFuse(fuseName, fuseId - 1))));
 			}
-			
+
 			groupDataItem.associatedGameObject = Instantiate(groupDataItem.associatedGameObject);
 			groupDataItem.associatedGameObject.name = GetNameFuse(fuseName, fuseId, addPrefix: false);
-			
-			
+
+
 			string iconPath = Path.Combine(dir, GetNameFuse(fuseName, fuseId, addPrefix: false) + ".png");
 			if (File.Exists(iconPath)) {
 				byte[] array = File.ReadAllBytes(iconPath);
@@ -150,54 +146,54 @@ namespace ItemFuses
 				texture2D.LoadImage(array);
 				groupDataItem.icon = Sprite.Create(texture2D, new Rect(0f, 0f, (float)texture2D.width, (float)texture2D.height), new Vector2(0f, 0f));
 			}
-			
+
 			return groupDataItem;
 		}
-		
+
 		static string GetNameRocket(string pName, int pLevel, bool addPrefix = true) {
-			return ((pLevel <= 1 || !addPrefix ? "" : prefixRocket) + pName + (pLevel <=1?"":("_" + pLevel)));
+			return ((pLevel <= 1 || !addPrefix ? "" : prefixRocket) + pName + (pLevel <= 1 ? "" : ("_" + pLevel)));
 		}
 		static GroupDataItem GetRocketGroupDataItem(List<GroupData> ___groupsData, ItemConfig itemConfig, int pLevel) {
 			// Extract infos from item name strings
 			string rocketName = itemConfig.gId;
 			int rocketLvl = pLevel;
-			
-			
-			
+
+
+
 			// Create / Config Item
 			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find((GroupData data) => data.id == GetNameRocket(rocketName, 1)));
 			groupDataItem.name = GetNameRocket(rocketName, rocketLvl);
 			groupDataItem.id = GetNameRocket(rocketName, rocketLvl);
-			
+
 			// Apply Multiplier dependent of type of effect
-			int efficiencyMultiplier = (int) Math.Pow(itemConfig.baseEfficiencyMultiplierValue, rocketLvl - 1);
-			
+			int efficiencyMultiplier = (int)Math.Pow(itemConfig.baseEfficiencyMultiplierValue, rocketLvl - 1);
+
 			groupDataItem.unitMultiplierOxygen *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierHeat *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierPressure *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierPlants *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierInsects *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierAnimals *= efficiencyMultiplier;
-			
-			
+
+
 			//groupDataItem.terraformStageUnlock = null;
 			//groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
 			//groupDataItem.unlockingValue = (float) Math.Pow(1000, rocketLvl + 1); // T2: GTi, T3: TTi, T4: PTi, T5: ETi
 			//groupDataItem.tradeValue *= (int) Math.Pow(9,rocketLvl - 1);
 			//groupDataItem.tradeCategory = ((groupDataItem.tradeValue > 0) && (rocketLvl >= 5) && (groupDataItem.tradeCategory == DataConfig.TradeCategory.Null || groupDataItem.tradeCategory == DataConfig.TradeCategory.tier1)) ? DataConfig.TradeCategory.tier1 : DataConfig.TradeCategory.Null;
-			
+
 			groupDataItem.craftedInWorld = false;
 			groupDataItem.craftableInList.Clear();
-			groupDataItem.recipeIngredients = new List<GroupDataItem> {};
+			groupDataItem.recipeIngredients = new List<GroupDataItem> { };
 			/*GroupDataItem lastRocket = Instantiate((GroupDataItem)___groupsData.Find((GroupData data) => data.id == GetNameRocket(rocketName, rocketLvl - 1)));
 			for (int i = 0; i < quantity; i++) {
 				groupDataItem.recipeIngredients.Add(lastRocket);
 			}*/
-			
+
 			//groupDataItem.associatedGameObject = Instantiate(groupDataItem.associatedGameObject);
 			//groupDataItem.associatedGameObject.name = GetNameRocket(rocketName, rocketLvl, addPrefix: false);
-			
-			
+
+
 			string iconPath = Path.Combine(dir, GetNameRocket(rocketName, rocketLvl, addPrefix: false) + ".png");
 			if (File.Exists(iconPath)) {
 				byte[] array = File.ReadAllBytes(iconPath);
@@ -205,19 +201,19 @@ namespace ItemFuses
 				texture2D.LoadImage(array);
 				groupDataItem.icon = Sprite.Create(texture2D, new Rect(0f, 0f, (float)texture2D.width, (float)texture2D.height), new Vector2(0f, 0f));
 			}
-			
+
 			return groupDataItem;
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowRockets), nameof(UiWindowRockets.OnOpen))]
 		private static void UiWindowRockets_OnOpen(List<GroupData> ___rocketsGenerationGroups) {
 			foreach (GroupData rocket in addedRocketGroupData)
-			if (!___rocketsGenerationGroups.Contains(rocket)) ___rocketsGenerationGroups.Add(rocket);
+				if (!___rocketsGenerationGroups.Contains(rocket)) ___rocketsGenerationGroups.Add(rocket);
 		}
-		
+
 		private static List<GroupData> addedRocketGroupData = new List<GroupData>();
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
@@ -227,7 +223,7 @@ namespace ItemFuses
 					___groupsData.RemoveAt(i);
 				}
 			}
-			
+
 			var existingGroups = ___groupsData.Select(gd => gd.id).ToHashSet();
 
 			foreach (ItemConfig fuseConfig in fuseType) {
@@ -261,14 +257,14 @@ namespace ItemFuses
 					string text = fuseConfig.gId;
 					for (int lvl = 2; lvl <= fuseConfig.count; lvl++) {
 						dictionary["GROUP_NAME_" + GetNameFuse(text, lvl)] = dictionary[GameConfig.localizationGroupNameId + text + "1"] + " T" + lvl;//text.Substring(4) + " multiplier fuse T" + lvl;
-						dictionary["GROUP_DESC_" + GetNameFuse(text, lvl)] = ((int) Math.Pow(fuseConfig.baseEfficiencyMultiplierValue, lvl - 1)) + " times as efficient. (" + ((int) Math.Pow(fuseConfig.recipeQuantity, lvl - 1)) + ")";
+						dictionary["GROUP_DESC_" + GetNameFuse(text, lvl)] = ((int)Math.Pow(fuseConfig.baseEfficiencyMultiplierValue, lvl - 1)) + " times as efficient. (" + ((int)Math.Pow(fuseConfig.recipeQuantity, lvl - 1)) + ")";
 					}
 				}
 				foreach (ItemConfig rocketConfig in rocketType) {
 					string text = rocketConfig.gId;
 					for (int lvl = 2; lvl <= rocketConfig.count; lvl++) {
-						dictionary["GROUP_NAME_" + GetNameRocket(text, lvl)] = dictionary[GameConfig.localizationGroupNameId + text] + " Compressed (" + ((int) Math.Pow(rocketConfig.baseEfficiencyMultiplierValue, lvl - 1)) + ")";//text.Substring(4) + " multiplier fuse T" + lvl;
-						dictionary["GROUP_DESC_" + GetNameRocket(text, lvl)] = ((int) Math.Pow(rocketConfig.baseEfficiencyMultiplierValue, lvl - 1)) + " times as efficient";
+						dictionary["GROUP_NAME_" + GetNameRocket(text, lvl)] = dictionary[GameConfig.localizationGroupNameId + text] + " Compressed (" + ((int)Math.Pow(rocketConfig.baseEfficiencyMultiplierValue, lvl - 1)) + ")";//text.Substring(4) + " multiplier fuse T" + lvl;
+						dictionary["GROUP_DESC_" + GetNameRocket(text, lvl)] = ((int)Math.Pow(rocketConfig.baseEfficiencyMultiplierValue, lvl - 1)) + " times as efficient";
 					}
 				}
 			}

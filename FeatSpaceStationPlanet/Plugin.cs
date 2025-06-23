@@ -1,31 +1,20 @@
+// Copyright 2025-2025 Nicolas Schäfer & Contributors
+// Licensed under Apache License, Version 2.0
+
 using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Configuration;
-
 using HarmonyLib;
 using SpaceCraft;
-
-using TMPro;
-
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using UnityEngine.EventSystems;
-using Unity.Mathematics;
-using Unity.Netcode;
-
 using System;
-using System.Collections;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SpaceStationPlanet {
-	
-	[BepInPlugin("nicki0.theplanetcraftermods.SpaceStationPlanet", "(Feat) Space Station", PluginInfo.PLUGIN_VERSION)]
+namespace Nicki0.FeatSpaceStationPlanet {
+
+	[BepInPlugin("Nicki0.theplanetcraftermods.SpaceStationPlanet", "(Feat) Space Station", PluginInfo.PLUGIN_VERSION)]
 	public class Plugin : BaseUnityPlugin {
 		/*
 			TODO:
@@ -40,11 +29,11 @@ namespace SpaceStationPlanet {
 			Long-term:
 			"Asteroid" terrain to mine on
 		*/
-		
+
 		static ManualLogSource log;
-		
+
 		static MethodInfo method_Asteroid_SetFxStatuts;
-		
+
 		static readonly string planetName = "SpaceStation";
 		static readonly string planetSceneName = "SpaceStation_EmptyScene";
 		static readonly Vector3 planetPosition = new Vector3(2000, 200, 2000);
@@ -54,21 +43,21 @@ namespace SpaceStationPlanet {
 
 		public void Awake() {
 			log = Logger;
-			
+
 			method_Asteroid_SetFxStatuts = AccessTools.Method(typeof(Asteroid), "SetFxStatuts");
-			
+
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 		}
-		
-		
-		
+
+
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlanetList), "InitPlanetList")]
 		public static void PlanetList_InitPlanetList(ref PlanetData[] ____planets) {
 			foreach (PlanetData pd in ____planets) if (pd.id == planetName) return;
-			
-			
+
+
 			foreach (MeteoEventData med in Array.Find(____planets, e => e.id == "Prime").meteoEvents) {
 				List<GroupDataItem> meteorMaterialGroups = med?.asteroidEventData?.asteroidGameObject?.GetComponent<Asteroid>()?.groupsSelected;
 				if (meteorMaterialGroups == null) continue;
@@ -76,41 +65,41 @@ namespace SpaceStationPlanet {
 					asteroidOresForHarvestingRobot.Add(gdi);
 				}
 			}
-			
-			
+
+
 			List<PlanetData> newPlanetList = new List<PlanetData>();
 			foreach (PlanetData pd in ____planets) {
 				newPlanetList.Add(pd);
 				log.LogInfo(pd.id + " : " + pd.steamAppId);
 			}
-			
+
 			PlanetData newPlanet = PlanetData.Instantiate(Array.Find(____planets, e => e.id == "Selenea"));
 			DontDestroyOnLoad(newPlanet); // Taken from FlatLands mod by akarnokd
 			newPlanetList.Add(newPlanet);
-			
+
 			log.LogInfo(____planets[1].steamAppId);
-			
+
 			newPlanet.id = planetName;
 			newPlanet.name = planetName;
 			newPlanet.steamAppId = 0;
 			newPlanet.sceneName = planetSceneName;
 			newPlanet.showInBuild = true;
 			newPlanet.startingPlanet = false;
-			
-			
-			
+
+
+
 			TerraformStage completeStage = Instantiate(newPlanet.allTerraStages.Last());
 			newPlanet.allTerraStages.RemoveRange(1, newPlanet.allTerraStages.Count - 1);
 			newPlanet.allTerraStages.Add(completeStage);
 			AccessTools.FieldRefAccess<TerraformStage, double>(completeStage, "startValue") = 1000100000000;
-			
-			
+
+
 			TerraformStage neverStage = ScriptableObject.CreateInstance<TerraformStage>();//new TerraformStage();
 			AccessTools.FieldRefAccess<TerraformStage, string>(neverStage, "id") = "Never";
 			AccessTools.FieldRefAccess<TerraformStage, DataConfig.WorldUnitType>(neverStage, "unitType") = DataConfig.WorldUnitType.Terraformation;
 			AccessTools.FieldRefAccess<TerraformStage, double>(neverStage, "startValue") = double.MaxValue;
-			AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);;
-			
+			AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);
+
 			newPlanet.skyChangeTerraStage = neverStage;
 			newPlanet.startCloudsTerraStage = neverStage;
 			newPlanet.fullCloudsTerraStage = neverStage;
@@ -118,15 +107,15 @@ namespace SpaceStationPlanet {
 			newPlanet.endMossTerraStage = neverStage;
 			newPlanet.startBreathMoreStage = neverStage;
 			newPlanet.noNeedForOxygenStage = neverStage;
-			
+
 			EnvironmentVolumeVariables envEmpty = Instantiate(newPlanet.envDataStart);
 			envEmpty.fogColor = Color.black;
-			
+
 			newPlanet.envDataStart = envEmpty;
 			newPlanet.envDataEnd = envEmpty;
 			newPlanet.envDataNight = envEmpty;
-			
-			
+
+
 			newPlanet.layersToMoss.Clear();
 			newPlanet.mossPotentialColors.Clear();
 			//newPlanet.meteoEvents.Clear();
@@ -136,24 +125,24 @@ namespace SpaceStationPlanet {
 			newPlanet.tutorialSteps.Clear();
 			newPlanet.spawnPositions = new PlanetData.SpawnPositions[] {
 				new PlanetData.SpawnPositions {
-					id = "Standard", 
+					id = "Standard",
 					positions = new List<PositionAndRotation>() {
 						new PositionAndRotation(
-							planetPosition, 
+							planetPosition,
 							Quaternion.identity
-						) 
-					} 
-				} 
+						)
+					}
+				}
 			};
 			newPlanet.availableStoryEvents.Clear();
 			newPlanet.manualStoryEvents.Clear();
-			
-			
+
+
 			//RenderSettings.skybox = new Material(Material.GetDefaultParticleMaterial());
 			//RenderSettings.skybox.color = Color.black;
 			//RenderSettings.skybox.mainTexture = Texture2D.blackTexture;
 			//RenderSettings.skybox.SetFloat("_Exposure",100);
-			
+
 			____planets = newPlanetList.ToArray();
 		}
 		[HarmonyPrefix]
@@ -162,21 +151,45 @@ namespace SpaceStationPlanet {
 			if (planetToLoad.id == planetName) {
 				//RenderSettings.skybox = new Material(Material.GetDefaultParticleMaterial());
 				//RenderSettings.skybox.color = Color.black;
-				
+
 				if (!SceneManager.GetSceneByName(planetSceneName).IsValid()) {
 					Scene newScene = SceneManager.CreateScene(planetSceneName);
 				}
 			}
 		}
-		
-		
+
+		/*[HarmonyPrefix]
+				[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
+				static void PlanetLoader_HandleDataAfterLoad(PlanetData ____selectedPlanet){
+			TerrainData terrainData = new TerrainData();
+			//GameObject terrain = new Terrain();
+			
+			int res = terrainData.heightmapResolution;
+			log.LogInfo(res);
+						float[,] heights = terrainData.GetHeights(0, 0, res, res);
+						for (int i = 0; i < res; i++)
+						{
+								for (int j = 0; j < res; j++)
+								{
+										heights[i, j] = i*j;//(Math.Abs(i-res/2) + Math.Abs(j-res/2))/(res/10);
+								}
+						}
+			heights[1, 1] = 100;
+						terrainData.SetHeights(0, 0, heights);
+			
+			//terrainData.size = new Vector3(1000, 100, 1000);
+			
+			GameObject go = Terrain.CreateTerrainGameObject(terrainData);
+			go.SetActive(true);
+		}*/
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlanetUnlocker), nameof(PlanetUnlocker.LoadUnlockedPlanets))]
 		static void PlanetUnlocker_LoadUnlockedPlanets() {// From Akarnokd "FlatLands"
-			// make sure planetlist is initialized
+														  // make sure planetlist is initialized
 			Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(true);
 		}
-		
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(Localization), "LoadLocalization")]
 		private static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary) {
@@ -187,8 +200,8 @@ namespace SpaceStationPlanet {
 				}
 			}
 		}
-		
-		
+
+
 		/*[HarmonyPrefix]
 		[HarmonyPatch(typeof(ConstraintOnSurfaces), "Start")]
 		private static void ConstraintOnSurfaces_Start(ConstraintOnSurfaces __instance) {
@@ -196,7 +209,7 @@ namespace SpaceStationPlanet {
 			if (!__instance.allowedTaggedSurfaces.Contains(DataConfig.HomemadeTag.SurfaceFloor)) __instance.allowedTaggedSurfaces.Add(DataConfig.HomemadeTag.SurfaceFloor);
 			if (!__instance.allowedTaggedSurfaces.Contains(DataConfig.HomemadeTag.SurfaceGrid)) __instance.allowedTaggedSurfaces.Add(DataConfig.HomemadeTag.SurfaceGrid);
 		}*/
-		
+
 		private static List<GroupData> asteroidOresForHarvestingRobot = new List<GroupData>();
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionGroupSelector), "OpenInventories")]
@@ -210,7 +223,7 @@ namespace SpaceStationPlanet {
 				___oreList.AddRange(asteroidOresForHarvestingRobot);
 			}
 		}
-		
+
 		private static List<string> lockedGroupsOnNewPlanet = new List<string>() {
 			"Drill0",
 			"Drill1",
@@ -228,65 +241,64 @@ namespace SpaceStationPlanet {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
-			
+
 			PlanetData newPlanetData = Managers.GetManager<PlanetLoader>()?.planetList?.GetPlanetFromId(planetName);
 			if (newPlanetData == null) return;
-			
+
 			foreach (GroupData groupData in ___groupsData) {
-				if (groupData != null && groupData is GroupDataConstructible && lockedGroupsOnNewPlanet.Contains(groupData.id)) {
-					GroupDataConstructible gdc = (GroupDataConstructible) groupData;
-					if (gdc.notAllowedPlanetsRequirement == null) gdc.notAllowedPlanetsRequirement = new List<PlanetData>() {};
+				if (groupData != null && groupData is GroupDataConstructible gdc && lockedGroupsOnNewPlanet.Contains(groupData.id)) {
+					gdc.notAllowedPlanetsRequirement ??= new List<PlanetData>() { };
 					gdc.notAllowedPlanetsRequirement.Add(newPlanetData);
 				}
 			}
 		}
-		
+
 		private static PlanetLoader planetLoader = null;
-		private static bool isOnPlanet() {
+		private static bool IsOnPlanet() {
 			if (planetLoader == null) {
 				planetLoader = Managers.GetManager<PlanetLoader>();
 			}
 			return planetLoader.GetCurrentPlanetData()?.GetPlanetId() == planetName;
 		}
-		
+
 		// --- Player Movement --->
 		private static float lastJetpackFactor = 1;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlayerMovable), nameof(PlayerMovable.UpdatePlayerMovement))]
-		static void pre_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, float ___jetpackFactor, ref float ___JumpImpulse, int ___jumpStatusInAir) {
-			__state = new float[] {___PlayerWeight, ___JumpImpulse};
+		static void Pre_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, float ___jetpackFactor, ref float ___JumpImpulse, int ___jumpStatusInAir) {
+			__state = new float[] { ___PlayerWeight, ___JumpImpulse };
 			lastJetpackFactor = ___jetpackFactor;
-			
-			if (isOnPlanet()) {
+
+			if (IsOnPlanet()) {
 				___PlayerWeight *= 0.1f;
 				if (___jumpStatusInAir == 2) ___JumpImpulse *= 0.2f;
 			}
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(PlayerMovable), nameof(PlayerMovable.UpdatePlayerMovement))]
-		static void post_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, ref float ___JumpImpulse) {
+		static void Post_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, ref float ___JumpImpulse) {
 			___PlayerWeight = __state[0];
 			___JumpImpulse = __state[1];
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlayerGroundRelation), nameof(PlayerGroundRelation.GetGroundDistance))]
 		static bool PlayerGroundRelation_GetGroundDistance(ref float __result) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				__result = 3.5f + 2f * lastJetpackFactor - 0.1f;
 				return false;
 			}
 			return true;
 		}
 		// <--- Player Movement ---
-		
+
 		// --- Meteors --->
 		static readonly Vector3 meteorCenter = new Vector3(planetPosition.x, planetPosition.y + 1000, planetPosition.z);
 		static readonly Vector3 meteorSize = new Vector3(500, 5, 500);
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(AsteroidsHandler), nameof(AsteroidsHandler.InitAsteroidsHandler))]
 		static void AsteroidsHandler_InitAsteroidsHandler(List<Collider> ___spawnBoxes, List<Collider> ___authorizedPlaces) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				GameObject goSpawn = new GameObject();
 				goSpawn.AddComponent<BoxCollider>();
 				BoxCollider spawnCollider = goSpawn.GetComponent<BoxCollider>();
@@ -296,9 +308,9 @@ namespace SpaceStationPlanet {
 				spawnCollider.center = meteorCenter;
 				spawnCollider.size = meteorSize;
 				___spawnBoxes.Add(spawnCollider);
-				
+
 				log.LogInfo(spawnCollider.bounds.min + " :: " + spawnCollider.bounds.max);
-				
+
 				/*GameObject goPlace = new GameObject();
 				goPlace.AddComponent<SphereCollider>();
 				SphereCollider placeCollider = goPlace.GetComponent<SphereCollider>();
@@ -310,19 +322,19 @@ namespace SpaceStationPlanet {
 				___authorizedPlaces.Add(placeCollider);*/
 			}
 		}
-		
-		
+
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(AsteroidsHandler), "IsInAuthorizedBounds")]
 		static bool AsteroidsHandler_IsInAuthorizedBounds(ref bool __result, Vector3 position) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				__result = true;
 				log.LogInfo("Called IsInAuthorizedBounds: " + position);
 				return false;
 			}
 			return true;
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(Asteroid), "Start")]
 		static bool Asteroid_Start(
@@ -332,78 +344,70 @@ namespace SpaceStationPlanet {
 					float ___maxLiveTime,
 					List<GroupItem> ___associatedGroups
 				) {
-			if (!isOnPlanet()) {
+			if (!IsOnPlanet()) {
 				return true;
 			}
-			RaycastHit raycastHit;
-			bool hitSpot = Physics.Raycast(__instance.transform.position, __instance.transform.forward, out raycastHit, 10000f, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater));
+			bool hitSpot = Physics.Raycast(__instance.transform.position, __instance.transform.forward, out RaycastHit raycastHit, 10000f, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater));
 			if (hitSpot) return true;
-			
+
 			____startPoint = __instance.transform.position;
 			____impactPoint = __instance.transform.position + __instance.transform.forward * 4000;
-			
-			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[]{__instance.fxContainerTail, true}); //this.SetFxStatuts(__instance.fxContainerTail, true);
-			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[]{__instance.fxContainerImpact, false}); //this.SetFxStatuts(__instance.fxContainerImpact, false);
+
+			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerTail, true }); //this.SetFxStatuts(__instance.fxContainerTail, true);
+			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerImpact, false }); //this.SetFxStatuts(__instance.fxContainerImpact, false);
 			UnityEngine.Object.Destroy(__instance.gameObject, ___maxLiveTime);
-			if (__instance.audioExplosion != null)
-			{
-				__instance.audioExplosion.Stop();
-			}
-			if (__instance.audioTrail != null)
-			{
-				__instance.audioTrail.Play();
-			}
-			foreach (GroupDataItem groupDataItem in __instance.groupsSelected)
-			{
+			__instance.audioExplosion?.Stop();
+			__instance.audioTrail?.Play();
+			foreach (GroupDataItem groupDataItem in __instance.groupsSelected) {
 				___associatedGroups.Add((GroupItem)GroupsHandler.GetGroupViaId(groupDataItem.id));
 			}
 			PlanetLoader manager = Managers.GetManager<PlanetLoader>();
 			//manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, new Action(__instance.Destroy));
-			manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, new Action(delegate(){UnityEngine.Object.Destroy(__instance.gameObject);}));
+			manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, new Action(delegate () { UnityEngine.Object.Destroy(__instance.gameObject); }));
 			return false;
 		}
-		
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(AsteroidEventData), nameof(AsteroidEventData.GetMaxAsteroidsTotal))]
 		static void AsteroidEventData_GetMaxAsteroidsTotal(ref int __result) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				__result *= 10;
 			}
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(AsteroidEventData), nameof(AsteroidEventData.GetMaxAsteroidsSimultaneous))]
 		static void AsteroidEventData_GetMaxAsteroidsSimultaneous(ref int __result) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				__result *= 10;
 			}
 		}
-		
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MeteoHandler), "UpdateCurrentMeteoEvent")]
 		static bool MeteoHandler_UpdateCurrentMeteoEvent() {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				return false;
 			}
 			return true;
 		}
 		// <--- Meteors ---
-		
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(GaugesConsumptionHandler), nameof(GaugesConsumptionHandler.GetOxygenConsumptionRate))]
 		private static void GaugesConsumptionHandler_GetOxygenConsumptionRate(ref float __result) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				__result *= 5;
 			}
 		}
-		
+
 		[HarmonyPrefix]
-		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(bool), typeof(float), typeof(float)})]
+		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] { typeof(bool), typeof(float), typeof(float) })]
 		static void PlayerCameraShake_SetShaking(ref float _shakeValue) {
-			if (isOnPlanet()) {
+			if (IsOnPlanet()) {
 				_shakeValue *= 0.2f;
 			}
 		}
-		
+
 		/*[HarmonyPostfix]
 		[HarmonyPatch(typeof(SystemViewHandler), "Start")]
 		private static void SystemViewHandler_Start(List<SpacePlanetView> ___spacePlanetViews) {
@@ -416,13 +420,13 @@ namespace SpaceStationPlanet {
 		static bool SystemViewHandler_ZoomOnPlanet(PlanetData planetData, SystemViewHandler __instance, int ___zoomValueOnPlanets, List<SpacePlanetView> ___spacePlanetViews) {
 			if (planetData == null) return true;
 			if (planetData.GetPlanetId() != planetName) return true;
-			
+
 			//foreach (SpacePlanetView spacePlanetView in ___spacePlanetViews) log.LogInfo(spacePlanetView.transform.position);
-			
+
 			Vector3 vector = new Vector3(-5049.94f, -4000.50f, 15.13f);//spacePlanetView.transform.position; //(-5049.94, -3994.29, 17.13)-3992.50
 			vector += new Vector3((float)___zoomValueOnPlanets, 0f, 0f);
 			log.LogInfo(vector + " is the space station zoom spot");
-			AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] {vector});
+			AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] { vector });
 			return false;
 		}
 		//[Error  :  HarmonyX] Failed to patch void SpaceCraft.SystemViewHandler::ZoomOnPlanet(SpaceCraft.PlanetData planetData): HarmonyLib.InvalidHarmonyPatchArgumentException: (static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews)): Return type of pass through postfix static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews) does not match type of its first parameter
