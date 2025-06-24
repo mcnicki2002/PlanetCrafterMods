@@ -67,24 +67,27 @@ namespace Nicki0.CheatMachineConfig {
 		[HarmonyPatch(typeof(MachineDisintegrator), nameof(MachineDisintegrator.SetDisintegratorInventory))]
 		public static void MachineDisintegrator_SetDisintegratorInventory(Inventory inventory, ref int ___breakEveryXSec) {
 			WorldObject wo = WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory);
-			if (wo.GetGroup().GetId() == "RecyclingMachine2") ___breakEveryXSec = t2recycler_time.Value;
-			if (wo.GetGroup().GetId() == "OreBreaker1") ___breakEveryXSec = t1orebreaker_time.Value;
-			if (wo.GetGroup().GetId() == "OreBreaker2") ___breakEveryXSec = t1orebreaker_time.Value;
-			if (wo.GetGroup().GetId() == "OreBreaker3") ___breakEveryXSec = t1orebreaker_time.Value;
+			if (t2recycler_time.Value != 0) if (wo.GetGroup().GetId() == "RecyclingMachine2") ___breakEveryXSec = t2recycler_time.Value;
+			if (t1orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker1") ___breakEveryXSec = t1orebreaker_time.Value;
+			if (t2orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker2") ___breakEveryXSec = t2orebreaker_time.Value;
+			if (t3orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker3") ___breakEveryXSec = t3orebreaker_time.Value;
 		}
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineAutoCrafter), "Awake")]
 		public static void MachineAutoCrafter_Awake(ref float ___craftEveryXSec, ref float ___range) {
-			___craftEveryXSec = autocrafter_time.Value;
-			___range = autocrafter_range.Value;
+			if (autocrafter_time.Value != 0) ___craftEveryXSec = autocrafter_time.Value;
+			if (autocrafter_range.Value != 0) ___range = autocrafter_range.Value;
 		}
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineGrowerIfLinkedGroup), "Awake")]
 		public static void MachineGrowerIfLinkedGroup_Awake(ref float ___timeToGrow) {
-			if (Math.Abs(___timeToGrow - 1f) < 0.01) ___timeToGrow = incubator_time.Value;
-			else if (Math.Abs(___timeToGrow - 4f) < 0.01) ___timeToGrow = dnaManipulator_time.Value;
+			if (Math.Abs(___timeToGrow - 1f) < 0.01) {
+				if (incubator_time.Value != 0) ___timeToGrow = incubator_time.Value;
+			} else if (Math.Abs(___timeToGrow - 4f) < 0.01) {
+				if (dnaManipulator_time.Value != 0) ___timeToGrow = dnaManipulator_time.Value;
+			}
 		}
 
 		private static bool enabledDroneFix = true;
@@ -115,7 +118,7 @@ namespace Nicki0.CheatMachineConfig {
 		}
 
 		// "look rotation viewing vector is zero"-fix
-		[HarmonyPrefix]
+		/*[HarmonyPrefix] // old. Getting transform each time was marked as inefficient by performance profiler
 		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
 		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
 			if (!enabledDroneFix) return true;
@@ -125,6 +128,18 @@ namespace Nicki0.CheatMachineConfig {
 				____droneRoot.transform.rotation = Quaternion.Slerp(____droneRoot.transform.rotation, Quaternion.LookRotation(targetPosition - ____droneRoot.transform.position), ___rotationSpeed * Time.deltaTime);
 			}
 			return false;
+		}*/
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
+		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
+			targetPosition += Vector3.up * 2f;
+			Transform droneTransform = ____droneRoot.transform;
+			droneTransform.Translate(0f, 0f, Time.deltaTime * ___forwardSpeed);
+			Vector3 targetPositionDifference = targetPosition - droneTransform.position;
+			if ((double)(targetPositionDifference).sqrMagnitude > float.Epsilon) {
+				droneTransform.rotation = Quaternion.Slerp(droneTransform.rotation, Quaternion.LookRotation(targetPositionDifference), ___rotationSpeed * Time.deltaTime);
+			}
+			return false;
 		}
 
 		[HarmonyPrefix]
@@ -132,13 +147,13 @@ namespace Nicki0.CheatMachineConfig {
 		public static void MachineOptimizer_SetOptimizerInventory(Inventory inventory, ref int ___maxWorldObjectPerFuse, ref float ___range) {
 			WorldObject wo = WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory);
 			if (wo.GetGroup().GetId() == "Optimizer1") {
-				___maxWorldObjectPerFuse = t1machineOptimizer_affectedMachineCount.Value;
-				___range = t1machineOptimizer_range.Value;
+				if (t1machineOptimizer_affectedMachineCount.Value != 0) ___maxWorldObjectPerFuse = t1machineOptimizer_affectedMachineCount.Value;
+				if (t1machineOptimizer_range.Value != 0) ___range = t1machineOptimizer_range.Value;
 
 			}
 			if (wo.GetGroup().GetId() == "Optimizer2") {
-				___maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;
-				___range = t2machineOptimizer_range.Value;
+				if (t2machineOptimizer_affectedMachineCount.Value != 0) ___maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;
+				if (t2machineOptimizer_range.Value != 0) ___range = t2machineOptimizer_range.Value;
 			}
 		}
 	}

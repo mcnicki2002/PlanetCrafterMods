@@ -49,7 +49,7 @@ namespace Nicki0.ItemMoreFuses {
 			new FuseItemConfig("FuseTradeRocketsSpeed"),
 			new FuseItemConfig("FuseGrowth"),
 			new FuseItemConfig("FuseInsects"),
-			new FuseItemConfig("FuseAnimals") { count = 6 }
+			new FuseItemConfig("FuseAnimals") { count = 7 }
 		};
 		static readonly List<ItemConfig> rocketType = new List<ItemConfig> {
 			new RocketItemConfig("RocketOxygen1"),
@@ -251,8 +251,13 @@ namespace Nicki0.ItemMoreFuses {
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(Localization), "LoadLocalization")]
-		private static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary) {
-			if (___localizationDictionary.TryGetValue("english", out var dictionary)) {
+		private static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary, string ___currentLangage) {
+			if (string.IsNullOrEmpty(___currentLangage)) return;
+			if (___localizationDictionary.TryGetValue(/*"english"*/___currentLangage, out var dictionary)) {
+				if (dictionary.ContainsKey("GROUP_NAME_Nicki0ModItem_Fuse-FuseProduction2")) {
+					return;
+				}
+
 				foreach (ItemConfig fuseConfig in fuseType) {
 					string text = fuseConfig.gId;
 					for (int lvl = 2; lvl <= fuseConfig.count; lvl++) {

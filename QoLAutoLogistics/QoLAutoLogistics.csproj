@@ -9,35 +9,40 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.QoLAutoLogistics</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup>
+		<GameDir>D:\SteamLibrary\steamapps\common\The Planet Crafter</GameDir>
+		<GameManaged>$(GameDir)\Planet Crafter_Data\Managed</GameManaged>
+		<PluginsFolder>$(GameDir)\BepInEx\plugins</PluginsFolder>
+	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\Assembly-CSharp.dll</HintPath>
+			<HintPath>$(GameManaged)\Assembly-CSharp.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="Unity.Netcode.Runtime">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>
+			<HintPath>$(GameManaged)\Unity.Netcode.Runtime.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="netstandard">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\netstandard.dll</HintPath>
+			<HintPath>$(GameManaged)\netstandard.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\unity.textmeshpro.dll</HintPath>
+			<HintPath>$(GameManaged)\unity.textmeshpro.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="UnityEngine.UI">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\UnityEngine.UI.dll</HintPath>
+			<HintPath>$(GameManaged)\UnityEngine.UI.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="Unity.InputSystem">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>D:\SteamLibrary\steamapps\common\The Planet Crafter\Planet Crafter_Data\Managed\Unity.InputSystem.dll</HintPath>
+			<HintPath>$(GameManaged)\Unity.InputSystem.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 	</ItemGroup>
@@ -49,8 +54,8 @@
 		<PackageReference Include="UnityEngine.Modules" Version="2023.2.4" IncludeAssets="compile" />
 	</ItemGroup>
 	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\Nicki0 - $(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
 		
 		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
 		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />

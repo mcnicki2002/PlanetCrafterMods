@@ -50,9 +50,11 @@ namespace Nicki0.CheatDroneSpeed {
 		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
 		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
 			targetPosition += Vector3.up * 2f;
-			____droneRoot.transform.Translate(0f, 0f, Time.deltaTime * ___forwardSpeed);
-			if ((double)(targetPosition - ____droneRoot.transform.position).sqrMagnitude > float.Epsilon) {
-				____droneRoot.transform.rotation = Quaternion.Slerp(____droneRoot.transform.rotation, Quaternion.LookRotation(targetPosition - ____droneRoot.transform.position), ___rotationSpeed * Time.deltaTime);
+			Transform droneTransform = ____droneRoot.transform;
+			droneTransform.Translate(0f, 0f, Time.deltaTime * ___forwardSpeed);
+			Vector3 targetPositionDifference = targetPosition - droneTransform.position;
+			if ((double)(targetPositionDifference).sqrMagnitude > float.Epsilon) {
+				droneTransform.rotation = Quaternion.Slerp(droneTransform.rotation, Quaternion.LookRotation(targetPositionDifference), ___rotationSpeed * Time.deltaTime);
 			}
 			return false;
 		}

@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>CheatMachineConfig</AssemblyName>
 		<Description>(Cheat) Machine Config</Description>
-		<Version>1.0.3</Version>
+		<Version>1.0.4</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.CheatMachineConfig</RootNamespace>
@@ -15,7 +15,9 @@
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 	</ItemGroup>
 	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\The Planet Crafter\BepInEx\plugins\$(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
+		
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
 		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
 		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
