@@ -84,7 +84,7 @@ namespace Nicki0.QoLAutoLogistics {
 			String pathToConfigFolder = Paths.ConfigPath;
 			if (File.Exists(pathToConfigFolder + "\\autoAddLogistic.cfg")) {
 				File.Copy(pathToConfigFolder + "\\autoAddLogistic.cfg", pathToConfigFolder + "\\Nicki0.theplanetcraftermods.QoLAutoLogistics.cfg", true);
-				File.Move(pathToConfigFolder + "\\autoAddLogistic.cfg", pathToConfigFolder + "\\autoAddLogistic.cfg_backup");
+				File.Move(pathToConfigFolder + "\\autoAddLogistic.cfg", pathToConfigFolder + "\\autoAddLogistic.cfg_backup_" + DateTime.Now.ToString("yyyy-MM-ddThhmmss"));
 				Config.Reload();
 				log.LogInfo("Old config transfered");
 			}
