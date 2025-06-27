@@ -57,6 +57,9 @@ namespace Nicki0.QoLAutoLogistics {
 		public static ConfigEntry<bool> updateSupplyAll;
 		public static ConfigEntry<bool> logisticMenuIgnoreLockingConditions;
 		public static ConfigEntry<string> logisticMenuAdditionalGroups;
+		public static ConfigEntry<bool> deliveryDontDeliverFromProductionToDestructor;
+		public static ConfigEntry<string> deliveryDontDeliverFromProductionToDestructorGroups;
+		public static ConfigEntry<bool> deliveryDontDeliverSpawnedObjectsToDestructor;
 
 		private static List<string> staticSynonymesList = new List<string>() {
 			"Al:Aluminium",
@@ -110,9 +113,19 @@ namespace Nicki0.QoLAutoLogistics {
 			updateSupplyAll = Config.Bind<bool>("Config_UpdateSupplyAll", "updateSupplyAll", false, "Will update the 'supply all' item groups when new items are available, e.g. after an update. Only logistic settings that don't demand any group are updated.");
 			logisticMenuIgnoreLockingConditions = Config.Bind<bool>("Config_ShowLogisticsItemGroups", "ignoreLockingConditions", false, "Ignore lock condition and show groups from additionalGroups.");
 			logisticMenuAdditionalGroups = Config.Bind<string>("Config_ShowLogisticsItemGroups", "additionalGroups", "CookCocoaSeed,CookWheatSeed", "Additional item groups to show in the logistics menu if ignoreLockingConditions=true. allowAnyValue is ignored by this setting. Requires restart to apply.");
+			deliveryDontDeliverFromProductionToDestructor = Config.Bind<bool>("Config_DroneDelivery", "dontDeliverFromProductionToShredder", false, "Prevent that drones deliver from [dontDeliverToShredderFromMachines] to shredders (Example: Iron from T3 Ore Extractors isn't delivered to shredders demanding Iron).");
+			deliveryDontDeliverFromProductionToDestructorGroups = Config.Bind<string>("Config_DroneDelivery", "dontDeliverToShredderFromMachines", "OreExtractor3,HarvestingRobot1,AutoCrafter1,Incubator1,GeneticManipulator1,PlanetaryDeliveryDepot1,InterplanetaryExchangePlatform1,SilkGenerator,TradePlatform1,WaterCollector1,WaterCollector2,Biodome2,GasExtractor2", "Machines that drones won't deliver items from to shredders.");
+			deliveryDontDeliverSpawnedObjectsToDestructor = Config.Bind<bool>("Config_DroneDelivery", "dontDeliverSpawnedObjectsToShredder", false, "Prevent that drones deliver fruits (and any other item that drones collect from the floor) to shredders.");
 
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+		}
+		public static void OnModConfigChanged(ConfigEntryBase _) {
+			deliveryDontDeliverFromList_StableHashCodes = null;
+
+			ReloadConfig();
+		}
+		private static void ReloadConfig() {
 		}
 
 		// --- Set Logistics on e.g. Ore Extractors --->
@@ -799,6 +812,58 @@ namespace Nicki0.QoLAutoLogistics {
 			while (_availableStatus.Count < ___groupsDisplayer.Count) _availableStatus.Add(true);
 		}
 		// <--- Copy Logistics ---
+
+		// --- Don't deliver from production to destructor --->
+		private static int stableHashCode_Destructor1 = -1;
+		private static HashSet<int> deliveryDontDeliverFromList_StableHashCodes;
+		private static void ReloadConfig_DeliveryDontDeliverFromProductionToDestructor() {
+			(deliveryDontDeliverFromList_StableHashCodes ??= new HashSet<int>()).Clear();
+
+			stableHashCode_Destructor1 = GroupsHandler.GetGroupViaId("Destructor1").stableHashCode;
+
+			List<string> logisticGroupSynonymesListSplit = logisticGroupSynonymesList.Value.Split(',').ToList();
+			logisticGroupSynonymesListSplit.AddRange(staticSynonymesList);
+			allGroups = GroupsHandler.GetAllGroups(); // needed for GetGroupsFromString([...])
+			foreach (string groupString in deliveryDontDeliverFromProductionToDestructorGroups.Value.Split(',').Select(e => e.Trim())) {
+				foreach (Group g in GetGroupsFromString(groupString, logisticGroupSynonymesListSplit)) {
+					deliveryDontDeliverFromList_StableHashCodes.Add(g.stableHashCode);
+				}
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(LogisticManager), "CreateNewTaskForWorldObject")]
+		private static bool LogisticManager_CreateNewTaskForWorldObject(Inventory supplyInventory, Inventory demandInventory, ref LogisticTask __result) {
+			if (!enableMod.Value) { return true; }
+			if (!deliveryDontDeliverFromProductionToDestructor.Value) { return true; }
+			
+			if (deliveryDontDeliverFromList_StableHashCodes == null) { ReloadConfig_DeliveryDontDeliverFromProductionToDestructor(); }
+
+			int demandingWorldObjectGroupHash = demandInventory.GetLogisticEntity().GetWorldObject()?.GetGroup().stableHashCode ?? 0;
+			if (demandingWorldObjectGroupHash != stableHashCode_Destructor1) { return true; }
+			int supplyingWorldObjectGroupHash = supplyInventory.GetLogisticEntity().GetWorldObject()?.GetGroup().stableHashCode ?? 0;
+			if (deliveryDontDeliverFromList_StableHashCodes.Contains(supplyingWorldObjectGroupHash)) {
+				__result = null;
+				return false;
+			}
+			return true;
+		}
+
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(LogisticManager), "CreateNewTaskForWorldObjectForSpawnedObject")]
+		private static bool LogisticManager_CreateNewTaskForWorldObjectForSpawnedObject(Inventory demandInventory, ref LogisticTask __result) {
+			if (!enableMod.Value) { return true; }
+			if (!deliveryDontDeliverSpawnedObjectsToDestructor.Value) { return true; }
+
+			if (stableHashCode_Destructor1 == 0) { stableHashCode_Destructor1 = GroupsHandler.GetGroupViaId("Destructor1").stableHashCode; }
+			int demandingWorldObjectGroupHash = demandInventory.GetLogisticEntity().GetWorldObject()?.GetGroup().stableHashCode ?? 0;
+			
+			if (demandingWorldObjectGroupHash == stableHashCode_Destructor1) {
+				__result = null;
+				return false;
+			}
+			return true;
+		}
+		// <--- Don't deliver from production to destructor ---
 
 		private static void SendNotification(string text, Sprite sprite = null, float timeShown = 2f) {
 			field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData((sprite ?? Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f)), text, timeShown, true));

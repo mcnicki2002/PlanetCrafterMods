@@ -1,19 +1,19 @@
 # PlanetCrafterMods
 
 ## Mods
-- [Auto-Logistics](#auto-logistics--autoaddlogistic)
+- [(QoL) Auto-Logistics](#auto-logistics)
 - [(Feat) Portal Travel](#feat-portal-travel)
 - [(Feat) Space Station](#feat-space-station)
 
 ## Scripts
 - [merge](#merge)
 
-## Auto-Logistics / AutoAddLogistic
+## (QoL) Auto-Logistics
 
 Copy and paste (drone) logistic settings and automatically supply generated items.
 
 ### Features:
-- Copy and paste
+- Copy and paste:
   - Copy by holding C (default key, config: 'copyLogisticsKey') while closing the logistics menu or when selecting an item group
   - Paste by holding V (default key, config: 'pasteLogisticsKey') while opening an inventory / a machine
   - Supported settings:
@@ -68,10 +68,16 @@ Copy and paste (drone) logistic settings and automatically supply generated item
     - `SUPER ALLOY>` demands super alloy and super alloy rod, does not change priority
     - `+storage` sets priority to custom-configured priority "storage", does not change demanded item groups
   - Allow 1000 characters in the name field of storage container by setting config 'allowLongNames' to 'true'
+
 - Update 'Supply all' logistic settings if new item groups were added, e.g. by an update or a mod (config: updateSupplyAll)
-- Show more item groups in the logistics menu
+
+- Show more item groups in the logistics menu:
   - Ignore lock conditions for hidden item groups (e.g. Common Larva (only displayed if blueprint is unlocked), ...) (config: logisticMenuIgnoreLockingConditions)
   - Custom list of item groups that would otherwise be hidden (config: logisticMenuAdditionalGroups)
+
+- Prevent drones from delivering to shredders:
+  - if the item is from a machine / container in dontDeliverToShredderFromMachines (<-configurable; default: Machines that only produce one item group + crafters + rockets (v1.526)) (config: dontDeliverFromProductionToShredder)
+  - if the item is 'spawned' / from the ground (Example: eggplants, algae, ...) (config: dontDeliverSpawnedObjectsToShredder)
 
 ### Config:
 - allowAnyValue:
