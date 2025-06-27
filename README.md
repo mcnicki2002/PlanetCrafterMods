@@ -1,7 +1,7 @@
 # PlanetCrafterMods
 
 ## Mods
-- [(QoL) Auto-Logistics](#auto-logistics)
+- [(QoL) Auto-Logistics](#qol-auto-logistics)
 - [(Feat) Portal Travel](#feat-portal-travel)
 - [(Feat) Space Station](#feat-space-station)
 
