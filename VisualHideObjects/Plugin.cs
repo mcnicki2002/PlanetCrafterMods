@@ -14,6 +14,7 @@ namespace Nicki0.VisualHideObjects {
 	[BepInPlugin("Nicki0.theplanetcraftermods.VisualHideObjects", "(Visual) Hide Objects", PluginInfo.PLUGIN_VERSION)]
 	public class Plugin : BaseUnityPlugin {
 
+		public static ConfigEntry<bool> occlusionDistanceEnabled;
 		public static ConfigEntry<string> occulsionNames;
 		public static ConfigEntry<int> occulsionDistance;
 		public static ConfigEntry<Key> occulsionKey;
@@ -27,6 +28,7 @@ namespace Nicki0.VisualHideObjects {
 			// Plugin startup logic
 			log = Logger;
 
+			occlusionDistanceEnabled = Config.Bind<bool>("Config", "enableDistanceOcclusion", false, "Enable the occlusion of objects when the player is far away from them (distance configurable)");
 			occulsionNames = Config.Bind<string>("Config", "namesOfObjectsToHide", "TreesSpreader", "comma separated list of objects to hide when far away. For specific tree spreaders, use TreesSpreader0,TreesSpreader1,TreesSpreader2");
 			occulsionDistance = Config.Bind<int>("Config", "hideDistance", 15, "Distance from player to object to show it.");
 			occulsionKey = Config.Bind<Key>("Config", "keyShow", Key.LeftCtrl, "Hold this key to show all objects again.");
@@ -41,10 +43,12 @@ namespace Nicki0.VisualHideObjects {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MeshOccluder), nameof(MeshOccluder.TryToOcclude))]
 		public static bool MeshOccluder_TryToOcclude(MeshOccluder __instance, Vector3 playerObjectPosition, int occlusionMask) {
-			foreach (string substring in occulsionStrings) {
-				if (__instance.transform.name.StartsWith(substring, StringComparison.Ordinal)) {
-					__instance.SetRenderersStatus(Vector3.Distance(playerObjectPosition, __instance.transform.position) < occulsionDistance.Value || Keyboard.current[occulsionKey.Value].isPressed);
-					return false;
+			if (occlusionDistanceEnabled.Value) {
+				foreach (string substring in occulsionStrings) {
+					if (__instance.transform.name.StartsWith(substring, StringComparison.Ordinal)) {
+						__instance.SetRenderersStatus(Vector3.Distance(playerObjectPosition, __instance.transform.position) < occulsionDistance.Value || Keyboard.current[occulsionKey.Value].isPressed);
+						return false;
+					}
 				}
 			}
 
