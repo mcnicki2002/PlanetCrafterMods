@@ -91,14 +91,16 @@ Adds the ability to travel from the portal of one planet to the portal of anothe
 
 ### Features:
 - Travel between fully terraformed planets without any cost (\*configurable) with the portal
-  - Portal-traveling is only possible if the procedural instance portal is closed
   - How to use:
     - Press the lower button on the upper-left side in the portal generator display
     - Select the planet to travel to by pressig `Open`
     - Walk into the opened portal
+  - Portals stay open (new v1.1.3.0) (config: keepPortalsOpen)
+    - Portals are color coded (config: activateColoredPortals, portalDestinationColors)
 
 Note: 
 - Portals on moons, which shouldn't exist in the base game, will get removed if the mod is removed. This is a savety machanism to prevent that procedural instances can be opened on the moons after the mod is removed/isn't functional anymore.
+- Portal-traveling will close active portals
 - This mod is not fully multiplayer compatible. It only works for the host.
 
 ### Config
