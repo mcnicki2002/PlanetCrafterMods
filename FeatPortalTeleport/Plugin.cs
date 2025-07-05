@@ -23,12 +23,15 @@ namespace Nicki0.FeatPortalTeleport {
 	public class Plugin : BaseUnityPlugin {
 
 		/*
-			TODO:
-		*/
+		 *	TODO:
+		 *	
+		 *	
+		 *	BUGS:
+		 */
+		private static bool enableKeepPortalOpen = true;
+		private static bool enableColorPortals = true;
 
-
-
-
+		static Plugin Instance;
 		static ManualLogSource log;
 
 		public static ConfigEntry<bool> configEnableDebug;
@@ -36,20 +39,36 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<bool> configRequireFullTerraformation;
 		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
 
+		public static ConfigEntry<bool> configKeepPortalsOpen;
+		public static ConfigEntry<bool> configSetColorPortals;
+		public static ConfigEntry<string> configColorPortalsColors;
+
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
+		static MethodInfo method_MachinePortalGenerator_SetParticles;
 		static AccessTools.FieldRef<Recipe, List<Group>> field_Recipe_recipe;
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
 
+
 		private void Awake() {
 			log = Logger;
+			Instance = this;
 
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
 			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
 			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Debug", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
 
+			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
+			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
+			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1", "Color of a portal connected to a planet (RGB/RGBA)");
+
+			enableKeepPortalOpen = configKeepPortalsOpen.Value;
+			enableColorPortals = configSetColorPortals.Value;
+			if (enableKeepPortalOpen) { SetColorConfig(); }
+
 			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
+			method_MachinePortalGenerator_SetParticles = AccessTools.Method(typeof(MachinePortalGenerator), "SetParticles");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
@@ -57,6 +76,36 @@ namespace Nicki0.FeatPortalTeleport {
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+		}
+
+		public static void OnModConfigChanged(ConfigEntryBase _) {
+			if (enableKeepPortalOpen) { SetColorConfig(); }
+		}
+
+		private static readonly int StateObjectId = SaveState.GenerateId(typeof(Plugin));
+		private static WorldObject woidsToPlanetidhash_StateObject = null;
+		private static Dictionary<int, int> woidsToPlanetidhashstate = null;
+		private static Dictionary<int, int> GetWoIdsToPlanetIdHashes() {
+			if (woidsToPlanetidhashstate != null) { return woidsToPlanetidhashstate; }
+			if (SaveState.GetAndCreateStateObject(StateObjectId, out WorldObject stateObject)) {
+				woidsToPlanetidhash_StateObject = stateObject;
+				woidsToPlanetidhashstate = SaveState.GetDictionaryData<int, int>(stateObject, Int32.Parse, Int32.Parse);
+				return woidsToPlanetidhashstate;
+			}
+			throw new Exception("Couldn't obtain woIdsToPlanetId state object");
+		}
+		private static void SetWoIdsToPlanetIdHashes(Dictionary<int, int> newState) {
+			if (woidsToPlanetidhash_StateObject == null) {
+				if (SaveState.GetAndCreateStateObject(StateObjectId, out WorldObject stateObject)) {
+					woidsToPlanetidhash_StateObject = stateObject;
+				}
+			}
+			if (woidsToPlanetidhash_StateObject != null) {
+				SaveState.SetDictionaryData<int, int>(woidsToPlanetidhash_StateObject, newState);
+			} else {
+				throw new Exception("Couldn't obtain woIdsToPlanetId state object");
+			}
+			woidsToPlanetidhashstate = null;
 		}
 
 		private static int planetToTeleportToHash = 0;
@@ -70,8 +119,10 @@ namespace Nicki0.FeatPortalTeleport {
 			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(110, 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
 																																																		   // Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
-				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-					return;
+				if (!enableKeepPortalOpen) {
+					if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
+						return;
+					}
 				}
 
 				bool onExcludedPlanet = planetsExcludingPortalGenerator.Contains(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash() ?? 0);
@@ -87,12 +138,27 @@ namespace Nicki0.FeatPortalTeleport {
 
 				SetUiVisibility(true, __instance);
 				__instance.btnScan.SetActive(true);
+
+				if (enableKeepPortalOpen) {
+					Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
+					if (woIdToPlanet.TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+						ClosePortal(lastMachinePortalGeneratorInteractedWith);
+						if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
+							OpenPortal(lastMachinePortalGeneratorInteractedWith);
+						}
+
+						woIdToPlanet.Remove(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal]);
+						SetWoIdsToPlanetIdHashes(woIdToPlanet);
+					}
+				}
 			});
 
 			// Bottom Button
 			buttonTabPortalTravel.GetComponent<Button>().onClick.AddListener(delegate () {
-				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-					return;
+				if (!enableKeepPortalOpen) {
+					if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
+						return;
+					}
 				}
 
 				bool foundPlanetInstanceSelector = false;
@@ -139,28 +205,60 @@ namespace Nicki0.FeatPortalTeleport {
 			__instance.transform.Find("Container/UiPortalList/InstancesList/CategoryTitles/Recipe").gameObject.SetActive(active || configRequireCost.Value);
 			TMPro.TextMeshProUGUI tmp = __instance.transform.Find("Container/Title").GetComponent<TMPro.TextMeshProUGUI>();
 			if (string.IsNullOrEmpty(originalTitle)) originalTitle = tmp.text;
-			tmp.text = active ? originalTitle : "Portal travel";
+
+			if (!enableKeepPortalOpen) {
+				tmp.text = active ? originalTitle : "Portal travel";
+			} else {
+				string destinationText = "";
+
+				if (GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+					destinationText = " - Destination: " + Readable.GetPlanetLabel(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash));
+				}
+
+				tmp.text = active ? originalTitle : ("Portal travel" + destinationText);
+			}
 		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
+		private static void UiwindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance, GameObject containerToShow) {
+			if (enableKeepPortalOpen) {
+				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+					Instance.StartCoroutine(ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
+				}
+			}
+		}
+		private static Action hideButtonTabPortalTravelOnOpen;
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpen))]
 		static void UiWindowPortalGenerator_OnOpen(UiWindowPortalGenerator __instance) {
-			__instance.StartCoroutine(hideButtonBOnOpen());
-			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
-			}
+			if (!enableKeepPortalOpen) {
+				hideButtonTabPortalTravelOnOpen ??= delegate () {
+					if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
+						buttonTabPortalTravel.SetActive(false);
+					}
+				};
 
+				if (buttonTabPortalTravel == null) {// Hide buttonTabPortalTravel because on first load, buttonTabPortalTravel == null
+					Instance.StartCoroutine(ExecuteLater(hideButtonTabPortalTravelOnOpen));
+				} else {
+					hideButtonTabPortalTravelOnOpen();
+				}
+			}
+			
 			SetUiVisibility(true, __instance);
 		}
-		private static IEnumerator hideButtonBOnOpen() { // Hide buttonTabPortalTravel because on first load, buttonTabPortalTravel == null
-			yield return new WaitForSeconds(0.01f);
-			if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
-				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
-			}
+		private static IEnumerator ExecuteLater(Action toExecute) {
+			//yield return new WaitForSeconds(0.01f);
+			yield return new WaitForEndOfFrame();
+			toExecute.Invoke();
 		}
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.ShowOpenedInstance))]
 		static void UiWindowPortalGenerator_ShowOpenedInstance() {
-			if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
+			if (!enableKeepPortalOpen) {
+				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
+			}
 		}
 
 		[HarmonyPostfix]
@@ -174,13 +272,13 @@ namespace Nicki0.FeatPortalTeleport {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/InstancesList/Grid")) {
 					if (transform.name == "UiWorldInstanceLine(Clone)") {
 						transform.gameObject.SetActive(false);
-						SetUiVisibility(false, __instance);
+						if (!enableKeepPortalOpen) SetUiVisibility(false, __instance); // No clue why this even was here in the first place
 					}
 				}
 			}
 		}
 
-		private static GameObject gameObjectForOpeningPortals;
+		private static GameObject gameObjectForOpeningPortals_DontKeepPortalOpen;
 		static void AddPortals(UiWindowPortalGenerator __instance) {
 			PlayerMainController pmc = Managers.GetManager<PlayersManager>().GetActivePlayerController();
 			WorldUnitsHandler wuh = Managers.GetManager<WorldUnitsHandler>();
@@ -238,28 +336,37 @@ namespace Nicki0.FeatPortalTeleport {
 				if (configRequireCost.Value) field_Recipe_recipe(recipe).Add(GroupsHandler.GetGroupViaId("FusionEnergyCell"));
 				List<bool> list = pmc.GetPlayerBackpack().GetInventory().ItemsContainsStatus(recipe.GetIngredientsGroupInRecipe());
 				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(
-							new WorldInstanceData(pd.GetPlanetId(), pd.GetPlanetHash(), 0, recipe, 0, 0),
-							recipe.GetIngredientsGroupInRecipe(),
-							list,
-							new Action<UiWorldInstanceSelector>(delegate (UiWorldInstanceSelector uiWorldInstanceSelector) {
+						new WorldInstanceData(pd.GetPlanetId(), pd.GetPlanetHash(), 0, recipe, 0, 0),
+						recipe.GetIngredientsGroupInRecipe(),
+						list,
+						new Action<UiWorldInstanceSelector>(delegate (UiWorldInstanceSelector uiWorldInstanceSelector) {
 
-								InventoriesHandler.Instance.RemoveItemsFromInventory(
-										uiWorldInstanceSelector.GetAssociatedWorldInstanceData().GetRecipe().GetIngredientsGroupInRecipe(),
-										Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerBackpack().GetInventory(),
-										true, true, null);
+							InventoriesHandler.Instance.RemoveItemsFromInventory(
+									uiWorldInstanceSelector.GetAssociatedWorldInstanceData().GetRecipe().GetIngredientsGroupInRecipe(),
+									Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerBackpack().GetInventory(),
+									true, true, null);
 
-								planetToTeleportToHash = pd.GetPlanetHash();
+							planetToTeleportToHash = pd.GetPlanetHash();
 
+							if (enableKeepPortalOpen) {
+								OpenPortal(lastMachinePortalGeneratorInteractedWith);
+
+								Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
+								woIdToPlanet[portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal]] = pd.GetPlanetHash();
+								SetWoIdsToPlanetIdHashes(woIdToPlanet);
+							} else {
 								List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 								foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 									if (!mpg.gameObject.activeInHierarchy) continue;
-									if (gameObjectForOpeningPortals == null) gameObjectForOpeningPortals = new GameObject();
-									mpg.OpenPortal(null, gameObjectForOpeningPortals, false);
+									if (gameObjectForOpeningPortals_DontKeepPortalOpen == null) gameObjectForOpeningPortals_DontKeepPortalOpen = new GameObject();
+									mpg.OpenPortal(null, gameObjectForOpeningPortals_DontKeepPortalOpen, false);
 									portalCreatedByMod = true;
 								}
+							}
 
-								Managers.GetManager<WindowsHandler>().CloseAllWindows();
-							}), false);
+
+							Managers.GetManager<WindowsHandler>().CloseAllWindows();
+						}), false);
 
 				worldInstanceSelectorAdded = true;
 			}
@@ -276,6 +383,58 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 		}
 
+		static MachinePortalGenerator lastMachinePortalGeneratorInteractedWith = null;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(ActionUsePortalGenerator), nameof(ActionUsePortalGenerator.OnAction))]
+		static void ActionUsePortalGenerator_OnAction(ActionUsePortalGenerator __instance) {
+			if (enableKeepPortalOpen) {
+				lastMachinePortalGeneratorInteractedWith = __instance.transform.root.GetComponent<MachinePortalGenerator>();
+			}
+		}
+
+		static Dictionary<MachinePortal, int> portalToWoId = new Dictionary<MachinePortal, int>();
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(WorldObjectsHandler), nameof(WorldObjectsHandler.InstantiateWorldObject))]
+		static void WorldObjectsHandler_InstantiateWorldObject(WorldObject worldObject, GameObject __result) {
+			if (!enableKeepPortalOpen) return;
+
+			if (worldObject.GetGroup().GetId() != "PortalGenerator1") { return; }
+			MachinePortalGenerator mpg = __result.GetComponent<MachinePortalGenerator>();
+			portalToWoId[mpg.machinePortal] = worldObject.GetId();
+
+			if (GetWoIdsToPlanetIdHashes().ContainsKey(worldObject.GetId())) {
+				OpenPortal(mpg);
+			}
+		}
+		[HarmonyPrefix] // Clear dictionary portalToWoId to prevent errors when reloading / loading another world
+		[HarmonyPatch(typeof(SaveFilesSelector), nameof(SaveFilesSelector.SelectedSaveFile))]
+		static void SaveFilesSelector_SelectedSaveFile() {
+			if (!enableKeepPortalOpen) return;
+			portalToWoId.Clear();
+		}
+
+		static bool closePortalCalledFromOnCloseInstance = false;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnCloseInstance))]
+		static void Pre_WorldInstanceHandler_Awake() { closePortalCalledFromOnCloseInstance = true; }
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachinePortalGenerator), nameof(MachinePortalGenerator.ClosePortal))]
+		static bool MachinePortalGenerator_ClosePortal(MachinePortalGenerator __instance) {
+			if (!enableKeepPortalOpen) return true;
+
+			if (!closePortalCalledFromOnCloseInstance) return true;
+
+			if (GetWoIdsToPlanetIdHashes().ContainsKey(portalToWoId[__instance.machinePortal]) && __instance.gameObject.activeInHierarchy) {
+				return false;
+			}
+
+			return true;
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnCloseInstance))]
+		static void Post_WorldInstanceHandler_Awake() { closePortalCalledFromOnCloseInstance = false; }
+
+
 		private static bool portalCreatedByMod = false;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpenInstance))]
@@ -286,11 +445,38 @@ namespace Nicki0.FeatPortalTeleport {
 		private static bool semaphoreActive = false;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
-		private static void PlanetLoader_HandleDataAfterLoad() {
+		private static void Pre_PlanetLoader_HandleDataAfterLoad() {
 			if (semaphoreActive) {
 				Managers.GetManager<SavedDataHandler>().DecrementSaveLock();// semaphore unlock saving
 				semaphoreActive = false;
 			}
+		}
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
+		private static void Post_PlanetLoader_HandleDataAfterLoad() {
+			if (!enableKeepPortalOpen) return;
+
+			Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
+
+			foreach (MachinePortal mp in portalToWoId.Keys) {
+				if (mp == null) continue;
+
+				MachinePortalGenerator mpg = mp.transform.root.GetComponent<MachinePortalGenerator>();
+
+				if (mpg.gameObject.activeInHierarchy && woIdToPlanet.ContainsKey(portalToWoId[mp])) {
+					OpenPortal(mpg);
+				}
+			}
+
+			// clean stateObject
+			Dictionary<int, int> newWoIdToPlanetDict = new Dictionary<int, int>();
+			foreach (int woid in WorldObjectsHandler.Instance.GetAllWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1")).Select(e => e.GetId())) {
+				if (woIdToPlanet.TryGetValue(woid, out int planetId)) {
+					newWoIdToPlanetDict[woid] = planetId;
+				}
+			}
+			SetWoIdsToPlanetIdHashes(newWoIdToPlanetDict);
 		}
 
 		[HarmonyPostfix]
@@ -321,9 +507,36 @@ namespace Nicki0.FeatPortalTeleport {
 
 		[HarmonyPrefix] // do not execute WorldInstanceHandler.SetWorldInstanceActive(true)
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static void Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state) {
+		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state, ref MachinePortal __instance) {
+			if (enableKeepPortalOpen) {
+				if (portalToWoId.TryGetValue(__instance, out int woid)) {
+					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
+						// check if portal still exists
+						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null) {
+							field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData(
+								Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f),
+								"No portal on destination planet",
+								5f,
+								true));
+							ClosePortal(__instance.transform.root.GetComponent<MachinePortalGenerator>());
+
+							Dictionary<int, int> woIdsToPlanetIdHashes = GetWoIdsToPlanetIdHashes();
+							woIdsToPlanetIdHashes.Remove(woid);
+							SetWoIdsToPlanetIdHashes(woIdsToPlanetIdHashes);
+
+							return false;
+						}
+
+						portalCreatedByMod = true;
+						planetToTeleportToHash = planetHash;
+					}
+				}
+			}
+
+
 			__state = ____enterPortal;
 			if (portalCreatedByMod) ____enterPortal = false;
+			return true;
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
@@ -344,7 +557,11 @@ namespace Nicki0.FeatPortalTeleport {
 				List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 				foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 					if (!mpg.gameObject.activeInHierarchy) continue;
-					mpg.ClosePortal();
+					if (enableKeepPortalOpen) {
+						ClosePortal(mpg);
+					} else {
+						mpg.ClosePortal();
+					}
 				}
 
 				//Managers.GetManager<SavedDataHandler>().DecrementSaveLock();
@@ -389,14 +606,31 @@ namespace Nicki0.FeatPortalTeleport {
 
 				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash);
 
-				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash());
-				if (woPortalGenerator != null) { // should never be null as the portal should only show if there is a portal generator on the planet
+				if (enableKeepPortalOpen) {
+					WorldObject woPortalGenerator = null;
+
+					foreach (WorldObject portalWoOnDestinationPlanet in WorldObjectsHandler.Instance.GetAllWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash())) {
+						woPortalGenerator ??= portalWoOnDestinationPlanet;
+						if (GetWoIdsToPlanetIdHashes().TryGetValue(portalWoOnDestinationPlanet.GetId(), out int destinationPlanetHash)) {
+							if (destinationPlanetHash == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData()?.GetPlanetHash()) {
+								woPortalGenerator = portalWoOnDestinationPlanet;
+								break;
+							}
+						}
+					}
 					pos = woPortalGenerator.GetPosition();
 					rot = woPortalGenerator.GetRotation();
+				} else {
+					WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash());
+					if (woPortalGenerator != null) { // should never be null as the portal should only show if there is a portal generator on the planet
+						pos = woPortalGenerator.GetPosition();
+						rot = woPortalGenerator.GetRotation();
+					}
 				}
+				
 				// ClientRpc has to be manually invoked as it isn't executed because the planetIndex returns -1 (see PlanetList.GetPlanetIndex patch)
 				//this.SwitchToPlanetClientRpc(____planetIndex.Value, vector + new Vector3(0f, 1f, 0f), (int)quaternion.eulerAngles.y);
-				method_PlanetNetworkLoader_SwitchToPlanetClientRpc.Invoke(__instance, new object[] { ____planetIndex.Value, pos + new Vector3(0, 7, 0), (int)rot.eulerAngles.y + 90 });
+				method_PlanetNetworkLoader_SwitchToPlanetClientRpc.Invoke(__instance, new object[] { ____planetIndex.Value, pos + new Vector3(0, 7, 0) + rot * (-1.17f * Vector3.forward + 0.29f * Vector3.right), (int)rot.eulerAngles.y + 90 });
 
 				portalCreatedByMod = false;
 			}
@@ -469,6 +703,100 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 		// <--- prevent loading of portals on moons ---
 
+		// --- Color Portals --->
+		/*
+		 *	{ -1140328421, new Color(200, 55, 0, 1)}, // Prime
+		 *	{ -486276833, new Color(30, 30, 25, 1)}, // Humble
+		 *	{ -1016990411, new Color(32, 80, 16, 1)}, // Selenea
+		 *	{ -1291310150, new Color(0, 100, 100, 1)} // Aqualis
+		 */
+		private static void SetColorConfig() {
+			PlanetColor.Clear();
+			foreach (string planetSplit in ("SpaceStation: -5, -5, -5, 1; " + configColorPortalsColors.Value).Split(';')) {
+				string[] attributeSplit = planetSplit.Split(':');
+				if (attributeSplit.Length != 2) continue;
+				string planet = attributeSplit[0].Trim();
+				string[] colorParams = attributeSplit[1].Split(",");
+
+				float[] colorParamsFloat = new float[colorParams.Length];
+				bool successfulConversion = true;
+				for (int i = 0; i < colorParams.Length; i++) {
+					if (!float.TryParse(colorParams[i].Trim(), out colorParamsFloat[i])) {
+						successfulConversion = false;
+					}
+				}
+				if (successfulConversion) {
+					if (colorParamsFloat.Length == 4) {
+						PlanetColor[planet.GetStableHashCode()] = new Color(colorParamsFloat[0], colorParamsFloat[1], colorParamsFloat[2], colorParamsFloat[3]);
+					} else if (colorParamsFloat.Length == 3) {
+						PlanetColor[planet.GetStableHashCode()] = new Color(colorParamsFloat[0], colorParamsFloat[1], colorParamsFloat[2]);
+					}
+				}
+			}
+		}
+		private static readonly Dictionary<int, Color> PlanetColor = new Dictionary<int, Color>();
+		private static bool DefaultPortalColorSet = true;
+		private static Color DefaultPortalColor = new Color(767, 112, 568, 1);
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachinePortalGenerator), "SetParticles")]
+		static void MachinePortalGenerator_SetParticles(List<ParticleSystem> ___particlesOnOpen, MachinePortalGenerator __instance) {
+			if (!enableKeepPortalOpen) { return; }
+			if (!enableColorPortals) { return; }
+
+			foreach (ParticleSystem particle in ___particlesOnOpen) {
+				ParticleSystemRenderer particleCircles = particle.GetComponent<ParticleSystemRenderer>();
+				Instance.StartCoroutine(ExecuteLater(delegate () {
+					if (!portalToWoId.ContainsKey(__instance.machinePortal)) {
+						SetMaterialColor(particleCircles, Color.clear);
+						return;
+					}
+					if (GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[__instance.machinePortal], out int planetIdHash)) {
+						if (PlanetColor.TryGetValue(planetIdHash, out Color planetColor)) {
+							SetMaterialColor(particleCircles, planetColor);
+							return;
+						}
+					}
+					if (DefaultPortalColorSet) {
+						SetMaterialColor(particleCircles, DefaultPortalColor, true);
+					}
+				}));
+			}
+		}
+		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color color, bool useDefaultColor = false) {
+			if (!renderer.sharedMaterial.HasColor("_EmissionColor")) {
+				ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
+				mm.startColor = Color.clear;
+			}
+
+			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer)
+				ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
+				mm.startSpeed = 1;
+
+				renderer.transform.position -= renderer.transform.forward * 4;
+				renderer.sharedMaterial = Instantiate(renderer.sharedMaterial);
+			}
+			if (!useDefaultColor || DefaultPortalColorSet) {
+				renderer.sharedMaterial.SetColor("_EmissionColor", useDefaultColor ? DefaultPortalColor : color);
+			}
+		}
+		// <--- Color Portals ---
+
+
+
+		private static void OpenPortal(MachinePortalGenerator mpg) {
+			mpg.machinePortal.gameObject.SetActive(true);
+			method_MachinePortalGenerator_SetParticles.Invoke(mpg, new object[] { true });
+			mpg.soundOnOpening.Play();
+			mpg.soundIsOpen.Play();
+		}
+		private static void ClosePortal(MachinePortalGenerator mpg) {
+			mpg.machinePortal.Close();
+			mpg.machinePortal.gameObject.SetActive(false);
+			method_MachinePortalGenerator_SetParticles.Invoke(mpg, new object[] { false });
+			mpg.soundIsOpen.Stop();
+			mpg.soundOnClose.Play();
+		}
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(Localization), "GetLocalizedString")]
 		private static void Localization_GetLocalizedString(string stringCode, ref string __result) {
@@ -477,7 +805,11 @@ namespace Nicki0.FeatPortalTeleport {
 				return;
 			}
 			if (stringCode == "UI_portals_Instructions1") {
-				__result = __result + ". Portal travel requires a portal on source and destination planet and no other portal may be open.";
+				if (enableKeepPortalOpen) {
+					__result = __result + ". Portal travel requires a portal on source and destination planet. Select the 'Long range wrecks' tab to close the portal.";
+				} else {
+					__result = __result + ". Portal travel requires a portal on source and destination planet and no other portal may be open.";
+				}
 				return;
 			}
 		}

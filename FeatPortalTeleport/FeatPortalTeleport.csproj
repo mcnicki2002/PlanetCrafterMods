@@ -4,12 +4,15 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>FeatPortalTeleport</AssemblyName>
 		<Description>(Feat) Portal Travel</Description>
-		<Version>1.1.2</Version>
+		<Version>1.1.3.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.FeatPortalTeleport</RootNamespace>
 	</PropertyGroup>
 	<Import Project="$(SolutionDir)\solution_private.targets" />
+	<ItemGroup>
+		<Compile Include="..\Nicki0Lib\SaveState.cs" Link="SaveState.cs" />
+	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
