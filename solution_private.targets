@@ -5,15 +5,15 @@
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
 		<PackageReference Include="UnityEngine.Modules" Version="6000.0.49" IncludeAssets="compile" />
 	</ItemGroup>
-		<PropertyGroup>
-				<GameDir>D:\SteamLibrary\steamapps\common\The Planet Crafter</GameDir>
-				<GameManaged>$(GameDir)\Planet Crafter_Data\Managed</GameManaged>
-				<PluginsFolder>$(GameDir)\BepInEx\plugins</PluginsFolder>
-		</PropertyGroup>
-		<PropertyGroup>
-				<AuthorName>Nicki0</AuthorName>
-				<Destination>$(PluginsFolder)\$(AuthorName) - $(Description)</Destination>
-		</PropertyGroup>
+	<PropertyGroup>
+		<GameDir>D:\SteamLibrary\steamapps\common\The Planet Crafter</GameDir>
+		<GameManaged>$(GameDir)\Planet Crafter_Data\Managed</GameManaged>
+		<PluginsFolder>$(GameDir)\BepInEx\plugins</PluginsFolder>
+	</PropertyGroup>
+	<PropertyGroup>
+		<AuthorName>Nicki0</AuthorName>
+		<Destination>$(PluginsFolder)\$(AuthorName) - $(Description)</Destination>
+	</PropertyGroup>
 	
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">

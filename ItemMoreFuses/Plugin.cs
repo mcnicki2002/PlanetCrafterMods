@@ -99,7 +99,7 @@ namespace Nicki0.ItemMoreFuses {
 
 
 			// Create / Config Item
-			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find((GroupData data) => data.id == GetNameFuse(fuseName, 1)));
+			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find(data => data.id == GetNameFuse(fuseName, 1)));
 			groupDataItem.name = GetNameFuse(fuseName, fuseId);
 			groupDataItem.id = GetNameFuse(fuseName, fuseId);
 
@@ -125,14 +125,15 @@ namespace Nicki0.ItemMoreFuses {
 
 			groupDataItem.terraformStageUnlock = null;
 			groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
-			groupDataItem.unlockingValue = (float)Math.Pow(1000, fuseId + 1); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: ZTi
+			groupDataItem.unlockingValue = (float)((fuseId <= 5) ? Math.Pow(1000, fuseId + 1) : Math.Pow(10, 3*6 + fuseId - 5)); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: 10 ETi, T7: 100 ETi
 			groupDataItem.tradeValue *= (int)Math.Pow(itemConfig.recipeQuantity, fuseId - 1);
 			groupDataItem.tradeCategory = ((groupDataItem.tradeValue > 0) && (fuseId >= 5) && (groupDataItem.tradeCategory == DataConfig.TradeCategory.Null || groupDataItem.tradeCategory == DataConfig.TradeCategory.tier1)) ? DataConfig.TradeCategory.tier1 : DataConfig.TradeCategory.Null;
 			if (fuseId <= 3 && !groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftStationT3)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftStationT3);
 			if (!groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftQuartzT1)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftQuartzT1);
-			groupDataItem.recipeIngredients = new List<GroupDataItem> { };
+			groupDataItem.recipeIngredients = new List<GroupDataItem>();
+			GroupDataItem ingredientItem = ___groupsData.Find(data => data.id == GetNameFuse(fuseName, fuseId - 1)) as GroupDataItem;
 			for (int i = 0; i < itemConfig.recipeQuantity; i++) {
-				groupDataItem.recipeIngredients.Add(Instantiate((GroupDataItem)___groupsData.Find((GroupData data) => data.id == GetNameFuse(fuseName, fuseId - 1))));
+				groupDataItem.recipeIngredients.Add(Instantiate(ingredientItem));
 			}
 
 			groupDataItem.associatedGameObject = Instantiate(groupDataItem.associatedGameObject);
@@ -161,7 +162,7 @@ namespace Nicki0.ItemMoreFuses {
 
 
 			// Create / Config Item
-			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find((GroupData data) => data.id == GetNameRocket(rocketName, 1)));
+			GroupDataItem groupDataItem = (GroupDataItem)Instantiate(___groupsData.Find(data => data.id == GetNameRocket(rocketName, 1)));
 			groupDataItem.name = GetNameRocket(rocketName, rocketLvl);
 			groupDataItem.id = GetNameRocket(rocketName, rocketLvl);
 
@@ -185,9 +186,9 @@ namespace Nicki0.ItemMoreFuses {
 			groupDataItem.craftedInWorld = false;
 			groupDataItem.craftableInList.Clear();
 			groupDataItem.recipeIngredients = new List<GroupDataItem> { };
-			/*GroupDataItem lastRocket = Instantiate((GroupDataItem)___groupsData.Find((GroupData data) => data.id == GetNameRocket(rocketName, rocketLvl - 1)));
+			/*GroupDataItem lastRocket = (GroupDataItem)___groupsData.Find((GroupData data) => data.id == GetNameRocket(rocketName, rocketLvl - 1));
 			for (int i = 0; i < quantity; i++) {
-				groupDataItem.recipeIngredients.Add(lastRocket);
+				groupDataItem.recipeIngredients.Add(Instantiate(lastRocket));
 			}*/
 
 			//groupDataItem.associatedGameObject = Instantiate(groupDataItem.associatedGameObject);

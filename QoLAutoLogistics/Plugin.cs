@@ -835,7 +835,7 @@ namespace Nicki0.QoLAutoLogistics {
 		private static bool LogisticManager_CreateNewTaskForWorldObject(Inventory supplyInventory, Inventory demandInventory, ref LogisticTask __result) {
 			if (!enableMod.Value) { return true; }
 			if (!deliveryDontDeliverFromProductionToDestructor.Value) { return true; }
-			
+
 			if (deliveryDontDeliverFromList_StableHashCodes == null) { ReloadConfig_DeliveryDontDeliverFromProductionToDestructor(); }
 
 			int demandingWorldObjectGroupHash = demandInventory.GetLogisticEntity().GetWorldObject()?.GetGroup().stableHashCode ?? 0;
@@ -856,7 +856,7 @@ namespace Nicki0.QoLAutoLogistics {
 
 			if (stableHashCode_Destructor1 == 0) { stableHashCode_Destructor1 = GroupsHandler.GetGroupViaId("Destructor1").stableHashCode; }
 			int demandingWorldObjectGroupHash = demandInventory.GetLogisticEntity().GetWorldObject()?.GetGroup().stableHashCode ?? 0;
-			
+
 			if (demandingWorldObjectGroupHash == stableHashCode_Destructor1) {
 				__result = null;
 				return false;
