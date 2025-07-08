@@ -39,6 +39,7 @@ namespace Nicki0.QoLAutoLogistics {
 		static FieldInfo field_WorldObjectText_proxy;
 		static ConstructorInfo constructor_Group;
 		static MethodInfo method_CanvasPinedRecipes_RemovePinedRecipeAtIndex;
+		static MethodInfo method_MachineGenerator_SetMiningRayGeneration;
 
 		public static ConfigEntry<bool> enableMod;
 		public static ConfigEntry<bool> enableDebug;
@@ -95,6 +96,7 @@ namespace Nicki0.QoLAutoLogistics {
 			field_WorldObjectText_proxy = AccessTools.Field(typeof(WorldObjectText), "_proxy");
 			constructor_Group = AccessTools.DeclaredConstructor(typeof(Group), new Type[] { typeof(GroupData) });
 			method_CanvasPinedRecipes_RemovePinedRecipeAtIndex = AccessTools.Method(typeof(CanvasPinedRecipes), "RemovePinnedRecipeAtIndex");
+			method_MachineGenerator_SetMiningRayGeneration = AccessTools.Method(typeof(MachineGenerator), "SetMiningRayGeneration");
 
 			enableMod = Config.Bind<bool>(".Config_General", "enableMod", true, "Enable mod");
 			enableDebug = Config.Bind<bool>(".Config_General", "enableDebug", false, "Enable debug messages");
@@ -202,7 +204,7 @@ namespace Nicki0.QoLAutoLogistics {
 		// --- Set Logistics on generating machines e.g. bee hive --->
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachineGenerator), nameof(MachineGenerator.SetGeneratorInventory))]
-		public static void MachineGenerator_SetGeneratorInventory(ref Inventory inventory, ref MachineGenerator __instance) {
+		public static void MachineGenerator_SetGeneratorInventory(ref Inventory inventory, MachineGenerator __instance, List<GroupData> ___groupDatas) {
 			if (!enableMod.Value) return;
 			if (!enableGeneratorAddLogistics.Value) return;
 
@@ -214,6 +216,12 @@ namespace Nicki0.QoLAutoLogistics {
 				if (__instance.groupDatasTerraStage.Count > 0) {
 					list.AddRange(__instance.groupDatasTerraStage);
 				}
+
+				method_MachineGenerator_SetMiningRayGeneration.Invoke(__instance, []);//__instance.SetMiningRayGeneration();
+				if (___groupDatas != null) {
+					list.AddRange(___groupDatas);
+				}
+
 				foreach (GroupData groupData in list) {
 					inventory.GetLogisticEntity().AddSupplyGroup(GroupsHandler.GetGroupViaId(groupData.id));
 				}
