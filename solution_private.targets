@@ -69,6 +69,6 @@
 	</ItemGroup>
 
 	<Target Name="CopyToGit" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)..\..\..\..\solution_private.targets" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\" />
+		<Copy SourceFiles="$(TargetDir)\..\..\..\..\solution_private.targets" DestinationFolder="$(TargetDir)\..\..\..\..\..\PlanetCrafterMods\" Condition="Exists('$(TargetDir)\..\..\..\..\solution_private.targets')"/>
 	</Target>
 </Project>

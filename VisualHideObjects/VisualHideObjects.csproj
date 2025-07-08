@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>VisualHideObjects</AssemblyName>
 		<Description>(Visual) Hide Objects</Description>
-		<Version>1.0.1</Version>
+		<Version>1.0.1.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.VisualHideObjects</RootNamespace>
