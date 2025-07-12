@@ -4,7 +4,7 @@
 		<TargetFramework>net46</TargetFramework>
 		<AssemblyName>QoLAutoLogistics</AssemblyName>
 		<Description>(QoL) Auto-Logistics</Description>
-		<Version>1.0.11.0</Version>
+		<Version>1.0.12.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.QoLAutoLogistics</RootNamespace>
@@ -59,6 +59,8 @@
 		
 		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
 		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		<Copy SourceFiles="$(TargetDir)..\..\..\IconData.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
 		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip" Overwrite="true" />
 	</Target>
