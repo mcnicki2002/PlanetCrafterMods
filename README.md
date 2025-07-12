@@ -46,7 +46,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
     - Change config 'clearOutputOnInputChange' to 'false' to select more than one demand item group and not clear the supply list of the output inventory when selecting/removing a demanded item group 
 
 - Set demanded items in storage lockers via text field:
-  - Configure demanded (or supply) item groups
+  - Configure demanded (or supplied) item groups
     - Uses:
       - localized item names
       - custom item names (config: `synonymes = name1:idOrName1,name2:idOrName2` e.g.: `N2:NitrogenCapsule1,O2:OxygenCapsule1,example:Uranium Rod`)
@@ -82,7 +82,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
   - if the item is from a machine / container in dontDeliverToShredderFromMachines (<-configurable; default: Machines that only produce one item group + crafters + rockets (v1.526)) (config: dontDeliverFromProductionToShredder)
   - if the item is 'spawned' / from the ground (Example: eggplants, algae, ...) (config: dontDeliverSpawnedObjectsToShredder)
 
-- Demand/Supply item groups that are contained in the inventory by holding `Left Ctrl` (config: addContainedGroupsModifierKey) while pressing the demand/supply settings button (new v1.0.12.0)
+- Demand/Supply item groups that are contained in the inventory by holding `Left Ctrl` (config: addContainedGroupsModifierKey) while pressing the demand/supply selector button (new v1.0.12.0)
 
 ### Config:
 - allowAnyValue:
