@@ -195,7 +195,7 @@ namespace Nicki0.FeatPortalTeleport {
 			backgroundImageGameObjectA.transform.localScale = new Vector3(1f * 0.85f, 1.15f * 0.85f, 1f * 0.85f)/*(1.1f, 1.28f, 1.1f)*/;
 			backgroundImageGameObjectA.AddComponent<Image>().sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/CloseUiButton").GetComponentInChildren<Image>().sprite;
 
-			button.SetActive(false); // must be false to prevent displaying the buttons when opening the UI from a procedural instance with M before opening an actual portal generator because the buttons are null in UiWindowPortalGenerator_ShowUiWindows
+			button.SetActive(true);
 
 			return button;
 		}
@@ -259,8 +259,17 @@ namespace Nicki0.FeatPortalTeleport {
 		static void UiWindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance, GameObject containerToShow) {
 			if (enableKeepPortalOpen) {
 				if (!IsLastMachinePortalGeneratorInteractedWithValid()) { // For when the UI is opened with M in the portal wreck
-					if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
-					if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false);
+					if (buttonTabPortalTravel != null) {
+						buttonTabPortalTravel.SetActive(false);
+					} else {
+						Instance.StartCoroutine(ExecuteLater(delegate () { if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false); }));
+					}
+					if (buttonTabProceduralInstance != null) {
+						buttonTabProceduralInstance.SetActive(false);
+					} else {
+						Instance.StartCoroutine(ExecuteLater(delegate () { if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false); }));
+					}
+
 					return;
 				}
 				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
