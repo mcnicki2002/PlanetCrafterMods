@@ -42,6 +42,7 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<bool> configKeepPortalsOpen;
 		public static ConfigEntry<bool> configSetColorPortals;
 		public static ConfigEntry<string> configColorPortalsColors;
+		public static ConfigEntry<float> configTimeInPortal;
 
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
 		static MethodInfo method_MachinePortalGenerator_SetParticles;
@@ -62,6 +63,7 @@ namespace Nicki0.FeatPortalTeleport {
 			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
 			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
 			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1", "Color of a portal connected to a planet (RGB/RGBA)");
+			configTimeInPortal = Config.Bind<float>("General", "timeInPortal", 0, "Time in seconds for how long the player remains inside the portal animation. Default time: 5s. Set to 0 to use default time.");
 
 			enableKeepPortalOpen = configKeepPortalsOpen.Value;
 			enableColorPortals = configSetColorPortals.Value;
@@ -193,7 +195,7 @@ namespace Nicki0.FeatPortalTeleport {
 			backgroundImageGameObjectA.transform.localScale = new Vector3(1f * 0.85f, 1.15f * 0.85f, 1f * 0.85f)/*(1.1f, 1.28f, 1.1f)*/;
 			backgroundImageGameObjectA.AddComponent<Image>().sprite = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/CloseUiButton").GetComponentInChildren<Image>().sprite;
 
-			button.SetActive(true);
+			button.SetActive(false); // must be false to prevent displaying the buttons when opening the UI from a procedural instance with M before opening an actual portal generator because the buttons are null in UiWindowPortalGenerator_ShowUiWindows
 
 			return button;
 		}
@@ -211,22 +213,14 @@ namespace Nicki0.FeatPortalTeleport {
 			} else {
 				string destinationText = "";
 
-				if (GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+				if (IsLastMachinePortalGeneratorInteractedWithValid() && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
 					destinationText = " - Destination: " + Readable.GetPlanetLabel(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash));
 				}
 
 				tmp.text = active ? originalTitle : ("Portal travel" + destinationText);
 			}
 		}
-		[HarmonyPostfix]
-		[HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
-		private static void UiwindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance, GameObject containerToShow) {
-			if (enableKeepPortalOpen) {
-				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
-					Instance.StartCoroutine(ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
-				}
-			}
-		}
+		
 		private static Action hideButtonTabPortalTravelOnOpen;
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpen))]
@@ -260,10 +254,20 @@ namespace Nicki0.FeatPortalTeleport {
 				if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
 			}
 		}
-
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "ShowUiWindows")]
-		static void UiWindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance) {
+		static void UiWindowPortalGenerator_ShowUiWindows(UiWindowPortalGenerator __instance, GameObject containerToShow) {
+			if (enableKeepPortalOpen) {
+				if (!IsLastMachinePortalGeneratorInteractedWithValid()) { // For when the UI is opened with M in the portal wreck
+					if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false);
+					if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false);
+					return;
+				}
+				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+					Instance.StartCoroutine(ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
+				}
+			}
+
 			if (buttonTabProceduralInstance != null && buttonTabPortalTravel != null) {
 				buttonTabProceduralInstance.SetActive(!__instance.uiOnScanning.activeSelf);
 				buttonTabPortalTravel.SetActive(!__instance.uiOnScanning.activeSelf);
@@ -384,6 +388,9 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 
 		static MachinePortalGenerator lastMachinePortalGeneratorInteractedWith = null;
+		private static bool IsLastMachinePortalGeneratorInteractedWithValid() {
+			return lastMachinePortalGeneratorInteractedWith != null && (lastMachinePortalGeneratorInteractedWith.gameObject.transform.position - Managers.GetManager<PlayersManager>().GetActivePlayerController().transform.position).magnitude < 20;
+		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionUsePortalGenerator), nameof(ActionUsePortalGenerator.OnAction))]
 		static void ActionUsePortalGenerator_OnAction(ActionUsePortalGenerator __instance) {
@@ -507,7 +514,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 		[HarmonyPrefix] // do not execute WorldInstanceHandler.SetWorldInstanceActive(true)
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state, ref MachinePortal __instance) {
+		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state, ref MachinePortal __instance, ref float ____timeInTunnel) {
 			if (enableKeepPortalOpen) {
 				if (portalToWoId.TryGetValue(__instance, out int woid)) {
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
@@ -535,7 +542,13 @@ namespace Nicki0.FeatPortalTeleport {
 
 
 			__state = ____enterPortal;
-			if (portalCreatedByMod) ____enterPortal = false;
+			if (portalCreatedByMod) {
+				if (configTimeInPortal.Value >= 0.001f) {
+					____timeInTunnel = configTimeInPortal.Value;
+				}
+
+				____enterPortal = false;
+			}
 			return true;
 		}
 		[HarmonyPostfix]
