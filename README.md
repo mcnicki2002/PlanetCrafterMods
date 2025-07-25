@@ -70,7 +70,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
     - `iron +AC` demands iron at custom-configured priority "AC"
     - `SUPER ALLOY>` demands super alloy and super alloy rod, does not change priority
     - `+storage` sets priority to custom-configured priority "storage", does not change demanded item groups
-  - Allow 1000 characters in the name field of storage container by setting config 'allowLongNames' to 'true'
+  - Allow 125 characters in the name field of storage container by setting config 'allowLongNames' to 'true'
 
 - Update 'Supply all' logistic settings if new item groups were added, e.g. by an update or a mod (config: updateSupplyAll)
 
