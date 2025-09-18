@@ -26,7 +26,6 @@ public class Plugin : BaseUnityPlugin {
 
 	static ManualLogSource log;
 
-	//private static Dictionary<DataConfig.WorldUnitType, bool> unitSet = new Dictionary<DataConfig.WorldUnitType, bool>();
 	private class UNIT_PREFIX {
 		private int INDEX_NONE = -1;
 		public readonly string[] PREFIX_LIST;
@@ -87,8 +86,8 @@ public class Plugin : BaseUnityPlugin {
 	private static UnitAttr mass = new UnitAttr("t") { prefix = new List<string>() { "g", "kg" } };
 	private static Dictionary<DataConfig.WorldUnitType, UnitAttr> units = new() {
 		{ DataConfig.WorldUnitType.Terraformation,      new UnitAttr("Ti") },
-		{ DataConfig.WorldUnitType.Oxygen,              new UnitAttr("mol")/*{ hardcodedUnits = "ppq,ppt,ppb,ppm,\u2030, ,k,M,G,T,P".Split(',').ToList() }*/ },
-		{ DataConfig.WorldUnitType.Heat,                new UnitAttr("°C" /*"K~"*/){ offset = SI_UNIT_PREFIX.p } },
+		{ DataConfig.WorldUnitType.Oxygen,              new UnitAttr("mol")/*{ hardcodedUnits = "ppq,ppt,ppb,ppm,\u2030, ,k,M,G,T,P".Split(',').ToList() }*/ }, // because >1 mil ppm is impossible
+		{ DataConfig.WorldUnitType.Heat,                new UnitAttr("°C" /*"K~"*/){ offset = SI_UNIT_PREFIX.p } }, // fits better for melting ice
 		{ DataConfig.WorldUnitType.Pressure,            new UnitAttr("Pa"){ offset = SI_UNIT_PREFIX.n } },
 		{ DataConfig.WorldUnitType.Biomass, mass },
 		{ DataConfig.WorldUnitType.Plants, mass },
@@ -126,29 +125,28 @@ public class Plugin : BaseUnityPlugin {
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(WorldUnit), MethodType.Constructor, new Type[] { typeof(List<string>), typeof(DataConfig.WorldUnitType) })]
 	public static void WorldUnit_ctor(ref List<string> unitLabels, DataConfig.WorldUnitType worldUnitType) {
-		setUnits(ref unitLabels, worldUnitType);
+		SetUnits(ref unitLabels, worldUnitType);
 	}
 
-	public static void setUnits(ref List<string> unitLabels, DataConfig.WorldUnitType unitType) {
+	public static void SetUnits(ref List<string> unitLabels, DataConfig.WorldUnitType unitType) {
 		if (!configActive.Value) return;
 
-		/*if (configExponent.Value) {
-			unitLabels = new List<string>{""};
-			for (int i = 1; i < 34; i++) unitLabels.Add("*10^" + (3*i));
-			return;
-		}*/
 		if (configPrintUnitsWhenStarting.Value) log.LogInfo(unitType.ToString() + ": \"" + string.Join("\", \"", unitLabels) + "\"");
 
 		if (unitConfigs.TryGetValue(unitType, out ConfigEntry<string> currentConfig)) {
 			if (configExponent.Value) {
-				unitLabels = new List<string>() { units[unitType].BaseUnit() };
+				if (units.TryGetValue(unitType, out UnitAttr unit)) {
+					unitLabels = new List<string>() { unit.BaseUnit() };
+				} else { // shouldn't be reachable as unitConfigs is generated from units keys
+					log.LogWarning(unitType.ToString() + " not set. Missing unit definition.");
+					return;
+				}
 			} else {
 				unitLabels = currentConfig.Value.Split(',').ToList();
 			}
-			//unitSet[unitType] = true;
-		}// else unitSet[unitType] = false;
 
-		if (configDebug.Value) Console.WriteLine("Unit set for: " + unitType.ToString());
+			if (configDebug.Value) Console.WriteLine("Unit set for: " + unitType.ToString());
+		}
 	}
 
 	//[HarmonyPrefix] // taken from v1.509

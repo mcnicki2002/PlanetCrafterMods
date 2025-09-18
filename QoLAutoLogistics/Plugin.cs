@@ -197,19 +197,19 @@ namespace Nicki0.QoLAutoLogistics {
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnClearDemand))]
-		public static void LogisticSelector_OnClearDemand(ref Inventory ____inventory) {
+		public static void LogisticSelector_OnClearDemand(Inventory ____inventory) {
 			if (!enableMod.Value) return;
 
-			ClearDemand(ref ____inventory);
+			ClearDemand(____inventory);
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(LogisticSelector), "OnRemoveDemandGroup")]
-		public static void LogisticSelector_OnRemoveDemandGroup(ref Inventory ____inventory) {
+		public static void LogisticSelector_OnRemoveDemandGroup(Inventory ____inventory) {
 			if (!enableMod.Value) return;
 
-			ClearDemand(ref ____inventory);
+			ClearDemand(____inventory);
 		}
-		private static void ClearDemand(ref Inventory inv) {
+		private static void ClearDemand(Inventory inv) {
 			if (!enableMod.Value) return;
 			if (!clearOutputOnInputChange.Value) return;
 
@@ -568,7 +568,7 @@ namespace Nicki0.QoLAutoLogistics {
 		static string currentlyLoadedLanguage = "";
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(Localization), "LoadLocalization")]
-		public static void Localization_LoadLocalization(ref Dictionary<string, Dictionary<string, string>> ___localizationDictionary, ref string ___currentLangage) {
+		public static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary, string ___currentLangage) {
 			if (!enableMod.Value) return;
 
 			if (currentlyLoadedLanguage == ___currentLangage && untranslate.Count != 0) return;
@@ -584,7 +584,7 @@ namespace Nicki0.QoLAutoLogistics {
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowTextInput), nameof(UiWindowTextInput.SetTextWorldObject))]
-		public static void UiWindowTextInput_SetTextWorldObject(ref TMP_InputField ___inputField) {
+		public static void UiWindowTextInput_SetTextWorldObject(TMP_InputField ___inputField) {
 			if (!enableMod.Value) return;
 			if (!allowLongNames.Value) return;
 

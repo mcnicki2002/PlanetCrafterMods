@@ -49,7 +49,7 @@ namespace Nicki0.ItemMoreFuses {
 			new FuseItemConfig("FuseTradeRocketsSpeed"),
 			new FuseItemConfig("FuseGrowth"),
 			new FuseItemConfig("FuseInsects"),
-			new FuseItemConfig("FuseAnimals") { count = 7 }
+			new FuseItemConfig("FuseAnimals") { count = 8 }
 		};
 		static readonly List<ItemConfig> rocketType = new List<ItemConfig> {
 			new RocketItemConfig("RocketOxygen1"),

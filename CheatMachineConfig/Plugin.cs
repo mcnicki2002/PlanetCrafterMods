@@ -7,6 +7,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Nicki0.CheatMachineConfig {
@@ -31,25 +32,29 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<float> t1machineOptimizer_range;
 		public static ConfigEntry<int> t2machineOptimizer_affectedMachineCount;
 		public static ConfigEntry<float> t2machineOptimizer_range;
+		public static ConfigEntry<float> TradePlatform1_time;
+		public static ConfigEntry<float> InterplanetaryExchangePlatform1_time;
 
 		private void Awake() {
 			log = Logger;
 
 			enableMod = Config.Bind<bool>("General", "enable", true, "Enable Mod");
 
-			t2recycler_time = Config.Bind<int>("Config_Recycler", "T2Recycler_time", 45, "Time to recycle an item (in seconds)");
-			t1orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T1OreCrusher_time", 130, "Time to break an item (in seconds)");
-			t2orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T2OreCrusher_time", 90, "Time to break an item (in seconds)");
-			t3orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T3OreCrusher_time", 70, "Time to break an item (in seconds)");
-			autocrafter_time = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_time", 5f, "Time to craft an item (in seconds)");
-			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 20f, "Range of auto crafter");
-			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 1f, "Time to incubate an item (in minutes)");
-			dnaManipulator_time = Config.Bind<float>("Config_DNA-Manipulator", "DnaManipulator_time", 4f, "Time to dna-manipulate an item (in minutes)");
-			drone_speed = Config.Bind<float>("Config_Drone", "Drone_SpeedMultiplier", 1f, "Speed multiplier of drones");
-			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T1MachineOptimizer_MachineCount", 5, "Optimization Capacity / Max amount of machines per fuse");
-			t1machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T1MachineOptimizer_range", 120, "Range of machine optimizer");
-			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T2MachineOptimizer_MachineCount", 8, "Optimization Capacity / Max amount of machines per fuse");
-			t2machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T2MachineOptimizer_range", 250, "Range of machine optimizer");
+			t2recycler_time = Config.Bind<int>("Config_Recycler", "T2Recycler_time", 0, "[Default: 45] Time to recycle an item (in seconds)");
+			t1orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T1OreCrusher_time", 0, "[Default: 130] Time to break an item (in seconds)");
+			t2orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T2OreCrusher_time", 0, "[Default: 90] Time to break an item (in seconds)");
+			t3orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T3OreCrusher_time", 0, "[Default: 70] Time to break an item (in seconds)");
+			autocrafter_time = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_time", 0, "[Default: 5] Time to craft an item (in seconds)");
+			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 0, "[Default: 20] Range of auto crafter");
+			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 0, "[Default: 1] Time to incubate an item (in minutes)");
+			dnaManipulator_time = Config.Bind<float>("Config_DNA-Manipulator", "DnaManipulator_time", 0, "[Default: 4] Time to dna-manipulate an item (in minutes)");
+			drone_speed = Config.Bind<float>("Config_Drone", "Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
+			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T1MachineOptimizer_MachineCount", 0, "[Default: 5] Optimization Capacity / Max amount of machines per fuse");
+			t1machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T1MachineOptimizer_range", 0, "[Default: 120] Range of machine optimizer");
+			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Config_MachineOptimizer", "T2MachineOptimizer_MachineCount", 0, "[Default: 8] Optimization Capacity / Max amount of machines per fuse");
+			t2machineOptimizer_range = Config.Bind<float>("Config_MachineOptimizer", "T2MachineOptimizer_range", 0, "[Default: 250] Range of machine optimizer");
+			TradePlatform1_time = Config.Bind<float>("Config_RocketBackAndForth", "TradePlatform1_time", 0, "[Default: 600] Time to return of the trade rocket");
+			InterplanetaryExchangePlatform1_time = Config.Bind<float>("Config_RocketBackAndForth", "InterplanetaryExchangePlatform1_time", 0, "[Default: 600] Time to return of the interplanetary exchange shuttle");
 
 			// Plugin startup logic
 
@@ -83,9 +88,9 @@ namespace Nicki0.CheatMachineConfig {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineGrowerIfLinkedGroup), "Awake")]
 		public static void MachineGrowerIfLinkedGroup_Awake(ref float ___timeToGrow) {
-			if (Math.Abs(___timeToGrow - 1f) < 0.01) {
+			if (Math.Abs(___timeToGrow - 1f) < 0.01) { // Incubator has a default time of 1
 				if (incubator_time.Value != 0) ___timeToGrow = incubator_time.Value;
-			} else if (Math.Abs(___timeToGrow - 4f) < 0.01) {
+			} else if (Math.Abs(___timeToGrow - 4f) < 0.01) { // DNA Manipulator has a default time of 4
 				if (dnaManipulator_time.Value != 0) ___timeToGrow = dnaManipulator_time.Value;
 			}
 		}
@@ -154,6 +159,16 @@ namespace Nicki0.CheatMachineConfig {
 			if (wo.GetGroup().GetId() == "Optimizer2") {
 				if (t2machineOptimizer_affectedMachineCount.Value != 0) ___maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;
 				if (t2machineOptimizer_range.Value != 0) ___range = t2machineOptimizer_range.Value;
+			}
+		}
+
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachineRocketBackAndForth), "GetUpdateGrowthInterval")] // "Awake" doesn't work with the command console mod, because it sets the value as postfix in SetInventoryRocketBackAndForth
+		public static void MachineRocketBackAndForth_GetUpdateGrowthInterval(ref float ___updateGrowthEvery, MachineRocketBackAndForth __instance) {
+			if (__instance is MachineRocketBackAndForthTrade) {
+				if (TradePlatform1_time.Value != 0) ___updateGrowthEvery = TradePlatform1_time.Value / 100.0f;
+			} else if (__instance is MachineRocketBackAndForthInterplanetaryExchange) {
+				if (t2machineOptimizer_affectedMachineCount.Value != 0) ___updateGrowthEvery = InterplanetaryExchangePlatform1_time.Value / 100.0f;
 			}
 		}
 	}
