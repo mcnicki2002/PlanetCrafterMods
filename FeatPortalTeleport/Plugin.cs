@@ -20,6 +20,7 @@ using UnityEngine.UI;
 namespace Nicki0.FeatPortalTeleport {
 
 	[BepInPlugin("Nicki0.theplanetcraftermods.FeatPortalTeleport", "(Feat) Portal Travel", PluginInfo.PLUGIN_VERSION)]
+	[BepInDependency("Nicki0.theplanetcraftermods.SpaceStationPlanet", BepInDependency.DependencyFlags.SoftDependency)] // So StaticDataHandler_LoadStaticData changes notAllowedPlanetsRequirement after space station planet is added
 	public class Plugin : BaseUnityPlugin {
 
 		/*
