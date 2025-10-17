@@ -20,6 +20,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 	public class Plugin : BaseUnityPlugin {
 		/*
 		 *	TODO:
+		 *	- Map Background should be black, not dust-orange
+		 *	- disable larvae spawning
 		 *	First fall quite extreme... bug in TPC: game does not reset fall speed while standing.
 		 *	
 		 *	Long-term:
@@ -173,22 +175,22 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			WaitForSeconds wait = new WaitForSeconds(3);
 			yield return wait;
 
-			GameObject goOreMagnetarQuartz = GameObject.Find("OreVeins/Ores/MagnetarQuartz");
+			GameObject goOreMagnetarQuartz = GameObject.Find("World/OreVeins/Ores/MagnetarQuartz");
 			MachineGenerationGroupVein mggvMagnetarQuartz = goOreMagnetarQuartz.AddComponent<MachineGenerationGroupVein>();
 			mggvMagnetarQuartz.SetGroups([GroupsHandler.GetGroupViaId("MagnetarQuartz").GetGroupData()]);
 			mggvMagnetarQuartz.oreVeinIdentifer = DataConfig.OreVeinIdentifer.tier2;
 
-			GameObject goOreAlgae = GameObject.Find("OreVeins/Ores/Algae");
+			GameObject goOreAlgae = GameObject.Find("World/OreVeins/Ores/Algae");
 			MachineGenerationGroupVein mggvAlgae = goOreAlgae.AddComponent<MachineGenerationGroupVein>();
 			mggvAlgae.SetGroups([GroupsHandler.GetGroupViaId("Algae1Seed").GetGroupData()]);
 			mggvAlgae.oreVeinIdentifer = DataConfig.OreVeinIdentifer.tier2;
 
-			GameObject goOreIce = GameObject.Find("OreVeins/Ores/Ice");
+			GameObject goOreIce = GameObject.Find("World/OreVeins/Ores/Ice");
 			MachineGenerationGroupVein mggvIce = goOreIce.AddComponent<MachineGenerationGroupVein>();
 			mggvIce.SetGroups([GroupsHandler.GetGroupViaId("ice").GetGroupData()]);
 			mggvIce.oreVeinIdentifer = DataConfig.OreVeinIdentifer.tier1;
 
-			GameObject goTerrain = GameObject.Find("Terrain/TerrainAsteroids");
+			GameObject goTerrain = GameObject.Find("World/Terrains/TerrainAsteroids");
 			HomemadeTag ht = goTerrain.AddComponent<HomemadeTag>();
 			ht.homemadeTag = DataConfig.HomemadeTag.SurfaceTerrain;
 		}
@@ -310,7 +312,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
 
-			Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(); // Load PlanetList.InitPlanetList and therefore the space station planet
+			Managers.GetManager<PlanetLoader>()?.planetList?.GetPlanetList(); // Load PlanetList.InitPlanetList and therefore the space station planet // Using '?' because new save file creation crashes here
 
 			PlanetData newPlanetData = Managers.GetManager<PlanetLoader>()?.planetList?.GetPlanetFromId(planetName);
 			if (newPlanetData == null) {
@@ -412,7 +414,6 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		static bool AsteroidsHandler_IsInAuthorizedBounds(ref bool __result, Vector3 position) {
 			if (IsOnPlanet()) {
 				__result = true;
-				log.LogInfo("Called IsInAuthorizedBounds: " + position);
 				return false;
 			}
 			return true;
