@@ -63,7 +63,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
 			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
-			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1", "Color of a portal connected to a planet (RGB/RGBA)");
+			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1; Toxicity: 192, 192, 0, 1", "Color of a portal connected to a planet (RGB/RGBA)");
 			configTimeInPortal = Config.Bind<float>("General", "timeInPortal", 0, "Time in seconds for how long the player remains inside the portal animation. Default time: 5s. Set to 0 to use default time.");
 
 			enableKeepPortalOpen = configKeepPortalsOpen.Value;
@@ -118,8 +118,8 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "Start")]
 		static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance) {
-			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(110, 880, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon"); //(100, 860, 0)
-			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(110, 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
+			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3((Screen.width/1920f) * 110, (Screen.height/1080f) * 880, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon"); //(100, 860, 0)
+			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3((Screen.width/1920f) * 110, (Screen.height/1080f) * 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
 																																																		   // Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
 				if (!enableKeepPortalOpen) {
