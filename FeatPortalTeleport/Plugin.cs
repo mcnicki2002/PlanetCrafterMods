@@ -26,7 +26,6 @@ namespace Nicki0.FeatPortalTeleport {
 		/*
 		 *	TODO:
 		 *	
-		 *	
 		 *	BUGS:
 		 */
 		private static bool enableKeepPortalOpen = true;
@@ -118,9 +117,10 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "Start")]
 		static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance) {
-			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3((Screen.width/1920f) * 110, (Screen.height/1080f) * 880, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon"); //(100, 860, 0)
-			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3((Screen.width/1920f) * 110, (Screen.height/1080f) * 780, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image"); //(100, 680, 0)
-																																																		   // Top Button
+			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(-850, 340, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon");
+			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(-850, 240, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image");
+			
+			// Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
 				if (!enableKeepPortalOpen) {
 					if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
@@ -185,7 +185,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			button.transform.SetParent(__instance.transform, false);
 			button.name = name;
-			button.transform.position = pos;
+			button.transform.localPosition = pos;
 			button.GetComponent<RectTransform>().sizeDelta = new Vector2(60, 60);
 			button.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
 			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
@@ -219,6 +219,9 @@ namespace Nicki0.FeatPortalTeleport {
 				}
 
 				tmp.text = active ? originalTitle : ("Portal travel" + destinationText);
+
+				// Move '?' button to the right, away from the:
+				__instance.transform.Find("Container/UiPortalList/UIInfosHover").localPosition = new Vector3(828, -339, 0);
 			}
 		}
 		

@@ -16,6 +16,7 @@ namespace Nicki0 {
 		/// Method <c>GenerateId</c> Generate an id
 		/// </summary>
 		public static int GenerateId(Type PluginType) {
+			// Console.WriteLine("--- " + MetadataHelper.GetMetadata(PluginType).Name + " uses id " + GenerateId(MetadataHelper.GetMetadata(PluginType).GUID) + " ---");
 			return GenerateId(MetadataHelper.GetMetadata(PluginType).GUID);
 		}
 		/// <summary>
@@ -24,6 +25,8 @@ namespace Nicki0 {
 		public static int GenerateId(string id) {
 			return Nicki0IdSpace + ((id.GetStableHashCode() % 10000 + 10000) % 10000) * 10;
 		}
+
+		public static T Identity<T>(T obj) => obj;
 
 		public static bool GetAndCreateStateObject(int id, out WorldObject stateObject) {
 			stateObject = WorldObjectsHandler.Instance?.GetWorldObjectViaId(id);

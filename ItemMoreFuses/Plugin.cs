@@ -49,7 +49,8 @@ namespace Nicki0.ItemMoreFuses {
 			new FuseItemConfig("FuseTradeRocketsSpeed"),
 			new FuseItemConfig("FuseGrowth"),
 			new FuseItemConfig("FuseInsects"),
-			new FuseItemConfig("FuseAnimals") { count = 8 }
+			new FuseItemConfig("FuseAnimals") { count = 8 },
+			new FuseItemConfig("FusePurification")
 		};
 		static readonly List<ItemConfig> rocketType = new List<ItemConfig> {
 			new RocketItemConfig("RocketOxygen1"),
@@ -61,7 +62,8 @@ namespace Nicki0.ItemMoreFuses {
 			new RocketItemConfig("RocketBiomass2"),
 			new RocketItemConfig("RocketInsects1"),
 			new RocketItemConfig("RocketInsects2"),
-			new RocketItemConfig("RocketAnimals1")
+			new RocketItemConfig("RocketAnimals1"),
+			new RocketItemConfig("RocketPurification1")
 		};
 
 
@@ -121,6 +123,8 @@ namespace Nicki0.ItemMoreFuses {
 				groupDataItem.unitMultiplierInsects *= efficiencyMultiplier;
 			} else if (fuseName.Contains("Animal")) {
 				groupDataItem.unitMultiplierAnimals *= efficiencyMultiplier;
+			} else if (fuseName.Contains("Purification")) {
+				groupDataItem.unitMultiplierPurification *= efficiencyMultiplier;
 			}
 
 			groupDataItem.terraformStageUnlock = null;
@@ -175,6 +179,7 @@ namespace Nicki0.ItemMoreFuses {
 			groupDataItem.unitMultiplierPlants *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierInsects *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierAnimals *= efficiencyMultiplier;
+			groupDataItem.unitMultiplierPurification *= efficiencyMultiplier;
 
 
 			//groupDataItem.terraformStageUnlock = null;

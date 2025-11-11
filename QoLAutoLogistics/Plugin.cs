@@ -963,7 +963,7 @@ namespace Nicki0.QoLAutoLogistics {
 
 			button.transform.SetParent(__instance.transform, false);
 			button.name = name;
-			button.transform.position = __instance.transform.position + pos;
+			button.transform.localPosition = pos;
 			button.GetComponent<RectTransform>().sizeDelta = new Vector2(25, 25);
 			button.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
 			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
