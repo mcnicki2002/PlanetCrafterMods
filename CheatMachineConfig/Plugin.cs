@@ -23,6 +23,9 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<int> t1orebreaker_time;
 		public static ConfigEntry<int> t2orebreaker_time;
 		public static ConfigEntry<int> t3orebreaker_time;
+		public static ConfigEntry<int> t1detoxificationmachine_time;
+		public static ConfigEntry<int> t2detoxificationmachine_time;
+		public static ConfigEntry<int> t3detoxificationmachine_time;
 		public static ConfigEntry<float> autocrafter_time;
 		public static ConfigEntry<float> autocrafter_range;
 		public static ConfigEntry<float> incubator_time;
@@ -44,6 +47,9 @@ namespace Nicki0.CheatMachineConfig {
 			t1orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T1OreCrusher_time", 0, "[Default: 130] Time to break an item (in seconds)");
 			t2orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T2OreCrusher_time", 0, "[Default: 90] Time to break an item (in seconds)");
 			t3orebreaker_time = Config.Bind<int>("Config_OreCrusher", "T3OreCrusher_time", 0, "[Default: 70] Time to break an item (in seconds)");
+			t1detoxificationmachine_time = Config.Bind<int>("Config_DetoxificationMachine", "T1DetoxificationMachine_time", 0, "[Default: 45] Time to detox an item (in seconds)");
+			t2detoxificationmachine_time = Config.Bind<int>("Config_DetoxificationMachine", "T2DetoxificationMachine_time", 0, "[Default: 30] Time to detox an item (in seconds)");
+			t3detoxificationmachine_time = Config.Bind<int>("Config_DetoxificationMachine", "T3DetoxificationMachine_time", 0, "[Default: 15] Time to detox an item (in seconds)");
 			autocrafter_time = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_time", 0, "[Default: 5] Time to craft an item (in seconds)");
 			autocrafter_range = Config.Bind<float>("Config_AutoCrafter", "AutoCrafter_range", 0, "[Default: 20] Range of auto crafter");
 			incubator_time = Config.Bind<float>("Config_Incubator", "Incubator_time", 0, "[Default: 1] Time to incubate an item (in minutes)");
@@ -76,6 +82,9 @@ namespace Nicki0.CheatMachineConfig {
 			if (t1orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker1") ___breakEveryXSec = t1orebreaker_time.Value;
 			if (t2orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker2") ___breakEveryXSec = t2orebreaker_time.Value;
 			if (t3orebreaker_time.Value != 0) if (wo.GetGroup().GetId() == "OreBreaker3") ___breakEveryXSec = t3orebreaker_time.Value;
+			if (t1detoxificationmachine_time.Value != 0) if (wo.GetGroup().GetId() == "DetoxificationMachine1") ___breakEveryXSec = t1detoxificationmachine_time.Value;
+			if (t2detoxificationmachine_time.Value != 0) if (wo.GetGroup().GetId() == "DetoxificationMachine2") ___breakEveryXSec = t2detoxificationmachine_time.Value;
+			if (t3detoxificationmachine_time.Value != 0) if (wo.GetGroup().GetId() == "DetoxificationMachine3") ___breakEveryXSec = t3detoxificationmachine_time.Value;
 		}
 
 		[HarmonyPrefix]
@@ -118,7 +127,7 @@ namespace Nicki0.CheatMachineConfig {
 
 			float multiplier = drone_speed.Value;
 			___forwardSpeed = multiplier * baseForwardSpeed;
-			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
+			___distanceMinToTarget = /*multiplier * */baseDistanceMinToTarget;
 			___rotationSpeed = multiplier * baseRotationSpeed;
 		}
 
@@ -134,7 +143,7 @@ namespace Nicki0.CheatMachineConfig {
 			}
 			return false;
 		}*/
-		[HarmonyPrefix]
+		/*[HarmonyPrefix]
 		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
 		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
 			targetPosition += Vector3.up * 2f;
@@ -145,7 +154,7 @@ namespace Nicki0.CheatMachineConfig {
 				droneTransform.rotation = Quaternion.Slerp(droneTransform.rotation, Quaternion.LookRotation(targetPositionDifference), ___rotationSpeed * Time.deltaTime);
 			}
 			return false;
-		}
+		}*/
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineOptimizer), nameof(MachineOptimizer.SetOptimizerInventory))]
