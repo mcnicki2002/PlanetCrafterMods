@@ -738,7 +738,7 @@ namespace Nicki0.FeatPortalTeleport {
 		 */
 		private static void SetColorConfig() {
 			PlanetColor.Clear();
-			foreach (string planetSplit in ("SpaceStation: -5, -5, -5, 1; " + configColorPortalsColors.Value).Split(';')) {
+			foreach (string planetSplit in ("SpaceStation: -5, -5, -5, 1; Toxicity: 192, 192, 0, 1; " + configColorPortalsColors.Value).Split(';')) {
 				string[] attributeSplit = planetSplit.Split(':');
 				if (attributeSplit.Length != 2) continue;
 				string planet = attributeSplit[0].Trim();
