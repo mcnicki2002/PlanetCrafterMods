@@ -37,6 +37,7 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<bool> configEnableDebug;
 		public static ConfigEntry<bool> configRequireCost;
 		public static ConfigEntry<bool> configRequireFullTerraformation;
+		public static ConfigEntry<bool> configDisableOtherRequirements;
 		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
 
 		public static ConfigEntry<bool> configKeepPortalsOpen;
@@ -57,6 +58,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
+			configDisableOtherRequirements = Config.Bind<bool>("General", "disableOtherRequirements", false, "Disables other requirements, e.g. minimum Terraformation / Purification requirements.");
 			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
 			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Debug", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
 
@@ -675,6 +677,7 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 			foreach (PlanetData pd in portalGroupDataContructible.notAllowedPlanetsRequirement) planetsExcludingPortalGenerator.Add(pd.GetPlanetHash());
 			portalGroupDataContructible.notAllowedPlanetsRequirement = new List<PlanetData>();
+			if (configDisableOtherRequirements.Value) portalGroupDataContructible.terraStageRequirements = [];
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
