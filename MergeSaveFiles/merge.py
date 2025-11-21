@@ -37,9 +37,14 @@ import os
 # - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
 #       The script can't really filter them out though.
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
+# - Toxic water depletion (-> 'count' property) isn't merged (added in v1.6XX). Possible TODO, but no support for planet merging is intended.
+#     If one save file has cleaned lakes, use that one as the primaryFileName to carry that progress over to the merged file.
+# - NOTE: This script was created for the moons update (v1.518 - v1.526) and it will break when the save file format changes.
+# 
+# Last tested game version: v1.610
 #
 # Script author: Nicki0
-# Version: 5
+# Version: 6
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -53,6 +58,9 @@ import os
 #
 # Changelog v5:
 # - save files are loaded with UTF-8 encoding to support characters from other languages
+#
+# Changelog v6:
+# - added support to merge unitPurificationLevel for Toxicity
 #
 
 # - start config
@@ -203,8 +211,9 @@ for i in range(len(itemsP[1])):
 	unitPressureLevel = itemsP[1][i].split('unitPressureLevel":', 1)[1].split(',', 1)[0]
 	unitPlantsLevel = itemsP[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
 	unitInsectsLevel = itemsP[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
-	unitAnimalsLevel = itemsP[1][i].split('unitAnimalsLevel":', 1)[1].split('}', 1)[0]
-	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel]
+	unitAnimalsLevel = itemsP[1][i].split('unitAnimalsLevel":', 1)[1].split(',', 1)[0]
+	unitPurificationLevel = itemsP[1][i].split('unitPurificationLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel]
 	planets.append(planet)
 for i in range(len(itemsS[1])):
 	planetId = itemsS[1][i].split('"planetId":"', 1)[1].split('"', 1)[0]
@@ -213,18 +222,22 @@ for i in range(len(itemsS[1])):
 	unitPressureLevel = itemsS[1][i].split('unitPressureLevel":', 1)[1].split(',', 1)[0]
 	unitPlantsLevel = itemsS[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
 	unitInsectsLevel = itemsS[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
-	unitAnimalsLevel = itemsS[1][i].split('unitAnimalsLevel":', 1)[1].split('}', 1)[0]
-	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel]
+	unitAnimalsLevel = itemsS[1][i].split('unitAnimalsLevel":', 1)[1].split(',', 1)[0]
+	unitPurificationLevel = itemsS[1][i].split('unitPurificationLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel]
 	planetExistsInPlanets = False
 	for j in range(len(planets)):
 		if planets[j][0] == planetId:
 			planetExistsInPlanets = True
 			print("Merging Planet Progress for Planet " + planetId)
 			for k in range(1, len(planet)):
-				planets[j][k] = str(float(planets[j][k]) + float(planet[k]))
+				if float(planets[j][k]) == -1 or float(planet[k]) == -2:
+					planets[j][k] = str(-1) # for disabled units (e.g. Purification on Prime)
+				else:
+					planets[j][k] = str(float(planets[j][k]) + float(planet[k]))
 	if not planetExistsInPlanets:
 		planets.append(planet)
-items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + '}' for i in range(len(planets))]
+items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + ',"unitPurificationLevel":' + str(planets[i][7]) + '}' for i in range(len(planets))]
 
 # Combine crafted item count
 #{"craftedObjects":1043463
