@@ -2,13 +2,10 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
-using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Nicki0.FixRocketReturn {
 	[BepInPlugin("Nicki0.theplanetcraftermods.FixRocketReturn", "(Fix) Rocket Return", PluginInfo.PLUGIN_VERSION)]
