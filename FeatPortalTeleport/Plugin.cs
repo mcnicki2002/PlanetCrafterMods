@@ -449,11 +449,24 @@ namespace Nicki0.FeatPortalTeleport {
 				OpenPortal(mpg);
 			}
 		}
-		/*[HarmonyPrefix] // Clear dictionary portalToWoId to prevent errors when reloading / loading another world
+		
+		/*[HarmonyPrefix]
 		[HarmonyPatch(typeof(SaveFilesSelector), nameof(SaveFilesSelector.SelectedSaveFile))]
 		static void SaveFilesSelector_SelectedSaveFile() {
 			if (!enableKeepPortalOpen) return;
+
+			
 		}*/
+
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(SavedDataHandler), nameof(SavedDataHandler.SetSaveFileName))]
+		static void SavedDataHandler_SetSaveFileName() {
+			if (!enableKeepPortalOpen) return;
+
+			// reset state when loading a save file
+			woidsToPlanetidhashstate = null;
+			woidsToPlanetidhash_StateObject = null;
+		}
 
 		static bool closePortalCalledFromOnCloseInstance = false;
 		[HarmonyPrefix]
