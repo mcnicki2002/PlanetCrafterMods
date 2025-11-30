@@ -27,6 +27,8 @@ namespace Nicki0.FeatPortalTeleport {
 		 *	TODO:
 		 *	
 		 *	BUGS:
+		 *	
+		 *	Clients can close all portals by closing the procedural instance
 		 */
 		private static bool enableKeepPortalOpen = true;
 		private static bool enableColorPortals = true;
@@ -36,6 +38,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 		public static ConfigEntry<bool> configEnableDebug;
 		public static ConfigEntry<bool> configRequireCost;
+		public static ConfigEntry<string> configItemsCost;
 		public static ConfigEntry<bool> configRequireFullTerraformation;
 		public static ConfigEntry<bool> configDisableOtherRequirements;
 		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
@@ -57,6 +60,7 @@ namespace Nicki0.FeatPortalTeleport {
 			Instance = this;
 
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
+			configItemsCost = Config.Bind<string>("General", "costItems", "FusionEnergyCell", "Cost to open a portal (Comma separated list of item IDs)");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
 			configDisableOtherRequirements = Config.Bind<bool>("General", "disableOtherRequirements", false, "Disables other requirements, e.g. minimum Terraformation / Purification requirements.");
 			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
@@ -121,7 +125,7 @@ namespace Nicki0.FeatPortalTeleport {
 		static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance) {
 			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(-850, 340, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon");
 			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(-850, 240, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image");
-			
+
 			// Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
 				if (!enableKeepPortalOpen) {
@@ -146,13 +150,13 @@ namespace Nicki0.FeatPortalTeleport {
 
 				if (enableKeepPortalOpen) {
 					Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
-					if (woIdToPlanet.TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+					if (woIdToPlanet.TryGetValue(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal), out int planetHash)) {
 						ClosePortal(lastMachinePortalGeneratorInteractedWith);
 						if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() != null) {
 							OpenPortal(lastMachinePortalGeneratorInteractedWith);
 						}
 
-						woIdToPlanet.Remove(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal]);
+						woIdToPlanet.Remove(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal));
 						SetWoIdsToPlanetIdHashes(woIdToPlanet);
 					}
 				}
@@ -216,7 +220,7 @@ namespace Nicki0.FeatPortalTeleport {
 			} else {
 				string destinationText = "";
 
-				if (IsLastMachinePortalGeneratorInteractedWithValid() && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+				if (IsLastMachinePortalGeneratorInteractedWithValid() && GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal), out int planetHash)) {
 					destinationText = " - Destination: " + Readable.GetPlanetLabel(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash));
 				}
 
@@ -226,7 +230,7 @@ namespace Nicki0.FeatPortalTeleport {
 				__instance.transform.Find("Container/UiPortalList/UIInfosHover").localPosition = new Vector3(828, -339, 0);
 			}
 		}
-		
+
 		private static Action hideButtonTabPortalTravelOnOpen;
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnOpen))]
@@ -244,7 +248,7 @@ namespace Nicki0.FeatPortalTeleport {
 					hideButtonTabPortalTravelOnOpen();
 				}
 			}
-			
+
 			SetUiVisibility(true, __instance);
 		}
 		private static IEnumerator ExecuteLater(Action toExecute) {
@@ -278,7 +282,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 					return;
 				}
-				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal], out int planetHash)) {
+				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal), out int planetHash)) {
 					Instance.StartCoroutine(ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
 				}
 			}
@@ -352,7 +356,14 @@ namespace Nicki0.FeatPortalTeleport {
 				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
 				gameObject.name = "UiWorldInstanceSelector_PlanetTravel";
 				Recipe recipe = new Recipe(new List<GroupDataItem>());
-				if (configRequireCost.Value) field_Recipe_recipe(recipe).Add(GroupsHandler.GetGroupViaId("FusionEnergyCell"));
+				if (configRequireCost.Value) {
+					foreach (string groupStringRaw in configItemsCost.Value.Split(",")) {
+						Group costGroup = GroupsHandler.GetGroupViaId(groupStringRaw.Trim());
+						if (costGroup != null) {
+							field_Recipe_recipe(recipe).Add(costGroup);
+						}
+					}
+				}
 				List<bool> list = pmc.GetPlayerBackpack().GetInventory().ItemsContainsStatus(recipe.GetIngredientsGroupInRecipe());
 				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(
 						new WorldInstanceData(pd.GetPlanetId(), pd.GetPlanetHash(), 0, recipe, 0, 0),
@@ -371,7 +382,7 @@ namespace Nicki0.FeatPortalTeleport {
 								OpenPortal(lastMachinePortalGeneratorInteractedWith);
 
 								Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
-								woIdToPlanet[portalToWoId[lastMachinePortalGeneratorInteractedWith.machinePortal]] = pd.GetPlanetHash();
+								woIdToPlanet[PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal)] = pd.GetPlanetHash();
 								SetWoIdsToPlanetIdHashes(woIdToPlanet);
 							} else {
 								List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
@@ -414,7 +425,18 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 		}
 
-		static Dictionary<MachinePortal, int> portalToWoId = new Dictionary<MachinePortal, int>();
+		static int PortalToWoId(MachinePortal portal) {
+			WorldObjectAssociated woa = portal.transform.parent.GetComponent<WorldObjectAssociated>();
+			if (woa == null) return -1; // <- E.g. when the portal is the ReturnPortal in the procedural instance
+
+			if (woa.GetWorldObject() == null) { // E.g. for a client in a multiplayer session before the proxy set it; also probably for all construction ghosts
+				woa.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) { }); // <- Maybe it could help with multiplayer???
+				return -1;
+			}
+
+			return woa.GetWorldObject().GetId();
+		}
+
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(WorldObjectsHandler), nameof(WorldObjectsHandler.InstantiateWorldObject))]
 		static void WorldObjectsHandler_InstantiateWorldObject(WorldObject worldObject, GameObject __result) {
@@ -422,18 +444,16 @@ namespace Nicki0.FeatPortalTeleport {
 
 			if (worldObject.GetGroup().GetId() != "PortalGenerator1") { return; }
 			MachinePortalGenerator mpg = __result.GetComponent<MachinePortalGenerator>();
-			portalToWoId[mpg.machinePortal] = worldObject.GetId();
 
 			if (GetWoIdsToPlanetIdHashes().ContainsKey(worldObject.GetId())) {
 				OpenPortal(mpg);
 			}
 		}
-		[HarmonyPrefix] // Clear dictionary portalToWoId to prevent errors when reloading / loading another world
+		/*[HarmonyPrefix] // Clear dictionary portalToWoId to prevent errors when reloading / loading another world
 		[HarmonyPatch(typeof(SaveFilesSelector), nameof(SaveFilesSelector.SelectedSaveFile))]
 		static void SaveFilesSelector_SelectedSaveFile() {
 			if (!enableKeepPortalOpen) return;
-			portalToWoId.Clear();
-		}
+		}*/
 
 		static bool closePortalCalledFromOnCloseInstance = false;
 		[HarmonyPrefix]
@@ -441,12 +461,17 @@ namespace Nicki0.FeatPortalTeleport {
 		static void Pre_WorldInstanceHandler_Awake() { closePortalCalledFromOnCloseInstance = true; }
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachinePortalGenerator), nameof(MachinePortalGenerator.ClosePortal))]
-		static bool MachinePortalGenerator_ClosePortal(MachinePortalGenerator __instance) {
+		static bool MachinePortalGenerator_ClosePortal(MachinePortalGenerator __instance, GameObject ____currentReturnPortal) {
 			if (!enableKeepPortalOpen) return true;
 
 			if (!closePortalCalledFromOnCloseInstance) return true;
 
-			if (GetWoIdsToPlanetIdHashes().ContainsKey(portalToWoId[__instance.machinePortal]) && __instance.gameObject.activeInHierarchy) {
+			if (GetWoIdsToPlanetIdHashes().ContainsKey(PortalToWoId(__instance.machinePortal)) && __instance.gameObject.activeInHierarchy) {
+				if (____currentReturnPortal != null) {
+					/* If the portal generator with the return portal has an interplanetary portal open when clicking the close instance button, 
+					 * then the return portal must be destroyed, because otherwise there are multiple return portals when opening a new procedural instance. */
+					Destroy(____currentReturnPortal);
+				}
 				return false;
 			}
 
@@ -481,12 +506,13 @@ namespace Nicki0.FeatPortalTeleport {
 
 			Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
 
-			foreach (MachinePortal mp in portalToWoId.Keys) {
+			foreach (MachinePortal mp in FindObjectsByType<MachinePortal>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
 				if (mp == null) continue;
 
-				MachinePortalGenerator mpg = mp.transform.root.GetComponent<MachinePortalGenerator>();
+				MachinePortalGenerator mpg = mp.transform.parent.GetComponent<MachinePortalGenerator>();
+				if (mpg == null) continue; // <- (Return) Portal in procedural instance doesn't have a MachinePortalGenerator in it's parent
 
-				if (mpg.gameObject.activeInHierarchy && woIdToPlanet.ContainsKey(portalToWoId[mp])) {
+				if (mpg.gameObject.activeInHierarchy && woIdToPlanet.ContainsKey(PortalToWoId(mp))) {
 					OpenPortal(mpg);
 				}
 			}
@@ -531,7 +557,8 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
 		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state, ref MachinePortal __instance, ref float ____timeInTunnel) {
 			if (enableKeepPortalOpen) {
-				if (portalToWoId.TryGetValue(__instance, out int woid)) {
+				int woid = PortalToWoId(__instance);
+				if (woid != -1) {
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
 						// check if portal still exists
 						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null) {
@@ -582,6 +609,7 @@ namespace Nicki0.FeatPortalTeleport {
 					array[i].action.Enable();
 				}
 
+				// possibly for closing portals on the other planet when traveling??? No real idea why this exists or is important...
 				List<MachinePortalGenerator> allMachinePortalGenerators = field_WorldInstanceHandler__allMachinePortalGenerator(Managers.GetManager<WorldInstanceHandler>());
 				foreach (MachinePortalGenerator mpg in allMachinePortalGenerators) {
 					if (!mpg.gameObject.activeInHierarchy) continue;
@@ -655,7 +683,7 @@ namespace Nicki0.FeatPortalTeleport {
 						rot = woPortalGenerator.GetRotation();
 					}
 				}
-				
+
 				// ClientRpc has to be manually invoked as it isn't executed because the planetIndex returns -1 (see PlanetList.GetPlanetIndex patch)
 				//this.SwitchToPlanetClientRpc(____planetIndex.Value, vector + new Vector3(0f, 1f, 0f), (int)quaternion.eulerAngles.y);
 				method_PlanetNetworkLoader_SwitchToPlanetClientRpc.Invoke(__instance, new object[] { ____planetIndex.Value, pos + new Vector3(0, 7, 0) + rot * (-1.17f * Vector3.forward + 0.29f * Vector3.right), (int)rot.eulerAngles.y + 90 });
@@ -775,11 +803,12 @@ namespace Nicki0.FeatPortalTeleport {
 			foreach (ParticleSystem particle in ___particlesOnOpen) {
 				ParticleSystemRenderer particleCircles = particle.GetComponent<ParticleSystemRenderer>();
 				Instance.StartCoroutine(ExecuteLater(delegate () {
-					if (!portalToWoId.ContainsKey(__instance.machinePortal)) {
+
+					if (/*!portalToWoId.ContainsKey(__instance.machinePortal)*/__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
 						SetMaterialColor(particleCircles, Color.clear);
 						return;
 					}
-					if (GetWoIdsToPlanetIdHashes().TryGetValue(portalToWoId[__instance.machinePortal], out int planetIdHash)) {
+					if (GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(__instance.machinePortal), out int planetIdHash)) {
 						if (PlanetColor.TryGetValue(planetIdHash, out Color planetColor)) {
 							SetMaterialColor(particleCircles, planetColor);
 							return;
