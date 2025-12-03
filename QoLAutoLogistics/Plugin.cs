@@ -35,6 +35,7 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	
 		 *	BUGS
+		 *	
 		 */
 
 		static ManualLogSource log;
@@ -188,6 +189,10 @@ namespace Nicki0.QoLAutoLogistics {
 			if (!enableMod.Value) return;
 
 			WorldObject wo = WorldObjectsHandler.Instance.GetWorldObjectForInventory(____inventory);
+			if (wo == null) {
+				if (enableDebug.Value) log.LogWarning("WorldObject for Inventory " + ____inventory.GetId() + " not found!");
+				return;
+			}
 
 			string woId = wo.GetGroup().GetId();
 			if (woId.Contains("OreBreaker") || woId.Contains("RecyclingMachine2") || woId.Contains("DetoxificationMachine")) {
@@ -226,6 +231,11 @@ namespace Nicki0.QoLAutoLogistics {
 			if (!clearOutputOnInputChange.Value) return;
 
 			WorldObject wo = WorldObjectsHandler.Instance.GetWorldObjectForInventory(inv);
+
+			if (wo == null) {
+				if (enableDebug.Value) log.LogWarning("WorldObject for Inventory " + inv.GetId() + " not found!");
+				return;
+			}
 			string woId = wo.GetGroup().id;
 			if (woId.Contains("OreBreaker") || woId.Contains("RecyclingMachine2") || woId.Contains("DetoxificationMachine")) {
 				Inventory outputInventory = InventoriesHandler.Instance.GetInventoryById(wo.GetSecondaryInventoriesId().First());
@@ -791,6 +801,10 @@ namespace Nicki0.QoLAutoLogistics {
 		}
 		private static void CreateCopyLogistics(LogisticEntity logisticEntity, Inventory inventory, Group selectedGroup = null, bool sendNotification = true) {
 			WorldObject worldObject = WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory);
+			if (worldObject == null) {
+				if (enableDebug.Value) log.LogWarning("WorldObject for Inventory " + inventory.GetId() + " not found!");
+				return;
+			}
 			Group group = worldObject.GetGroup();
 
 			LogisticsSettingsAttrib lsa = new LogisticsSettingsAttrib();
@@ -866,7 +880,13 @@ namespace Nicki0.QoLAutoLogistics {
 		}
 		// Paste group selection (ore extractor T3, gas extractor T2, Harvester, delivery depot)
 		private static void SetSelectedGroupFromCopy(UiWindowGroupSelector __instance, Inventory ____inventoryRight, List<GroupData> allowedGroups = null) {
-			Group group = WorldObjectsHandler.Instance.GetWorldObjectForInventory(____inventoryRight).GetGroup();
+			WorldObject worldObject = WorldObjectsHandler.Instance.GetWorldObjectForInventory(____inventoryRight);
+			if (worldObject == null) {
+				if (enableDebug.Value) log.LogWarning("WorldObject for Inventory " + ____inventoryRight.GetId() + " not found!");
+				return;
+			}
+
+			Group group = worldObject.GetGroup();
 			if (GetCopiedLogistics(group, out LogisticsSettingsAttrib lsa)) {
 				if ((!copyLogisticsPerGroup.Value) && (lsa.groupSelected == null)) { // Note: Can't clear selected group when copyLogisticsPerGroup is false
 					return;
@@ -943,6 +963,10 @@ namespace Nicki0.QoLAutoLogistics {
 				ButtonPaste = CreateButton(__instance, "ButtonPaste", new Vector3(180, 210, 0), SpritePaste);
 				ButtonPaste.GetComponent<Button>().onClick.AddListener(delegate () {
 					WorldObject containerWorldObject = WorldObjectsHandler.Instance.GetWorldObjectForInventory(____inventory);
+					if (containerWorldObject == null) {
+						if (enableDebug.Value) log.LogWarning("WorldObject for Inventory " + ____inventory.GetId() + " not found!");
+						return;
+					}
 					PasteLogisticsContainer(PasteButton_LastOpened_ActionOpenable, ____inventory, containerWorldObject, sendNotification: false);
 				});
 			} else {
