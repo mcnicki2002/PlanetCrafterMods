@@ -25,6 +25,12 @@ namespace Nicki0.FeatPortalTeleport {
 
 		/*
 		 *	TODO:
+		 *	Set color for 
+		 *	PortalTunnel(Clone)/Container/
+		 *	- ParticleComplex (1)
+		 *	- FloorDust
+		 *		ParticleSystem -> startColor
+		 *	
 		 *	
 		 *	BUGS:
 		 *	
@@ -228,7 +234,61 @@ namespace Nicki0.FeatPortalTeleport {
 
 				// Move '?' button to the right, away from the:
 				__instance.transform.Find("Container/UiPortalList/UIInfosHover").localPosition = new Vector3(828, -339, 0);
+
+				// Change Grid layout to support more planets in the UI
+				Transform gridObjectTransform = __instance.transform.Find("Container/UiPortalList/InstancesList/Grid");
+				int destinationCount = 0;
+				foreach (Transform transform in gridObjectTransform) {
+					if (transform.name == "UiWorldInstanceSelector_PlanetTravel" && transform.gameObject.activeSelf) destinationCount++;
+				}
+				GridLayoutGroup grid = gridObjectTransform.GetComponent<GridLayoutGroup>();
+
+				if (active) {
+					grid.cellSize = new Vector2(1500, 85);
+				} else {
+					int newWidth = 1500;
+					int localButtonPositon = 573; // Default local x position as of v1.611
+					if (destinationCount > 3) {
+						newWidth = 750;
+						localButtonPositon = 198; // Alligned in a way that switching between the views doesn't change the button positon on the right
+					}
+					if (destinationCount > 6) {
+						newWidth = 500;
+						localButtonPositon = 100;
+					}
+					grid.cellSize = new Vector2(newWidth, 85);
+					foreach (Transform transform in gridObjectTransform) {
+						if (transform.name == "UiWorldInstanceSelector_PlanetTravel" && transform.gameObject.activeSelf) {
+							transform.Find("ContentContainer/ButtonOpen").localPosition = new Vector3(localButtonPositon, 0, 0);
+						}
+					}
+				}
+
+				// Change between planet view and system view in the top central screen
+				RawImage view = __instance.gameObject.GetComponentInChildren<RawImage>(true);
+				if (active) {
+					SpaceViewHandler SpaceVH = Managers.GetManager<SpaceViewHandler>();
+					view.texture = SpaceVH.GetComponentInChildren<Camera>(true).targetTexture;
+					view.uvRect = new Rect(0.3f, 0.5f, 0.5f, 0.17f); // default values as of v1.611
+				} else {
+					SystemViewHandler SolarVH = Managers.GetManager<SystemViewHandler>();
+					SolarVH.SetVisibiltity(true, 90);
+					view.texture = SolarVH.GetComponentInChildren<Camera>(true).targetTexture;
+					view.uvRect = new Rect(0.2f, 0.44f, 0.6f, 0.13f); // centers and unstretches the view
+				}
+
+				// Hide location id labels when system view is active
+				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/SpaceView/IconsContainer")) {
+					transform.gameObject.SetActive(active);
+				}
 			}
+		}
+
+		// Reset changes to System View Camera
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.OnClose))]
+		static void UiWindowPortalGenerator_OnClose() {
+			Managers.GetManager<SystemViewHandler>().SetVisibiltity(false);
 		}
 
 		private static Action hideButtonTabPortalTravelOnOpen;
@@ -449,7 +509,7 @@ namespace Nicki0.FeatPortalTeleport {
 				OpenPortal(mpg);
 			}
 		}
-		
+
 		/*[HarmonyPrefix]
 		[HarmonyPatch(typeof(SaveFilesSelector), nameof(SaveFilesSelector.SelectedSaveFile))]
 		static void SaveFilesSelector_SelectedSaveFile() {
@@ -594,7 +654,6 @@ namespace Nicki0.FeatPortalTeleport {
 					}
 				}
 			}
-
 
 			__state = ____enterPortal;
 			if (portalCreatedByMod) {
