@@ -4,7 +4,7 @@
 		<TargetFramework>net46</TargetFramework>
 		<AssemblyName>QoLAutoLogistics</AssemblyName>
 		<Description>(QoL) Auto-Logistics</Description>
-		<Version>1.0.17.0</Version>
+		<Version>1.0.18.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.QoLAutoLogistics</RootNamespace>

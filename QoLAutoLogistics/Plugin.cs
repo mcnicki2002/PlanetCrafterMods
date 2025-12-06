@@ -62,6 +62,7 @@ namespace Nicki0.QoLAutoLogistics {
 		public static ConfigEntry<bool> enableDebug;
 		public static ConfigEntry<bool> enableNotification;
 		public static ConfigEntry<bool> allowAnyValue;
+		public static ConfigEntry<bool> enablePotentialBuggedFeatures;
 
 		public static ConfigEntry<bool> clearOutputOnInputChange;
 		public static ConfigEntry<bool> allowLongNames;
@@ -130,6 +131,7 @@ namespace Nicki0.QoLAutoLogistics {
 			enableDebug = Config.Bind<bool>(".Config_General", "enableDebug", false, "Enable debug messages");
 			enableNotification = Config.Bind<bool>(".Config_General", "enableNotification", true, "Send a notification if an item group wasn't found or the logistics settings are copied/pasted.");
 			allowAnyValue = Config.Bind<bool>(".Config_General", "allowAnyValue", false, "Allows priority below lowest (-3) and above 5, demanding any item group/type and select unavailable items to extract. Those values are not officially supported by the game. Be carefull.");
+			enablePotentialBuggedFeatures = Config.Bind<bool>(".Config_General", "enablePotentialBuggedFeatures", false, "Be careful! This enables features that could be incompatible with the game and should only be used if you have backups! This e.g. enables logistics on outdoor farms, but also on the bugged extraction rocket!");
 
 			clearOutputOnInputChange = Config.Bind<bool>("Config_OreBreaker", "clearOutputOnInputChange", true, "Clear output-inventory supply list if other item is selected in ore crusher's, recycler T2's or Detoxification Machine's input-inventory's demand list. Only one item can be selected as demand input.");
 
@@ -851,7 +853,7 @@ namespace Nicki0.QoLAutoLogistics {
 
 			// --- show logistics on inventories that have it disabled --->
 			__state = __instance.hideLogisticsButton;
-			__instance.hideLogisticsButton &= !allowAnyValue.Value;
+			__instance.hideLogisticsButton &= !allowAnyValue.Value || !enablePotentialBuggedFeatures.Value;
 			// <--- show logistics on inventories that have it disabled ---
 
 			if (Keyboard.current[pasteLogisticsKey.Value].isPressed && (allowAnyValue.Value || !__instance.hideLogisticsButton)) {
