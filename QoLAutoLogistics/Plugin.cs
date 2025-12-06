@@ -29,6 +29,14 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	- Multiplayer compatibility
 		 *	
+		 *	- Respect disabled logistics for ActionOpenable.hideLogisticsButton when e.g. pasting with v
+		 *	- Show logistics selector even if ActionOpenable.hideLogisticsButton
+		 *	
+		 *	- Add config to add only supplied stuff to logistic selector
+		 *	  - Fix --- Only show allowed groups in logistics selector ---
+		 *	
+		 *	Info: Group -> GameObject -> get component ActionOpenable
+		 *	
 		 *	
 		 *	TO TEST
 		 *	
@@ -44,6 +52,7 @@ namespace Nicki0.QoLAutoLogistics {
 		static AccessTools.FieldRef<CanvasPinedRecipes, List<InformationDisplayer>> field_CanvasPinedRecipes_informationDisplayers;
 		static AccessTools.FieldRef<UiWindowContainer, Inventory> field_UiWindowContainer__inventoryRight;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
+		static AccessTools.FieldRef<Inventory, HashSet<Group>> field_Inventory__unauthorizedGroups;
 		static FieldInfo field_WorldObjectText_proxy;
 		static ConstructorInfo constructor_Group;
 		static MethodInfo method_CanvasPinedRecipes_RemovePinedRecipeAtIndex;
@@ -110,6 +119,7 @@ namespace Nicki0.QoLAutoLogistics {
 			field_CanvasPinedRecipes_informationDisplayers = AccessTools.FieldRefAccess<CanvasPinedRecipes, List<InformationDisplayer>>("informationDisplayers");
 			field_UiWindowContainer__inventoryRight = AccessTools.FieldRefAccess<UiWindowContainer, Inventory>("_inventoryRight");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
+			field_Inventory__unauthorizedGroups = AccessTools.FieldRefAccess<Inventory, HashSet<Group>>("_unauthorizedGroups");
 			field_WorldObjectText_proxy = AccessTools.Field(typeof(WorldObjectText), "_proxy");
 			constructor_Group = AccessTools.DeclaredConstructor(typeof(Group), new Type[] { typeof(GroupData) });
 			method_CanvasPinedRecipes_RemovePinedRecipeAtIndex = AccessTools.Method(typeof(CanvasPinedRecipes), "RemovePinnedRecipeAtIndex");
@@ -823,7 +833,7 @@ namespace Nicki0.QoLAutoLogistics {
 		private static ActionOpenable PasteButton_LastOpened_ActionOpenable;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionOpenable), "OpenInventories")]
-		public static void ActionOpenable_OpenInventories(ActionOpenable __instance, Inventory objectInventory, WorldObject worldObject) {
+		public static void ActionOpenable_OpenInventories(ActionOpenable __instance, Inventory objectInventory, WorldObject worldObject, ref bool __state) {
 			if (!enableMod.Value) return;
 
 			// prepare copy --->
@@ -839,7 +849,12 @@ namespace Nicki0.QoLAutoLogistics {
 			PasteButton_LastOpened_ActionOpenable = __instance;
 			// <--- prepare paste with buttons ---
 
-			if (Keyboard.current[pasteLogisticsKey.Value].isPressed) {
+			// --- show logistics on inventories that have it disabled --->
+			__state = __instance.hideLogisticsButton;
+			__instance.hideLogisticsButton &= !allowAnyValue.Value;
+			// <--- show logistics on inventories that have it disabled ---
+
+			if (Keyboard.current[pasteLogisticsKey.Value].isPressed && (allowAnyValue.Value || !__instance.hideLogisticsButton)) {
 				PasteLogisticsContainer(__instance, objectInventory, worldObject);
 			}
 		}
@@ -1055,6 +1070,29 @@ namespace Nicki0.QoLAutoLogistics {
 			return true;
 		}
 		// <--- Don't deliver from production to destructor ---
+
+		// --- show all groups in logistics selector --->
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(LogisticManager), nameof(LogisticManager.GetItemsToDisplayForLogistics))]
+		private static void LogisticManager_GetItemsToDisplayForLogistics(ref HashSet<Group> authorizedGroups) {
+			if (!enableMod.Value) { return; }
+
+			if (!allowAnyValue.Value) { return; }
+			if (authorizedGroups == null) {  return; }
+			authorizedGroups = new HashSet<Group>();
+		}
+		// <--- show all groups in logistics selector ---
+
+
+		// --- show logistics on inventories that have it disabled --->
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(ActionOpenable), "OpenInventories")]
+		private static void Post_ActionOpenable_OpenInventory(ActionOpenable __instance, ref bool __state) {
+			if (!enableMod.Value) { return; }
+
+			__instance.hideLogisticsButton = __state;
+		}
+		// <--- show logistics on inventories that have it disabled ---
 
 		private static void SendNotification(string text, Sprite sprite = null, float timeShown = 2f) {
 			field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData((sprite ?? Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f)), text, timeShown, true));
