@@ -272,6 +272,7 @@ namespace Nicki0.FeatPortalTeleport {
 					view.uvRect = new Rect(0.3f, 0.5f, 0.5f, 0.17f); // default values as of v1.611
 				} else {
 					SystemViewHandler SolarVH = Managers.GetManager<SystemViewHandler>();
+					SolarVH.ResetCameraPosition();
 					SolarVH.SetVisibiltity(true, 90);
 					view.texture = SolarVH.GetComponentInChildren<Camera>(true).targetTexture;
 					view.uvRect = new Rect(0.2f, 0.44f, 0.6f, 0.13f); // centers and unstretches the view
