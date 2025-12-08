@@ -29,13 +29,10 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	- Multiplayer compatibility
 		 *	
-		 *	- Respect disabled logistics for ActionOpenable.hideLogisticsButton when e.g. pasting with v
-		 *	- Show logistics selector even if ActionOpenable.hideLogisticsButton
 		 *	
-		 *	- Add config to add only supplied stuff to logistic selector
-		 *	  - Fix --- Only show allowed groups in logistics selector ---
 		 *	
 		 *	Info: Group -> GameObject -> get component ActionOpenable
+		 *	
 		 *	
 		 *	
 		 *	TO TEST
@@ -81,6 +78,7 @@ namespace Nicki0.QoLAutoLogistics {
 		public static ConfigEntry<bool> deliveryDontDeliverSpawnedObjectsToDestructor;
 		public static ConfigEntry<Key> addContainedItemsToLogisticsModifierKey;
 		public static ConfigEntry<bool> addContainedItemsToLogisticsClearList;
+		public static ConfigEntry<bool> setContainerNameWhenSelectingLogistics;
 
 		private static readonly List<string> staticSynonymesList = new List<string>() {
 			"Al:Aluminium",
@@ -158,6 +156,7 @@ namespace Nicki0.QoLAutoLogistics {
 			addContainedItemsToLogisticsModifierKey = Config.Bind<Key>("Config_AddContainedGroups", "addContainedGroupsModifierKey", Key.LeftCtrl, "Hold this key and press the supply or demand selection button in the logistics selector to supply or demand all item groups contained in the inventory.");
 			addContainedItemsToLogisticsClearList = Config.Bind<bool>("Config_AddContainedGroups", "clearListWhenAddingContainedGroups", true, "Clear supply/demand list when item groups that are contained in the inventory are added to the logistic settings.");
 
+			setContainerNameWhenSelectingLogistics = Config.Bind<bool>("Config_SetText", "enableSetText", true, "Set the container name to the demanded groups");
 
 			SpriteCopy = IconData.CreateSprite(IconData.ImageCopy, IconData.ImageCopy_Width, IconData.ImageCopy_Height);
 			SpritePaste = IconData.CreateSprite(IconData.ImagePaste, IconData.ImagePaste_Width, IconData.ImagePaste_Height);
@@ -174,6 +173,25 @@ namespace Nicki0.QoLAutoLogistics {
 			ReloadConfig();
 		}
 		private static void ReloadConfig() {
+		}
+
+		private static bool pasteLogisticsIntoNewlyBuild = false;
+		public void Update() {
+			if (!enableMod.Value) { return; }
+
+			if (Keyboard.current[pasteLogisticsKey.Value].wasPressedThisFrame && Keyboard.current.ctrlKey.IsPressed() && Keyboard.current.shiftKey.IsPressed()) {
+				pasteLogisticsIntoNewlyBuild = !pasteLogisticsIntoNewlyBuild;
+			}
+		}
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(BaseHudHandler), "UpdateHud")]
+		private static void Post_BaseHudHandler_UpdateHud(BaseHudHandler __instance) {
+			if (!enableMod.Value) { return; }
+
+			if (pasteLogisticsIntoNewlyBuild) {
+				__instance.textPositionDecoration.text += " - Paste Logistics";
+			}
 		}
 
 		// --- Set Logistics on e.g. Ore Extractors --->
@@ -271,7 +289,7 @@ namespace Nicki0.QoLAutoLogistics {
 			method_MachineGenerator_SetMiningRayGeneration.Invoke(__instance, []);//__instance.SetMiningRayGeneration();
 			List<GroupData> list = new List<GroupData>(__instance.groupDatas);
 			if (__instance.groupDatasTerraStage != null) list.AddRange(__instance.groupDatasTerraStage);
-			
+
 			foreach (GroupData groupData in list) {
 				inventory.GetLogisticEntity().AddSupplyGroup(GroupsHandler.GetGroupViaId(groupData.id));
 			}
@@ -394,6 +412,8 @@ namespace Nicki0.QoLAutoLogistics {
 					__instance.groupDisplayer.SetGroupAndUpdateDisplay(group, false, true, false, false);
 					__instance.groupSelectedEvent(group);
 				}
+				SetTextForInventory(containerInventory);
+				InventoriesHandler.Instance.UpdateLogisticEntity(containerInventory); // although that should already happen in __instance.groupSelectedEvent(group)
 				return false;
 			}
 			return true;
@@ -625,8 +645,19 @@ namespace Nicki0.QoLAutoLogistics {
 		// <--- Add Name to logistic entities ---
 
 		// --- Logistics to String --->
-		private static string LogisticsToString(LogisticEntity entity) {
-			return string.Join(",", entity.GetDemandGroups().Select(group => (Readable.GetGroupName(group) ?? group.GetId())).ToArray()) + (" +" + entity.GetPriority());
+		private static string LogisticsToString(LogisticEntity entity, int count = int.MaxValue) {
+			return string.Join(", ", entity.GetDemandGroups().Select(group => (Readable.GetGroupName(group) ?? group.GetId())).Take(count).ToArray()) + (" +" + entity.GetPriority());
+		}
+		private static string PriorityToNames(int prio) {
+			IEnumerable<IEnumerable<string>> prioNamesSplit =
+			priorityNamesList.Value.Split(',').Select(n => n.Trim().Split(':').Select(e => e.Trim())).Where(e => e.Count() == 2).Reverse();
+			Dictionary<int, string> prioToNames = new Dictionary<int, string>();
+			foreach (IEnumerable<string> e in prioNamesSplit) {
+				if (int.TryParse(e.ElementAt(1), out int parsed)) {
+					prioToNames[parsed] = e.ElementAt(0);
+				}
+			}
+			return prioToNames.TryGetValue(prio, out string name) ? name : prio.ToString();
 		}
 		// <--- Logistics to String ---
 
@@ -874,25 +905,29 @@ namespace Nicki0.QoLAutoLogistics {
 				logisticEntity.SetPriority(lsa.priority);
 				if (lsa.demandGroups.Count > 0) foreach (Group g in lsa.demandGroups) LogisticSelector_OnGroupDemandSelected(g, objectInventory);
 
-
+				IEnumerable<Group> demandGroupsToAdd = lsa.demandGroups;
+				IEnumerable<Group> supplyGroupsToAdd = lsa.supplyGroups;
+				if (!allowAnyValue.Value) {
+					demandGroupsToAdd = lsa.demandGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem)g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display);
+					supplyGroupsToAdd = lsa.supplyGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem)g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display);
+					HashSet<Group> authorizedGroups = objectInventory.GetAuthorizedGroups();
+					if (authorizedGroups != null && authorizedGroups.Count > 0) {
+						demandGroupsToAdd = demandGroupsToAdd.Where(authorizedGroups.Contains);
+						supplyGroupsToAdd = supplyGroupsToAdd.Where(authorizedGroups.Contains);
+					}
+				}
 				logisticEntity.GetDemandGroups().Clear();
-				logisticEntity.GetDemandGroups().UnionWith(
-						allowAnyValue.Value ?
-							lsa.demandGroups :
-							lsa.demandGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem)g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)
-						); // must run after LogisticSelector_OnGroupDemandSelected
+				logisticEntity.GetDemandGroups().UnionWith(demandGroupsToAdd); // must run after LogisticSelector_OnGroupDemandSelected
 				logisticEntity.GetSupplyGroups().Clear();
-				logisticEntity.GetSupplyGroups().UnionWith(
-						allowAnyValue.Value ?
-							lsa.supplyGroups :
-							lsa.supplyGroups.Where(g => g.GetGroupData() is GroupDataItem).Where(g => ((GroupDataItem)g.GetGroupData()).displayInLogisticType == DataConfig.LogisticDisplayType.Display)
-						);
+				logisticEntity.GetSupplyGroups().UnionWith(supplyGroupsToAdd);
 				SettingProxy sp = actionOpenable.GetComponentInParent<SettingProxy>();
 				sp?.SetSetting(lsa.setting);
 				MachineRocketBackAndForthInterplanetaryExchange exchangeRocket = actionOpenable.GetComponentInParent<MachineRocketBackAndForthInterplanetaryExchange>();
 				exchangeRocket?.SetLinkedPlanet(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet));
 				if (enableNotification.Value && sendNotification) SendNotification("Inserted logistics", SpritePaste); // [missing translation]
 				InventoriesHandler.Instance.UpdateLogisticEntity(objectInventory);
+
+				SetTextForInventory(objectInventory);
 			}
 		}
 		// Paste group selection (ore extractor T3, gas extractor T2, Harvester, delivery depot)
@@ -904,7 +939,7 @@ namespace Nicki0.QoLAutoLogistics {
 			}
 
 			Group group = worldObject.GetGroup();
-			if (GetCopiedLogistics(group, out LogisticsSettingsAttrib lsa)) {
+			if (GetCopiedLogistics(group, out LogisticsSettingsAttrib lsa)) { // Check if --- add logistics when placing a WO --- needs adaptions when changing!
 				if ((!copyLogisticsPerGroup.Value) && (lsa.groupSelected == null)) { // Note: Can't clear selected group when copyLogisticsPerGroup is false
 					return;
 				}
@@ -912,7 +947,8 @@ namespace Nicki0.QoLAutoLogistics {
 					if (enableNotification.Value) SendNotification("Group not selectable here"); // [missing translation]
 					return;
 				}
-				AccessTools.Method(typeof(UiWindowGroupSelector), "OnGroupSelected").Invoke(__instance, new object[] { lsa.groupSelected });
+				AccessTools.Method(typeof(UiWindowGroupSelector), "OnGroupSelected").Invoke(__instance, new object[] { lsa.groupSelected }); // Invoked here because it's also patched!
+
 				if (enableNotification.Value) SendNotification("Set selected Group", SpritePaste); // [missing translation]
 			}
 		}
@@ -1080,7 +1116,7 @@ namespace Nicki0.QoLAutoLogistics {
 			if (!enableMod.Value) { return; }
 
 			if (!allowAnyValue.Value) { return; }
-			if (authorizedGroups == null) {  return; }
+			if (authorizedGroups == null) { return; }
 			authorizedGroups = new HashSet<Group>();
 		}
 		// <--- show all groups in logistics selector ---
@@ -1095,6 +1131,91 @@ namespace Nicki0.QoLAutoLogistics {
 			__instance.hideLogisticsButton = __state;
 		}
 		// <--- show logistics on inventories that have it disabled ---
+
+		// --- add logistics when placing a WO --->
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(WorldObjectsHandler), nameof(WorldObjectsHandler.InstantiateWorldObject))]
+		private static void Post_WorldObjectsHandler_InstantiateWorldObjecct(WorldObject worldObject) {
+			if (!enableMod.Value) { return; }
+
+			if (!pasteLogisticsIntoNewlyBuild) { return; }
+			if (!WorldObjectsHandler.Instance.GetHasInitiatedAllObjects()) return; // So objects that are placed during creation / loading aren't affected
+
+			int inventoryId = worldObject.GetLinkedInventoryId();
+			if (inventoryId <= 0 || inventoryId >= 9999999 /*<- taken from InventoriesHandler.GetBiggestInventoryId, should be border to scene invs*/) {
+				return;
+			}
+
+			Inventory inventory = InventoriesHandler.Instance.GetInventoryById(inventoryId);
+
+			ActionOpenable actionOpenable = worldObject.GetGameObject().GetComponent<ActionOpenable>();
+			if (actionOpenable == null) {
+				// It's pure luck that the game finds the correct ActionOpenable for dual inventory objects!
+				actionOpenable = worldObject.GetGameObject().GetComponentInChildren<ActionOpenable>();
+			}
+			if (actionOpenable != null) {
+				if (actionOpenable.hideLogisticsButton && !enablePotentialBuggedFeatures.Value) {
+					if (enableDebug.Value) SendNotification("Logistics is disabled for this machine"); // [missing translation]
+					return;
+				}
+				PasteLogisticsContainer(actionOpenable, inventory, worldObject, sendNotification: true);
+			} else if (worldObject.GetGameObject().GetComponentInChildren<ActionGroupSelector>() != null) { // e.g. for ore extractor
+				if (!allowAnyValue.Value) {
+					if (enableNotification.Value) SendNotification("Select group manually"); // [missing translation]
+					return;
+				}
+				if (GetCopiedLogistics(worldObject.GetGroup(), out LogisticsSettingsAttrib lsa)) {
+					if ((!copyLogisticsPerGroup.Value) && (lsa.groupSelected == null)) { // Note: Can't clear selected group when copyLogisticsPerGroup is false
+						return;
+					}
+
+					LinkedGroupsProxy linkedGroupsProxy = worldObject.GetGameObject()?.GetComponent<LinkedGroupsProxy>();
+					if (linkedGroupsProxy != null) {
+						linkedGroupsProxy.SetLinkedGroups(lsa.groupSelected != null ? [lsa.groupSelected] : []);
+						UiWindowGroupSelector_OnGroupSelected(ref inventory, lsa.groupSelected);
+						if (enableNotification.Value) SendNotification("Set selected Group", SpritePaste); // [missing translation]
+					}
+				}
+			}
+		}
+		// <--- add logistics when placing a WO ---
+
+		// --- Set Text for selected logistics -->
+		private static void SetTextForInventory(Inventory inventory) {
+			if (!enableMod.Value) { return; }
+			if (!setContainerNameWhenSelectingLogistics.Value) { }
+
+			if (inventory == null) return;
+			WorldObject worldObject = inventory.GetLogisticEntity()?.GetWorldObject(); //WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory)
+			GameObject go = worldObject?.GetGameObject();
+			if (go == null) { return; }
+
+			TextProxy tp = go.GetComponentInChildren<TextProxy>();
+			string text = tp?.GetText();
+			if (text == null) { return; }
+
+			foreach (string commentSymbol in LogisticByName_CommentSymbols) {
+				if (text.StartsWith(commentSymbol)) return;
+			}
+
+			tp.SetText(LogisticsToString(inventory.GetLogisticEntity(), 5));
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(LogisticSelector), "OnGroupDemandSelected")]
+		private static void Post_LogisticSelector_OnGroupDemandSelected(Inventory ____inventory) {
+			SetTextForInventory(____inventory);
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnClearDemand))]
+		private static void Post_LogisticSelector_OnClearDemand(Inventory ____inventory) {
+			SetTextForInventory(____inventory);
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnSupplyAll))]
+		private static void Post_LogisticSelector_OnSupplyAll(Inventory ____inventory) {
+			SetTextForInventory(____inventory);
+		}
+		// <--- Set Text for selected logistics ---
 
 		private static void SendNotification(string text, Sprite sprite = null, float timeShown = 2f) {
 			field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData((sprite ?? Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f)), text, timeShown, true));
