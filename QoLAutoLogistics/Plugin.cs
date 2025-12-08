@@ -29,8 +29,6 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	- Multiplayer compatibility
 		 *	
-		 *	
-		 *	
 		 *	Info: Group -> GameObject -> get component ActionOpenable
 		 *	
 		 *	
@@ -669,6 +667,7 @@ namespace Nicki0.QoLAutoLogistics {
 			public int setting = 0;
 			public Group groupSelected = null;
 			public int linkedPlanet = 0;
+			public string text = "";
 		}
 		private static Group defaultCopiedLogisticsGroup = null;
 		private static Dictionary<Group, LogisticsSettingsAttrib> copiedLogistics = new Dictionary<Group, LogisticsSettingsAttrib>();
@@ -709,7 +708,7 @@ namespace Nicki0.QoLAutoLogistics {
 			copiedLogistics[_group] = lsa;
 		}
 		// load temporary/default sprites if logistic selector wasn't opened yet.
-		enum SpriteType { logistic, demand, supply, supplyAll, setting, Planet }
+		enum SpriteType { logistic, demand, supply, supplyAll, setting, Planet, Message }
 		static readonly Dictionary<SpriteType, Sprite> sprites = new Dictionary<SpriteType, Sprite>();
 		private static readonly Dictionary<SpriteType, Sprite> defaultSprites = new Dictionary<SpriteType, Sprite>();
 		private static Sprite GetSprite(SpriteType st) {
@@ -745,6 +744,10 @@ namespace Nicki0.QoLAutoLogistics {
 				GameObject obj = GameObject.Find("MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon");
 				if (obj != null) sprites[SpriteType.Planet] = obj.GetComponent<Image>().sprite;
 			}
+			if (!sprites.ContainsKey(SpriteType.Message)) {
+				Sprite messageSprite = GroupsHandler.GetGroupViaId("ScreenMessage").GetAssociatedGameObject().GetComponentsInChildren<Image>().Select(e => e.sprite).Where(e => e != null).Where(e => e.name == "Icon_Message3").First();
+				if (messageSprite != null) sprites[SpriteType.Message] = messageSprite;
+			}
 		}
 		private static void LoadDefaultSprites(InformationDisplayer id) {
 			if (!defaultSprites.ContainsKey(SpriteType.logistic)) defaultSprites[SpriteType.logistic] = id.spriteOutInventory;
@@ -753,6 +756,7 @@ namespace Nicki0.QoLAutoLogistics {
 			if (!defaultSprites.ContainsKey(SpriteType.setting)) defaultSprites[SpriteType.setting] = id.spriteTutorial;
 			if (!defaultSprites.ContainsKey(SpriteType.supplyAll)) defaultSprites[SpriteType.supplyAll] = id.spriteTutorial;
 			if (!defaultSprites.ContainsKey(SpriteType.Planet)) defaultSprites[SpriteType.Planet] = id.spriteTutorial;
+			if (!defaultSprites.ContainsKey(SpriteType.Message)) defaultSprites[SpriteType.Message] = id.spriteTutorial;
 		}
 		// build info-groups
 		private static List<Group> InfoGroupList(LogisticsSettingsAttrib lsa) {
@@ -779,6 +783,9 @@ namespace Nicki0.QoLAutoLogistics {
 			if (lsa.linkedPlanet != 0) {
 				PlanetData linkedPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet);
 				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("UI_InterplanetaryExchange_selectedPlanet") + " " + (linkedPlanetData != null ? Readable.GetPlanetLabel(linkedPlanetData) : ""), GetSprite(SpriteType.Planet)));
+			}
+			if (!string.IsNullOrEmpty(lsa.text)) {
+				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("UI_change_text") + ": " + lsa.text, GetSprite(SpriteType.Message)));
 			}
 
 			return ingredientsGroupInRecipe;
@@ -857,6 +864,7 @@ namespace Nicki0.QoLAutoLogistics {
 			lsa.setting = worldObject.GetSetting();
 			lsa.groupSelected = selectedGroup;
 			lsa.linkedPlanet = linkedPlanetWhenOpened; // Set in ActionOpenable_OpenInventories
+			lsa.text = logisticEntity?.GetWorldObject()?.GetText() ?? "";
 
 			AddLogisticsSettingsCopy(group, lsa);
 			if (enableNotification.Value && sendNotification) SendNotification("Copied logistics", SpriteCopy); // [missing translation]
@@ -924,10 +932,10 @@ namespace Nicki0.QoLAutoLogistics {
 				sp?.SetSetting(lsa.setting);
 				MachineRocketBackAndForthInterplanetaryExchange exchangeRocket = actionOpenable.GetComponentInParent<MachineRocketBackAndForthInterplanetaryExchange>();
 				exchangeRocket?.SetLinkedPlanet(Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet));
+				if (!string.IsNullOrEmpty(lsa.text)) worldObject.GetGameObject()?.GetComponent<TextProxy>()?.SetText(lsa.text);
+
 				if (enableNotification.Value && sendNotification) SendNotification("Inserted logistics", SpritePaste); // [missing translation]
 				InventoriesHandler.Instance.UpdateLogisticEntity(objectInventory);
-
-				SetTextForInventory(objectInventory);
 			}
 		}
 		// Paste group selection (ore extractor T3, gas extractor T2, Harvester, delivery depot)
