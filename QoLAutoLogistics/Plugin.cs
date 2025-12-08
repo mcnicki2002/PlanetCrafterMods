@@ -156,7 +156,7 @@ namespace Nicki0.QoLAutoLogistics {
 			addContainedItemsToLogisticsModifierKey = Config.Bind<Key>("Config_AddContainedGroups", "addContainedGroupsModifierKey", Key.LeftCtrl, "Hold this key and press the supply or demand selection button in the logistics selector to supply or demand all item groups contained in the inventory.");
 			addContainedItemsToLogisticsClearList = Config.Bind<bool>("Config_AddContainedGroups", "clearListWhenAddingContainedGroups", true, "Clear supply/demand list when item groups that are contained in the inventory are added to the logistic settings.");
 
-			setContainerNameWhenSelectingLogistics = Config.Bind<bool>("Config_SetText", "enableSetText", true, "Set the container name to the demanded groups");
+			setContainerNameWhenSelectingLogistics = Config.Bind<bool>("Config_TextByLogistics", "enableSetDemandAsText", true, "Set the container name to the demanded groups");
 
 			SpriteCopy = IconData.CreateSprite(IconData.ImageCopy, IconData.ImageCopy_Width, IconData.ImageCopy_Height);
 			SpritePaste = IconData.CreateSprite(IconData.ImagePaste, IconData.ImagePaste_Width, IconData.ImagePaste_Height);
