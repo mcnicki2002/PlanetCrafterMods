@@ -247,19 +247,31 @@ namespace Nicki0.FeatPortalTeleport {
 					grid.cellSize = new Vector2(1500, 85);
 				} else {
 					int newWidth = 1500;
-					int localButtonPositon = 573; // Default local x position as of v1.611
+					int localNamePositionY = 0; // x = -730, x = -355, x = -230 for 1, 2 or 3 columns
+					Vector3 localButtonPositon = new Vector3(573, 0, 0); // Default local x position as of v1.611
+					Vector3 localMaterialContainerPosition = new Vector3(-256, -39, 0);
 					if (destinationCount > 3) {
 						newWidth = 750;
-						localButtonPositon = 198; // Alligned in a way that switching between the views doesn't change the button positon on the right
+						localButtonPositon.x = 198; // Alligned in a way that switching between the views doesn't change the button positon on the right
+						localMaterialContainerPosition.x = 64;
 					}
 					if (destinationCount > 6) {
 						newWidth = 500;
-						localButtonPositon = 100;
+						localButtonPositon.x = 100;
+						if (configRequireCost.Value) {
+							localNamePositionY = 24;
+							localMaterialContainerPosition.x = 16;
+							localMaterialContainerPosition.y = -51;
+						}
 					}
 					grid.cellSize = new Vector2(newWidth, 85);
 					foreach (Transform transform in gridObjectTransform) {
 						if (transform.name == "UiWorldInstanceSelector_PlanetTravel" && transform.gameObject.activeSelf) {
-							transform.Find("ContentContainer/ButtonOpen").localPosition = new Vector3(localButtonPositon, 0, 0);
+							transform.Find("ContentContainer/ButtonOpen").localPosition = localButtonPositon;
+							transform.Find("ContentContainer/GroupList").localPosition = localMaterialContainerPosition;
+							// The transform of the "Name" GameObject isn't centered and the cellSize change messes with the anchor positions or pivot position, therefore the localPosition changes...
+							Transform nameTransform = transform.Find("ContentContainer/Name");
+							nameTransform.localPosition = new Vector3(nameTransform.localPosition.x, localNamePositionY, nameTransform.localPosition.z);
 						}
 					}
 				}

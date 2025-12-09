@@ -1191,7 +1191,7 @@ namespace Nicki0.QoLAutoLogistics {
 		// --- Set Text for selected logistics -->
 		private static void SetTextForInventory(Inventory inventory) {
 			if (!enableMod.Value) { return; }
-			if (!setContainerNameWhenSelectingLogistics.Value) { }
+			if (!setContainerNameWhenSelectingLogistics.Value) { return; }
 
 			if (inventory == null) return;
 			WorldObject worldObject = inventory.GetLogisticEntity()?.GetWorldObject(); //WorldObjectsHandler.Instance.GetWorldObjectForInventory(inventory)

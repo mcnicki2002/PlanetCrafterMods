@@ -172,8 +172,11 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}
 
 		private static IEnumerator AddScripts() {
-			WaitForSeconds wait = new WaitForSeconds(3);
-			yield return wait;
+			WaitForSeconds wait = new WaitForSeconds(1);
+			int counter = 60;
+			while (GameObject.Find("World/OreVeins/Ores/MagnetarQuartz") == null && --counter > 0) {
+				yield return wait;
+			}
 
 			GameObject goOreMagnetarQuartz = GameObject.Find("World/OreVeins/Ores/MagnetarQuartz");
 			MachineGenerationGroupVein mggvMagnetarQuartz = goOreMagnetarQuartz.AddComponent<MachineGenerationGroupVein>();
