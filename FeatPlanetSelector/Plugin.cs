@@ -136,7 +136,6 @@ namespace Nicki0.FeatPlanetSelector {
 
 		public void Awake() {
 			GameObject grid = new GameObject("Grid");
-			grid.transform.localPosition = new Vector3(-666, 0, 0);
 			grid.transform.parent = this.transform;
 
 			UiWindowSystemView uiwsv = Managers.GetManager<WindowsHandler>().GetWindowViaUiId(DataConfig.UiType.SystemView) as UiWindowSystemView;
@@ -161,6 +160,7 @@ namespace Nicki0.FeatPlanetSelector {
 				labelObject.transform.localPosition = Vector3.zero;
 				TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
 				label.text = name;
+				label.GetComponent<LocalizedText>().textId = "Planet_" + pd.id;
 
 				menuObject.AddComponent<EventHoverIncrease>().SetHoverGroupEvent(default);
 				EventsHelpers.AddTriggerEvent(menuObject, EventTriggerType.PointerClick, new Action<EventTriggerCallbackData>(delegate (EventTriggerCallbackData d) {
@@ -186,7 +186,11 @@ namespace Nicki0.FeatPlanetSelector {
 
 			glg.constraintCount = 4;
 			glg.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-			glg.cellSize = new Vector2(350, 100);
+			glg.spacing = new Vector2(10, 10);
+
+			glg.cellSize = new Vector2((Screen.width * (3.0f/4.0f) - (glg.constraintCount - 1) * glg.spacing.x) / glg.constraintCount, 100);
+			float width = glg.cellSize.x * glg.constraintCount + (glg.constraintCount - 1) * glg.spacing.x;
+			grid.transform.localPosition = new Vector3(-width/2, 0, 0);
 		}
 	}
 }
