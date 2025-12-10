@@ -148,7 +148,7 @@ namespace Nicki0.FeatPlanetSelector {
 
 			Instantiate(uiwc.GetComponentInChildren<EventCloseAllUi>().gameObject, this.transform);
 
-			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(true)) {
+			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
 				string name = Readable.GetPlanetLabel(pd);
 				GameObject menuObject = new GameObject(pd.id);
 				menuObject.transform.parent = grid.transform;
