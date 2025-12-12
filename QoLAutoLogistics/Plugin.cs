@@ -31,6 +31,11 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	Info: Group -> GameObject -> get component ActionOpenable
 		 *	
+		 *	- Set/Change Group lists in UI
+		 *	
+		 *	- Add groups lists to logistic selector
+		 *	
+		 *	
 		 *	
 		 *	
 		 *	TO TEST
@@ -60,22 +65,32 @@ namespace Nicki0.QoLAutoLogistics {
 		public static ConfigEntry<bool> enablePotentialBuggedFeatures;
 
 		public static ConfigEntry<bool> clearOutputOnInputChange;
+
 		public static ConfigEntry<bool> allowLongNames;
 		public static ConfigEntry<string> logisticGroupSynonymesList;
 		public static ConfigEntry<string> logisticGroupNamedLists;
 		public static ConfigEntry<string> priorityNamesList;
+		public static ConfigEntry<bool> enableLogisticsByText;
+		public static ConfigEntry<bool> enableSingleGroupLogisticsByText;
+
 		public static ConfigEntry<bool> enableGeneratorAddLogistics;
+
 		public static ConfigEntry<bool> copyLogisticsPerGroup;
 		public static ConfigEntry<Key> copyLogisticsKey;
 		public static ConfigEntry<Key> pasteLogisticsKey;
+
 		public static ConfigEntry<bool> updateSupplyAll;
+
 		public static ConfigEntry<bool> logisticMenuIgnoreLockingConditions;
 		public static ConfigEntry<string> logisticMenuAdditionalGroups;
+
 		public static ConfigEntry<bool> deliveryDontDeliverFromProductionToDestructor;
 		public static ConfigEntry<string> deliveryDontDeliverFromProductionToDestructorGroups;
 		public static ConfigEntry<bool> deliveryDontDeliverSpawnedObjectsToDestructor;
+
 		public static ConfigEntry<Key> addContainedItemsToLogisticsModifierKey;
 		public static ConfigEntry<bool> addContainedItemsToLogisticsClearList;
+
 		public static ConfigEntry<bool> setContainerNameWhenSelectingLogistics;
 
 		private static readonly List<string> staticSynonymesList = new List<string>() {
@@ -135,6 +150,8 @@ namespace Nicki0.QoLAutoLogistics {
 			logisticGroupSynonymesList = Config.Bind<string>("Config_LogisticsByText", "synonymes", "N2:NitrogenCapsule1,O2:OxygenCapsule1,CH4:MethanCapsule1,H2O:WaterBottle1,Water:WaterBottle1", "List of synonymes");//Fertilizer T1:Fertilizer1,Fertilizer T2:Fertilizer2,Fertilizer T3:Fertilizer3,Mutagen T1:Mutagen1,Mutagen T2:Mutagen2,Mutagen T3:Mutagen3,Mutagen T4:Mutagen4,Drone T1:Drone1,Drone T2:Drone2,Animal food T1:AnimalFood1,Animal food T2:AnimalFood2,Animal food T3:AnimalFood3,Rocket Engine T1:RocketReactor,Rocket Engine T2:RocketReactor2,Azurae:Butterfly1Larvae,Leani:Butterfly2Larvae,Fensea:Butterfly3Larvae,Galaxe:Butterfly4Larvae,Abstreus:Butterfly5Larvae,Empalio:Butterfly6Larvae,Penga:Butterfly7Larvae,Chevrone:Butterfly8Larvae,Aemel:Butterfly9Larvae,Liux:Butterfly10Larvae,Nere:Butterfly11Larvae,Lorpen:Butterfly12Larvae,Fiorente:Butterfly13Larvae,Alben:Butterfly14Larvae,Futura:Butterfly15Larvae,Imeo:Butterfly16Larvae,Serena:Butterfly17Larvae,Golden Butterfly:Butterfly18Larvae,Faleria:Butterfly19Larvae,Oesbe:Butterfly20Larvae,Provios:Fish1Eggs,Vilnus:Fish2Eggs,Gerrero:Fish3Eggs,Khrom:Fish4Eggs,Ulani:Fish5Eggs,Aelera:Fish6Eggs,Tegede:Fish7Eggs,Ecaru:Fish8Eggs,Buyu:Fish9Eggs,Tiloo:Fish10Eggs,Golden Fish:Fish11Eggs,Velkia:Fish12Eggs,Galbea:Fish13Eggs,Stabu:Fish14Eggs,Atabu:Fish15Eggs,Generic Frog:Frog1Eggs,Huli:Frog2Eggs,Felicianna:Frog3Eggs,Strabo:Frog4Eggs,Trajuu:Frog5Eggs,Aiolus:Frog6Eggs,Afae:Frog7Eggs,Cillus:Frog8Eggs,Amedo:Frog9Eggs,Kenjoss:Frog10Eggs,Lavaum:Frog11Eggs,Leglus:Frog12Eggs,Jumi:Frog13Eggs,Seren:Frog14Eggs,Acuzzi:Frog15Eggs,Golden Frog:FrogGoldEggs,Common:LarvaeBase1,Uncommon:LarvaeBase2,Rare:LarvaeBase3,Bee:Bee1Larvae,Lirma:Seed0,Shanga:Seed1,Pestera:Seed2,Nulna:Seed3,Tuska:Seed4,Orema:Seed5,Volnus:Seed6,Snepea:Seed7Humble,Brelea:Seed8Humble,Seleus:Seed9Humble,Furteo:Seed10Humble,Humblea:Seed11Humble,Golden Seed:SeedGold,Iterra:Tree0Seed,Linifolia:Tree1Seed,Aleatus:Tree2Seed,Cernea:Tree3Seed,Elegea:Tree4Seed,Humelora:Tree5Seed,Aemora:Tree6Seed,Pleom:Tree7Seed,Soleus:Tree8Seed,Shreox:Tree9Seed,Rosea:Tree10Seed,Lillia:Tree11Seed,Prunea:Tree12Seed,Ruberu:Tree13Seed,Malissea:Tree14Seed,Redwo:Tree15Seed,Pamelia:Tree16Seed
 			logisticGroupNamedLists = Config.Bind<string>("Config_LogisticsByText", "lists", "quartz:quartz>,gas:N2+O2+CH4,basic ores:Fe+Si+Co+Mg+Ti+S,t1 ores:Al+Ir+Se,t2 ores:U+Os+Super Alloy+Zeolite+Obsidian+Blazar Quartz,fuses:multiplier fuse>", "List of groups. Put the list name into an inventory's text field to demand all item groups listed. Format: [name]:[group1]+[group2]...");
 			priorityNamesList = Config.Bind<string>("Config_LogisticsByText", "priorityGroups", "override:3,storage:2,s:2,backup:1,AC:0,overflow:-1,tradeAC:-1,rocket:-2,genOverflow:-2,trash:-3", "Names for priorities");//override:5,storage:4,s:4,backup:3,AC:2,overflow:1,pulsar:1,rocket:0,genOverflow:-2,trash:-3
+			enableLogisticsByText = Config.Bind<bool>("Config_LogisticsByText", "enableLogisticsByText", true, "Allow setting logistics via text fields (e.g. on containers).");
+			enableSingleGroupLogisticsByText = Config.Bind<bool>("Config_LogisticsByText", "enableSingleItemByText", true, "Allows to set single items via text. If false, only lists are found.");
 
 			enableGeneratorAddLogistics = Config.Bind<bool>("Config_GeneratorLogistics", "enableAddLogistics", true, "Enable automatic supply of generated items in machines when build. For example, Bee hives automatically supply honey and bee larva. Shredders are automatically set to the lowest priority.");
 
@@ -148,13 +165,13 @@ namespace Nicki0.QoLAutoLogistics {
 			logisticMenuAdditionalGroups = Config.Bind<string>("Config_ShowLogisticsItemGroups", "additionalGroups", "CookCocoaSeed,CookWheatSeed", "Additional item groups to show in the logistics menu if ignoreLockingConditions=true. allowAnyValue is ignored by this setting. Requires restart to apply.");
 
 			deliveryDontDeliverFromProductionToDestructor = Config.Bind<bool>("Config_DroneDelivery", "dontDeliverFromProductionToShredder", false, "Prevent that drones deliver from [dontDeliverToShredderFromMachines] to shredders (Example: Iron from T3 Ore Extractors isn't delivered to shredders demanding Iron).");
-			deliveryDontDeliverFromProductionToDestructorGroups = Config.Bind<string>("Config_DroneDelivery", "dontDeliverToShredderFromMachines", "OreExtractor3,HarvestingRobot1,AutoCrafter1,Incubator1,GeneticManipulator1,PlanetaryDeliveryDepot1,InterplanetaryExchangePlatform1,SilkGenerator,TradePlatform1,WaterCollector1,WaterCollector2,Biodome2,GasExtractor2", "Machines that drones won't deliver items from to shredders.");
+			deliveryDontDeliverFromProductionToDestructorGroups = Config.Bind<string>("Config_DroneDelivery", "dontDeliverToShredderFromMachines", "OreExtractor3,HarvestingRobot1,AutoCrafter1,Incubator1,GeneticManipulator1,PlanetaryDeliveryDepot1,InterplanetaryExchangePlatform1,SilkGenerator,TradePlatform1,WaterCollector1,WaterCollector2,Biodome2,GasExtractor2,DetoxificationMachine1,DetoxificationMachine2,DetoxificationMachine3,ToxicWaterCollector1,ToxicWaterCollector2,ToxicWaterCollector3", "Machines that drones won't deliver items from to shredders.");
 			deliveryDontDeliverSpawnedObjectsToDestructor = Config.Bind<bool>("Config_DroneDelivery", "dontDeliverSpawnedObjectsToShredder", false, "Prevent that drones deliver fruits (and any other item that drones collect from the floor) to shredders.");
 
 			addContainedItemsToLogisticsModifierKey = Config.Bind<Key>("Config_AddContainedGroups", "addContainedGroupsModifierKey", Key.LeftCtrl, "Hold this key and press the supply or demand selection button in the logistics selector to supply or demand all item groups contained in the inventory.");
 			addContainedItemsToLogisticsClearList = Config.Bind<bool>("Config_AddContainedGroups", "clearListWhenAddingContainedGroups", true, "Clear supply/demand list when item groups that are contained in the inventory are added to the logistic settings.");
 
-			setContainerNameWhenSelectingLogistics = Config.Bind<bool>("Config_TextByLogistics", "enableSetDemandAsText", true, "Set the container name to the demanded groups");
+			setContainerNameWhenSelectingLogistics = Config.Bind<bool>("Config_TextByLogistics", "enableSetDemandAsText", false, "Set the container name to the demanded groups");
 
 			SpriteCopy = IconData.CreateSprite(IconData.ImageCopy, IconData.ImageCopy_Width, IconData.ImageCopy_Height);
 			SpritePaste = IconData.CreateSprite(IconData.ImagePaste, IconData.ImagePaste_Width, IconData.ImagePaste_Height);
@@ -423,6 +440,7 @@ namespace Nicki0.QoLAutoLogistics {
 		[HarmonyPatch(typeof(UiWindowTextInput), nameof(UiWindowTextInput.OnClose))]
 		public static void UiWindowTextInput_OnClose(ref WorldObjectText ___worldObjectText, ref TMP_InputField ___inputField) {
 			if (!enableMod.Value) return;
+			if (!enableLogisticsByText.Value) return;
 
 			if (___worldObjectText == null) return;
 			TextProxy textProxy = (TextProxy)field_WorldObjectText_proxy.GetValue(___worldObjectText);
@@ -509,7 +527,7 @@ namespace Nicki0.QoLAutoLogistics {
 					foreach (string idElement in listIDs) {
 						foundGroupsFromString.AddRange(GetGroupsFromString(idElement, logisticGroupSynonymesListSplit));
 					}
-				} else {
+				} else if (enableSingleGroupLogisticsByText.Value) {
 					foundGroupsFromString.AddRange(GetGroupsFromString(possibleId, logisticGroupSynonymesListSplit));
 				}
 
@@ -1221,6 +1239,11 @@ namespace Nicki0.QoLAutoLogistics {
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(LogisticSelector), nameof(LogisticSelector.OnSupplyAll))]
 		private static void Post_LogisticSelector_OnSupplyAll(Inventory ____inventory) {
+			SetTextForInventory(____inventory);
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(LogisticSelector), "OnRemoveDemandGroup")]
+		private static void Post_LogisticSelector_OnRemoveDemandGroup(Inventory ____inventory) {
 			SetTextForInventory(____inventory);
 		}
 		// <--- Set Text for selected logistics ---
