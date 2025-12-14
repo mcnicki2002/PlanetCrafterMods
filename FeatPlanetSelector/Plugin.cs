@@ -146,7 +146,7 @@ namespace Nicki0.FeatPlanetSelector {
 			title.SetName("Title");
 			this.title = title.GetComponent<TextMeshProUGUI>();
 
-			Instantiate(uiwc.GetComponentInChildren<EventCloseAllUi>().gameObject, this.transform);
+			Instantiate(uiwc.GetComponentInChildren<EventCloseAllUi>(true).gameObject, this.transform);
 
 			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
 				string name = Readable.GetPlanetLabel(pd);
