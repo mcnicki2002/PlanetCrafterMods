@@ -53,7 +53,11 @@ namespace Nicki0.FeatPlanetSelector {
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachinePlanetChanger), "OnEnable")]
 		private static void MachinePlanetChanger_OnEnable(MachinePlanetChanger __instance, GameObject ____planetContainer) {
-			Instance.StartCoroutine(ExecuteLater(delegate () {
+			if (__instance.TryGetComponent<ConstructibleGhost>(out _)) return;
+			
+			__instance.StartCoroutine(ExecuteLater(delegate () {
+				if (__instance.TryGetComponent<ConstructibleGhost>(out _)) return;
+
 				__instance.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) {
 					if (wo != null && wo.GetPlanetLinkedHash() != 0) {
 
@@ -78,6 +82,7 @@ namespace Nicki0.FeatPlanetSelector {
 		}
 		private static IEnumerator UpdateState(MachinePlanetChanger mpc) {
 			WaitForSeconds wait = new WaitForSeconds(10f);
+			yield return wait;
 			while (mpc != null) {
 				mpc.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) {
 					if (wo != null) {
@@ -168,9 +173,9 @@ namespace Nicki0.FeatPlanetSelector {
 					GameObject planetContainer = AccessTools.FieldRefAccess<MachinePlanetChanger, GameObject>(mpc, "_planetContainer");
 
 					GameObjects.DestroyAllChildren(planetContainer, false);
-					PlanetChanger componentInChildren = Instantiate<GameObject>(pd.GetPlanetSpaceView(), planetContainer.transform).GetComponentInChildren<PlanetChanger>();
-					componentInChildren.Init();
-					componentInChildren.SetColors((float)Managers.GetManager<WorldUnitsHandler>().GetUnit(DataConfig.WorldUnitType.Terraformation, null).GetValue());
+					PlanetChanger planetChanger = Instantiate<GameObject>(pd.GetPlanetSpaceView(), planetContainer.transform).GetComponentInChildren<PlanetChanger>();
+					planetChanger.Init();
+					planetChanger.SetColors((float)Managers.GetManager<WorldUnitsHandler>().GetUnit(DataConfig.WorldUnitType.Terraformation, null).GetValue());
 
 					this.GetWorldObject().SetPlanetLinkedHash(pd.GetPlanetHash());
 				}), new EventTriggerCallbackData(pd));

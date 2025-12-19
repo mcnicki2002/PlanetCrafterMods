@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>FeatPlanetSelector</AssemblyName>
 		<Description>(Feat) Planet Selector</Description>
-		<Version>1.0.1.0</Version>
+		<Version>1.0.2.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.FeatPlanetSelector</RootNamespace>
