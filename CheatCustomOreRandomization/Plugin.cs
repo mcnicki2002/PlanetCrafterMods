@@ -17,7 +17,8 @@ namespace Nicki0.CheatCustomOreRandomization {
 
 		private static Plugin Instance;
 
-		private static readonly int StateObjectId = SaveState.GenerateId(typeof(Plugin));
+		private static readonly int DataFormatVersion = 1;
+		private static SaveState saveState;
 
 		private static ConfigEntry<bool> enable;
 		private static ConfigEntry<bool> debug;
@@ -29,6 +30,8 @@ namespace Nicki0.CheatCustomOreRandomization {
 			// Plugin startup logic
 			log = Logger;
 			Instance = this;
+
+			saveState = new SaveState(typeof(Plugin), DataFormatVersion);
 
 			enable = Config.Bind<bool>("Config", "enabled", true, "enable mod");
 			debug = Config.Bind<bool>("Config", "debug", false, "print messages");
@@ -53,14 +56,9 @@ namespace Nicki0.CheatCustomOreRandomization {
 
 			if (!Managers.GetManager<GameSettingsHandler>().GetCurrentGameSettings().GetRandomizeMineables()) { return; }
 
-			WorldObject stateObject;
+			bool configExists = GetData(out Dictionary<string, string> oreConfig);
 
-			bool configExists = SaveState.GetStateObject(StateObjectId, out stateObject);
 			if (!configExists) {
-				if (!SaveState.GetAndCreateStateObject(StateObjectId, out stateObject)) {
-					if (debug.Value) log.LogWarning("State Object not found");
-					return;
-				}
 				Dictionary<string, string> newOreConfig = new Dictionary<string, string>();
 				foreach (string cfgEntry in configOre.Value.Split(";")) {
 					string[] cfgSplit = cfgEntry.Split(":");
@@ -70,10 +68,8 @@ namespace Nicki0.CheatCustomOreRandomization {
 					newOreConfig[cfgSplit[0].Trim()] = cfgSplit[1].Trim();
 				}
 
-				SaveState.SetDictionaryData<string, string>(stateObject, newOreConfig);
+				saveState.SetData(newOreConfig);
 			}
-
-			Dictionary<string, string> oreConfig = SaveState.GetDictionaryData<string, string>(stateObject, StringIdentity, StringIdentity);
 
 			Dictionary<string, GroupData> toReplaceGIdsToGroupData = new Dictionary<string, GroupData>();
 			foreach (GroupData gd in ___groupsReplaced.Keys) {
@@ -118,6 +114,44 @@ namespace Nicki0.CheatCustomOreRandomization {
 					}
 				}*/
 
+			}
+		}
+
+		private static bool GetData(out Dictionary<string, string> stateData) {
+			stateData = default;
+			switch (saveState.GetDataFormatVersion(out int version)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					break;
+				case SaveState.ERROR_CODE.NEWER_DATA_FORMAT:
+					throw new Exception("Please update the mod " + PluginInfo.PLUGIN_NAME);
+				case SaveState.ERROR_CODE.OLD_DATA_FORMAT:
+					switch (version) {
+						case 1: // Current version, nothing to convert
+							break;
+						default:
+							return false;
+					}
+					break;
+				case SaveState.ERROR_CODE.INVALID_JSON: // custom format didn't use json, so the deserialization would fail
+					try {
+						if (SaveState_v0.GetStateObject(SaveState_v0.GenerateId(typeof(Plugin)), out WorldObject stateObject)) {
+							Dictionary<string, string> oldState = SaveState_v0.GetDictionaryData<string, string>(stateObject, StringIdentity, StringIdentity);
+							saveState.SetData(oldState);
+						}
+					} catch {
+						return false;
+					}
+					break;
+				case SaveState.ERROR_CODE.STATE_OBJECT_MISSING:
+					return false;
+			}
+
+			switch (saveState.GetData(out Dictionary<string, string> data)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					stateData = data;
+					return true;
+				default:
+					return false;
 			}
 		}
 	}

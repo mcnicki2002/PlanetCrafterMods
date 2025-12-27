@@ -17,5 +17,6 @@
 	<Target Name="CopyDLLs" AfterTargets="Build">
 		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(SourceDir)..\..\PlanetCrafterMods\$(AssemblyName)\" />
 		<Copy SourceFiles="$(SourceDir)SaveState.cs" DestinationFolder="$(SourceDir)..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)SaveState_v0.cs" DestinationFolder="$(SourceDir)..\..\PlanetCrafterMods\$(AssemblyName)\" />
 	</Target>
 </Project>

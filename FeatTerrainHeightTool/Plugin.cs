@@ -18,11 +18,16 @@ namespace Nicki0.FeatTerrainHeightTool {
 	public class Plugin : BaseUnityPlugin {
 
 		static ManualLogSource log;
-		private static readonly int SaveStateId = SaveState.GenerateId(typeof(Plugin));
+		//private static readonly int SaveStateId = SaveState.GenerateId(typeof(Plugin));
+
+		private static readonly int StateDataFormat = 1;
+		private static SaveState saveState;
 
 		private void Awake() {
 			// Plugin startup logic
 			log = Logger;
+
+			saveState = new SaveState(typeof(Plugin), StateDataFormat);
 
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -36,16 +41,41 @@ namespace Nicki0.FeatTerrainHeightTool {
 			}
 		}
 
+		//List<int> collectorInstIDs = new List<int>();
 		public void Update() {
 			if (Keyboard.current.ctrlKey.IsPressed() && Keyboard.current.tKey.wasPressedThisFrame && Keyboard.current.tKey.IsPressed()) {
 				switchToolIsActive = !switchToolIsActive;
 			}
+
+
+			/*
+			 * Does not work because once the objects are hidden, they get a new id
+			 * 
+			if (Keyboard.current.pKey.wasPressedThisFrame) {
+				if (Physics.Raycast(Managers.GetManager<PlayersManager>().GetActivePlayerController().GetAimController().GetAimRay(), out RaycastHit hit, 100)) {
+					collectorInstIDs.Add(hit.collider.gameObject.GetInstanceID());
+					log.LogMessage(hit.collider.gameObject.GetInstanceID());
+				}
+			}
+			if (Keyboard.current.lKey.wasPressedThisFrame) {
+				log.LogWarning("-----");
+				foreach (int id in collectorInstIDs) {
+					log.LogError(id);
+					//GameObject go = (GameObject) Resources.InstanceIDToObject(id);
+
+					GameObject go = (GameObject)typeof(UnityEngine.Object).GetMethod("FindObjectFromInstanceID", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+		.Invoke(null, new object[] { id });
+
+					log.LogInfo(go == null);
+					if (go != null) go.SetActive(!go.activeSelf);
+				}
+			}*/
 		}
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(BaseHudHandler), "UpdateHud")]
 		private static void BaseHudHandler_UpdateHud(BaseHudHandler __instance) {
-			if (switchToolIsActive && (Managers.GetManager<PlayersManager>()?.GetActivePlayerController().GetPlayerCanAct().GetCanMove()??false)) {
+			if (switchToolIsActive && (Managers.GetManager<PlayersManager>()?.GetActivePlayerController().GetPlayerCanAct().GetCanMove() ?? false)) {
 				__instance.textPositionDecoration.text += " - Terrain Height Tool Active";
 			}
 		}
@@ -72,10 +102,10 @@ namespace Nicki0.FeatTerrainHeightTool {
 		private static void ProcessTerrainModification() {
 			string saveFileName = Managers.GetManager<SavedDataHandler>().GetCurrentSaveFileName();
 			if (!(Keyboard.current.ctrlKey.IsPressed() && (Mouse.current.leftButton.IsPressed() || Mouse.current.rightButton.IsPressed()))) return;
-			SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
+			//SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
 
 			if (!heightsOfSaves.ContainsKey(saveFileName)) {
-				heightsOfSaves[saveFileName] = SaveState.GetDictionaryData<string, float[,]>(so, s => s, DecodeFloatArray);
+				heightsOfSaves[saveFileName] = GetSaveState();
 			}
 			Dictionary<string, float[,]> terrainHeights = heightsOfSaves[saveFileName];
 
@@ -185,8 +215,9 @@ namespace Nicki0.FeatTerrainHeightTool {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(SavedDataHandler), nameof(SavedDataHandler.SaveWorldData))]
 		private static void SavedDataHandler_SaveWorldData(SavedDataHandler __instance) {
-			SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
-			SaveState.SetDictionaryData<string, float[,]>(so, heightsOfSaves[__instance.GetCurrentSaveFileName()], TFunc: EncodeFloatArray);
+			//SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
+			//SaveState.SetDictionaryData<string, float[,]>(so, heightsOfSaves[__instance.GetCurrentSaveFileName()], TFunc: EncodeFloatArray);
+			saveState.SetData(heightsOfSaves[__instance.GetCurrentSaveFileName()]);
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
@@ -194,8 +225,9 @@ namespace Nicki0.FeatTerrainHeightTool {
 			string saveFileName = Managers.GetManager<SavedDataHandler>().GetCurrentSaveFileName();
 
 			if (!heightsOfSaves.ContainsKey(saveFileName)) {
-				SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
-				heightsOfSaves[saveFileName] = SaveState.GetDictionaryData<string, float[,]>(so, s => s, DecodeFloatArray);
+				//SaveState.GetAndCreateStateObject(SaveStateId, out WorldObject so);
+				heightsOfSaves[saveFileName] = GetSaveState();
+				//SaveState.GetDictionaryData<string, float[,]>(so, s => s, DecodeFloatArray);
 			}
 
 			Dictionary<string, float[,]> terrainHeights = heightsOfSaves[saveFileName];
@@ -203,6 +235,41 @@ namespace Nicki0.FeatTerrainHeightTool {
 				if (terrainHeights.TryGetValue(terrain.gameObject.name, out float[,] heights)) {
 					terrain.terrainData.SetHeights(0, 0, heights);
 				}
+			}
+		}
+
+		private static Dictionary<string, float[,]> GetSaveState() {
+			switch (saveState.GetDataFormatVersion(out int version)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					break;
+				case SaveState.ERROR_CODE.NEWER_DATA_FORMAT:
+					throw new Exception("Please update the mod " + PluginInfo.PLUGIN_NAME);
+				case SaveState.ERROR_CODE.OLD_DATA_FORMAT:
+					switch (version) {
+						case 1: // Current version, nothing to convert
+							break;
+						default:
+							log.LogError("Unknown data format! Resetting data.");
+							saveState.SetData(new Dictionary<string, float[,]>());
+							return new Dictionary<string, float[,]>();
+					}
+					break;
+				case SaveState.ERROR_CODE.INVALID_JSON:
+					log.LogError("Can't convert data format! Resetting data.");
+					saveState.SetData(new Dictionary<string, float[,]>());
+					break;
+				case SaveState.ERROR_CODE.STATE_OBJECT_MISSING:
+					saveState.SetData(new Dictionary<string, float[,]>());
+					return new Dictionary<string, float[,]>();
+			}
+
+			switch (saveState.GetData(out Dictionary<string, float[,]> data)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					return data;
+				default:
+					log.LogError("Can't load data! Resetting data.");
+					saveState.SetData(new Dictionary<string, float[,]>());
+					return new Dictionary<string, float[,]>();
 			}
 		}
 

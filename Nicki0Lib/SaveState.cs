@@ -2,89 +2,187 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SpaceCraft;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.Assertions;
 
 namespace Nicki0 {
 
 	public class SaveState {
+
+		/*
+		 * TODO: 
+		 * 
+		 * 
+		 * 
+		 */
+
+		/// <summary>
+		/// 0: individual
+		/// 1: json
+		/// </summary>
+		private static readonly int StateFormatVersion = 1;
+
+		class State {
+			public int stateFormatVersion; // State Format Version
+			public int dataFormatVersion; // Data Format Version
+			public JToken data; // Data
+		}
+
+		public enum ERROR_CODE {
+			SUCCESS,
+			INVALID_JSON,
+			OLD_DATA_FORMAT,
+			NEWER_DATA_FORMAT,
+			STATE_OBJECT_MISSING // <- can be used if the object has to be initialized; remember: Can happen in played/progressed save file
+		}
+
+		Type PluginType;
+		int DataFormatVersion;
+
+		public readonly int id;
+
+		public SaveState(Type pPluginType, int pDataFormatVersion, int? pId = null) {
+			PluginType = pPluginType;
+			DataFormatVersion = pDataFormatVersion;
+
+
+			id = (pId.HasValue ? pId.Value : GenerateId(PluginType));
+
+			BepInPlugin bip = MetadataHelper.GetMetadata(PluginType);
+			Log(bip.Name + " uses id " + id);
+		}
+
+
 		private static readonly int Nicki0IdSpace = 140_0000_0;
 		/// <summary>
 		/// Method <c>GenerateId</c> Generate an id
 		/// </summary>
-		public static int GenerateId(Type PluginType) {
+		private static int GenerateId(Type PluginType) {
 			// Console.WriteLine("--- " + MetadataHelper.GetMetadata(PluginType).Name + " uses id " + GenerateId(MetadataHelper.GetMetadata(PluginType).GUID) + " ---");
 			return GenerateId(MetadataHelper.GetMetadata(PluginType).GUID);
 		}
 		/// <summary>
 		/// Method <c>GenerateId</c> Generate an id
 		/// </summary>
-		public static int GenerateId(string id) {
+		private static int GenerateId(string id) {
 			return Nicki0IdSpace + ((id.GetStableHashCode() % 10000 + 10000) % 10000) * 10;
 		}
 
-		public static T Identity<T>(T obj) => obj;
+		public ERROR_CODE GetDataFormatVersion(out int dataFormatVersion) {
+			if (GetStateObject(out WorldObject wo)) {
+				try {
+					State state = JsonConvert.DeserializeObject<State>(wo.GetText());
 
-		public static bool GetAndCreateStateObject(int id, out WorldObject stateObject) {
-			stateObject = WorldObjectsHandler.Instance?.GetWorldObjectViaId(id);
-			if (stateObject == null) {
-				stateObject = WorldObjectsHandler.Instance?.CreateNewWorldObject(GroupsHandler.GetGroupViaId("Container2"), id);
-				stateObject?.SetText("");
+					if (state == null) {
+						dataFormatVersion = default;
+						return ERROR_CODE.INVALID_JSON;
+					}
+
+					dataFormatVersion = state.dataFormatVersion;
+
+					if (dataFormatVersion < this.DataFormatVersion) return ERROR_CODE.OLD_DATA_FORMAT;
+					if (dataFormatVersion > this.DataFormatVersion) return ERROR_CODE.NEWER_DATA_FORMAT;
+					return ERROR_CODE.SUCCESS;
+				} catch {
+					dataFormatVersion = default;
+					return ERROR_CODE.INVALID_JSON;
+				}
 			}
+			dataFormatVersion = default;
+			return ERROR_CODE.STATE_OBJECT_MISSING;
+		}
+
+		private bool GetStateObject(out WorldObject stateObject) {
+			stateObject = WorldObjectsHandler.Instance?.GetWorldObjectViaId(id);
 			stateObject?.SetDontSaveMe(false);
 			return stateObject != null;
 		}
-		public static bool GetStateObject(int id, out WorldObject stateObject) {
+
+		private bool CreateStateObject(out WorldObject stateObject) {
 			stateObject = WorldObjectsHandler.Instance?.GetWorldObjectViaId(id);
-			stateObject?.SetDontSaveMe(false);
-			return stateObject != null;
-		}
-		public static void SetDictionaryListData(WorldObject wo, Dictionary<string, List<string>> data) {
-			wo.SetText(string.Join(";", data.Keys.Select(e => e + ":" + string.Join(",", data[e]))));
-		}
-		public static void SetDictionaryListData<K, T>(WorldObject wo, Dictionary<K, IEnumerable<T>> data, Func<K, string> KFunc = null, Func<T, string> TFunc = null) {
-			KFunc ??= e => e.ToString();
-			TFunc ??= e => e.ToString();
-			wo.SetText(string.Join(";", data.Keys.Select(k => KFunc(k) + ":" + string.Join(",", data[k].Select(TFunc)))));
-		}
-		public static Dictionary<string, List<string>> GetDictionaryListData(WorldObject wo) {
-			Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
-			foreach (string keyAndList in wo.GetText().Split(";")) {
-				string[] keyAndListArray = keyAndList.Split(":");
-				Assert.IsTrue(keyAndListArray.Count() == 2, nameof(SaveState.GetDictionaryListData).ToString() + ": Wrong data format: there may only be one key and list");
-				dict[keyAndListArray[0]] = new List<string>(keyAndListArray[1].Split(","));
+			if (stateObject != null) {
+				stateObject.SetDontSaveMe(false);
+				return true; // object exists, so it can be accessed
+			} else {
+				stateObject = WorldObjectsHandler.Instance.CreateNewWorldObject(GroupsHandler.GetGroupViaId("Container2"), id);
+				stateObject?.SetDontSaveMe(false);
+				return stateObject != null;
 			}
-			return dict;
 		}
 
-		public static void SetDictionaryData<K, T>(WorldObject wo, Dictionary<K, T> data, Func<K, string> KFunc = null, Func<T, string> TFunc = null) {
-			KFunc ??= e => e.ToString();
-			TFunc ??= e => e.ToString();
-			wo.SetText(string.Join(";", data.Keys.Select(k => KFunc(k) + ":" + TFunc(data[k]))));
-		}
-		public static Dictionary<K, T> GetDictionaryData<K, T>(WorldObject wo, Func<string, K> KFunc, Func<string, T> TFunc) {
-			string text = wo.GetText();
-			Dictionary<K, T> dict = new Dictionary<K, T>();
-			if (string.IsNullOrEmpty(text)) return dict;
-
-			foreach (string keyAndValue in text.Split(";")) {
-				string[] keyAndValueArray = keyAndValue.Split(":");
-				Assert.IsTrue(keyAndValueArray.Count() == 2, nameof(SaveState.GetDictionaryData).ToString() + ": Wrong data format: there may only be one key and list");
-				dict[KFunc(keyAndValueArray[0])] = TFunc(keyAndValueArray[1]);
+		public bool SetData<T>(T data) {
+			if (data == null) {
+				Log("data is null!");
+				return false;
 			}
-			return dict;
+
+			BepInPlugin bip = MetadataHelper.GetMetadata(PluginType);
+			State state = new State();
+			state.stateFormatVersion = StateFormatVersion;
+			state.dataFormatVersion = this.DataFormatVersion;
+			state.data = JToken.FromObject(data);
+			/*using (SHA256 sha = SHA256.Create()) {
+				byte[] hashValue = sha.ComputeHash(Encoding.UTF8.GetBytes(state.data));
+				state.dhash = Convert.ToBase64String(hashValue);
+			}*/
+
+			string serializedData = JsonConvert.SerializeObject(state);
+			if (serializedData.Contains("@") || serializedData.Contains("|")) {
+				Log("String contains invalid characters");
+				return false;
+			}
+
+			if (GetStateObject(out WorldObject wo)) {
+				wo.SetText(serializedData);
+				return true;
+			} else if (WorldObjectsHandler.Instance != null) {
+				if (CreateStateObject(out WorldObject newWO)) {
+					newWO.SetText(serializedData);
+					return true;
+				} else {
+					return false;
+				}
+			}
+			return false;
 		}
 
-		public static void SetListData<T>(WorldObject wo, List<T> data, Func<T, string> TFunc = null, string separator = ",") {
-			TFunc ??= e => e.ToString();
-			wo.SetText(string.Join(separator, data.Select(TFunc)));
+		public ERROR_CODE GetData<T>(out T data) {
+			if (GetStateObject(out WorldObject wo)) {
+				try {
+					State state = JsonConvert.DeserializeObject<State>(wo.GetText() ?? "");
+					if (state == null) {
+						data = default(T);
+						return ERROR_CODE.INVALID_JSON;
+					}
+
+					if (state.stateFormatVersion != StateFormatVersion) {
+						/*
+						 * TODO: Implement handling of older versions
+						 */
+					}
+
+					if (state.dataFormatVersion != this.DataFormatVersion) {
+						data = default(T);
+						return state.dataFormatVersion < this.DataFormatVersion ? ERROR_CODE.OLD_DATA_FORMAT : ERROR_CODE.NEWER_DATA_FORMAT;
+					}
+
+					data = state.data.ToObject<T>();//JsonConvert.DeserializeObject<T>(state.data);
+
+					return data != null ? ERROR_CODE.SUCCESS : ERROR_CODE.INVALID_JSON;
+				} catch {
+					data = default(T);
+					return ERROR_CODE.INVALID_JSON;
+				}
+			} else {
+				data = default(T);
+				return ERROR_CODE.STATE_OBJECT_MISSING;
+			}
 		}
-		public static List<T> GetListData<T>(WorldObject wo, Func<string, T> TFunc, string separator = ",") {
-			return wo.GetText().Split(separator).Select(TFunc).ToList();
+
+		private void Log(string message) {
+			Console.WriteLine("[SaveState] " + message);
 		}
-		public static List<string> GetListData(WorldObject wo) => GetListData<string>(wo, e => e);
 	}
 }

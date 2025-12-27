@@ -66,6 +66,11 @@
 			<HintPath>$(GameManaged)\EVP5.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="NewtonsoftJson">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Newtonsoft.Json.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 
 	<Target Name="CopyToGit" AfterTargets="Build">

@@ -34,7 +34,7 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	- Set/Change Group lists in UI
 		 *	
 		 *	- Add groups lists to logistic selector
-		 *	
+		 
 		 *	
 		 *	
 		 *	
@@ -662,7 +662,7 @@ namespace Nicki0.QoLAutoLogistics {
 
 		// --- Logistics to String --->
 		private static string LogisticsToString(LogisticEntity entity, int count = int.MaxValue) {
-			return string.Join(", ", entity.GetDemandGroups().Select(group => (Readable.GetGroupName(group) ?? group.GetId())).Take(count).ToArray()) + (" +" + entity.GetPriority());
+			return string.Join(", ", entity.GetDemandGroups().Select(group => (Readable.GetGroupName(group) ?? group.GetId())).Take(count).ToArray()) + (entity.GetPriority() == 0 ? "" : " +" + entity.GetPriority());
 		}
 		private static string PriorityToNames(int prio) {
 			IEnumerable<IEnumerable<string>> prioNamesSplit =

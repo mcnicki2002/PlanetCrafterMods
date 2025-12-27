@@ -42,6 +42,9 @@ namespace Nicki0.FeatPortalTeleport {
 		static Plugin Instance;
 		static ManualLogSource log;
 
+		private static readonly int DataFormatVersion = 1;
+		private static SaveState saveState;
+
 		public static ConfigEntry<bool> configEnableDebug;
 		public static ConfigEntry<bool> configRequireCost;
 		public static ConfigEntry<string> configItemsCost;
@@ -53,6 +56,7 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<bool> configSetColorPortals;
 		public static ConfigEntry<string> configColorPortalsColors;
 		public static ConfigEntry<float> configTimeInPortal;
+		public static ConfigEntry<bool> configEnableStrudel;
 
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
 		static MethodInfo method_MachinePortalGenerator_SetParticles;
@@ -75,6 +79,7 @@ namespace Nicki0.FeatPortalTeleport {
 			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
 			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
 			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1; Toxicity: 192, 192, 0, 1", "Color of a portal connected to a planet (RGB/RGBA)");
+			configEnableStrudel = Config.Bind<bool>("Color", "coneShapedPortals", true, "Activate cone shape of the portal");
 			configTimeInPortal = Config.Bind<float>("General", "timeInPortal", 0, "Time in seconds for how long the player remains inside the portal animation. Default time: 5s. Set to 0 to use default time.");
 
 			enableKeepPortalOpen = configKeepPortalsOpen.Value;
@@ -87,6 +92,8 @@ namespace Nicki0.FeatPortalTeleport {
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
 
+			saveState = new SaveState(typeof(Plugin), DataFormatVersion);
+
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -96,30 +103,57 @@ namespace Nicki0.FeatPortalTeleport {
 			if (enableKeepPortalOpen) { SetColorConfig(); }
 		}
 
-		private static readonly int StateObjectId = SaveState.GenerateId(typeof(Plugin));
-		private static WorldObject woidsToPlanetidhash_StateObject = null;
 		private static Dictionary<int, int> woidsToPlanetidhashstate = null;
 		private static Dictionary<int, int> GetWoIdsToPlanetIdHashes() {
 			if (woidsToPlanetidhashstate != null) { return woidsToPlanetidhashstate; }
-			if (SaveState.GetAndCreateStateObject(StateObjectId, out WorldObject stateObject)) {
-				woidsToPlanetidhash_StateObject = stateObject;
-				woidsToPlanetidhashstate = SaveState.GetDictionaryData<int, int>(stateObject, Int32.Parse, Int32.Parse);
-				return woidsToPlanetidhashstate;
+
+			switch (saveState.GetDataFormatVersion(out int version)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					break;
+				case SaveState.ERROR_CODE.NEWER_DATA_FORMAT:
+					throw new Exception("Please update the mod " + PluginInfo.PLUGIN_NAME);
+				case SaveState.ERROR_CODE.OLD_DATA_FORMAT:
+					switch (version) {
+						case 1: // Current version, nothing to convert
+							break;
+						default:
+							log.LogError("Unknown data format! Resetting data.");
+							saveState.SetData(new Dictionary<int, int>());
+							return new Dictionary<int, int>();
+					}
+					break;
+				case SaveState.ERROR_CODE.INVALID_JSON: // custom format didn't use json, so the deserialization would fail
+					try {
+						if (SaveState_v0.GetStateObject(SaveState_v0.GenerateId(typeof(Plugin)), out WorldObject stateObject)) {
+							Dictionary<int, int> oldState = SaveState_v0.GetDictionaryData<int, int>(stateObject, Int32.Parse, Int32.Parse);
+							saveState.SetData(oldState);
+						}
+					} catch {
+						log.LogError("Can't convert data format! Resetting data.");
+						saveState.SetData(new Dictionary<int, int>());
+					}
+					break;
+				case SaveState.ERROR_CODE.STATE_OBJECT_MISSING:
+					saveState.SetData(new Dictionary<int, int>());
+					return new Dictionary<int, int>();
 			}
-			throw new Exception("Couldn't obtain woIdsToPlanetId state object");
+
+			switch (saveState.GetData(out Dictionary<int, int> data)) {
+				case SaveState.ERROR_CODE.SUCCESS:
+					woidsToPlanetidhashstate = data;
+					return woidsToPlanetidhashstate;
+				default:
+					log.LogError("Can't load data! Resetting data.");
+					saveState.SetData(new Dictionary<int, int>());
+					return new Dictionary<int, int>();
+			}
 		}
 		private static void SetWoIdsToPlanetIdHashes(Dictionary<int, int> newState) {
-			if (woidsToPlanetidhash_StateObject == null) {
-				if (SaveState.GetAndCreateStateObject(StateObjectId, out WorldObject stateObject)) {
-					woidsToPlanetidhash_StateObject = stateObject;
-				}
-			}
-			if (woidsToPlanetidhash_StateObject != null) {
-				SaveState.SetDictionaryData<int, int>(woidsToPlanetidhash_StateObject, newState);
+			if (saveState.SetData(newState)) {
+				woidsToPlanetidhashstate = null;
 			} else {
 				throw new Exception("Couldn't obtain woIdsToPlanetId state object");
 			}
-			woidsToPlanetidhashstate = null;
 		}
 
 		private static int planetToTeleportToHash = 0;
@@ -503,6 +537,7 @@ namespace Nicki0.FeatPortalTeleport {
 			if (woa == null) return -1; // <- E.g. when the portal is the ReturnPortal in the procedural instance
 
 			if (woa.GetWorldObject() == null) { // E.g. for a client in a multiplayer session before the proxy set it; also probably for all construction ghosts
+				if (woa.TryGetComponent<ConstructibleGhost>(out _)) return -1; // Calling GetWorldObjectDetails in unity 6000.3 could result in an exception as the m_NetworkManager could be null
 				woa.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) { }); // <- Maybe it could help with multiplayer???
 				return -1;
 			}
@@ -538,7 +573,6 @@ namespace Nicki0.FeatPortalTeleport {
 
 			// reset state when loading a save file
 			woidsToPlanetidhashstate = null;
-			woidsToPlanetidhash_StateObject = null;
 		}
 
 		static bool closePortalCalledFromOnCloseInstance = false;
@@ -911,12 +945,16 @@ namespace Nicki0.FeatPortalTeleport {
 				mm.startColor = Color.clear;
 			}
 
-			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer)
+			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer). This means that the object has been instantiated and configured already, which is done here
 				ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
-				mm.startSpeed = 1;
 
-				renderer.transform.position -= renderer.transform.forward * 4;
-				renderer.sharedMaterial = Instantiate(renderer.sharedMaterial);
+				if (configEnableStrudel.Value) {
+					mm.startSpeed = 1;
+
+					renderer.transform.position -= renderer.transform.forward * 4;
+				}
+
+				renderer.sharedMaterial = Instantiate(renderer.sharedMaterial); // Can't set the color on the original material, as the color would be the same everywhere
 			}
 			if (!useDefaultColor || DefaultPortalColorSet) {
 				renderer.sharedMaterial.SetColor("_EmissionColor", useDefaultColor ? DefaultPortalColor : color);
