@@ -54,7 +54,7 @@ namespace Nicki0.FeatPlanetSelector {
 		[HarmonyPatch(typeof(MachinePlanetChanger), "OnEnable")]
 		private static void MachinePlanetChanger_OnEnable(MachinePlanetChanger __instance, GameObject ____planetContainer) {
 			if (__instance.TryGetComponent<ConstructibleGhost>(out _)) return;
-			
+
 			__instance.StartCoroutine(ExecuteLater(delegate () {
 				if (__instance.TryGetComponent<ConstructibleGhost>(out _)) return;
 
@@ -82,8 +82,8 @@ namespace Nicki0.FeatPlanetSelector {
 		}
 		private static IEnumerator UpdateState(MachinePlanetChanger mpc) {
 			WaitForSeconds wait = new WaitForSeconds(10f);
-			yield return wait;
-			while (mpc != null) {
+			yield return new WaitForSeconds(1f);
+			while (mpc != null && !mpc.TryGetComponent<ConstructibleGhost>(out _)) {
 				mpc.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) {
 					if (wo != null) {
 						PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(wo.GetPlanetLinkedHash());
@@ -193,9 +193,9 @@ namespace Nicki0.FeatPlanetSelector {
 			glg.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 			glg.spacing = new Vector2(10, 10);
 
-			glg.cellSize = new Vector2((Screen.width * (3.0f/4.0f) - (glg.constraintCount - 1) * glg.spacing.x) / glg.constraintCount, 100);
+			glg.cellSize = new Vector2((Screen.width * (3.0f / 4.0f) - (glg.constraintCount - 1) * glg.spacing.x) / glg.constraintCount, 100);
 			float width = glg.cellSize.x * glg.constraintCount + (glg.constraintCount - 1) * glg.spacing.x;
-			grid.transform.localPosition = new Vector3(-width/2, 0, 0);
+			grid.transform.localPosition = new Vector3(-width / 2, 0, 0);
 		}
 	}
 }
