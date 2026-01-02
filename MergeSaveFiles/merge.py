@@ -11,6 +11,7 @@ import os
 #       How to get to the save file location:
 #           1: press F1 in the main menu
 #           2: open "%USERPROFILE%\AppData\LocalLow\MijuGames\Planet Crafter" in an explorer window
+# - (Optional) Fill newSaveFileIngameName in the config section; otherwise, the new in-game name will be "merged_[previous save file name]"
 # - Load both worlds in the new version and save them there to convert them to the new save file format.
 # - Close all portals.
 # - Place the player inventory and equipment of secondaryFileName in a chest (player inventories aren't merged).
@@ -20,31 +21,33 @@ import os
 #           - Click on 'open [command/powershell] window here'
 #           - Type 'python merge.py' and press enter. if this doesn't work, try 'py merge.py', 'python3 merge.py' or 'py3 merge.py'.
 #       The output file will be called "[name of primary save]-merged.json" and therefore shouldn't override existing saves.
-# - The in-game name of the merged file will be "merged_[previous save file name]". 
-#       To change the name, edit the save file, search for "saveDisplayName" and change the text in "" behind it.
-#       E.g.: "saveDisplayName":"merged_Survival-1" -> "saveDisplayName":"MyNewSaveFileName"
 # 
 # Restrictions/Warnings: 
 # - The script can take several minutes for huge save files. Put the bigger save file in primaryFileName.
-# - Blue crates, explodable rocks and other objects might respawn
 # - Mod config items (e.g. id=4000 for akarnokd's uihotbar) from secondaryFileName might loose their config behaviour.
 # - Player Inventories aren't merged as discussed above. 
 # - "worldSeed" (current known effect on: not generated wrecks in world, animals in world, random ores, tree position, something 'spawned on floor') 
 #     as well as the settings from secondaryFileName can't be merged.
 # - "Message_YouAreAConvict" might appear twice.
 # - PCLayers from the second save file are only merged if they are from a merged planet. Duplicated layers are a problem.
-# - This script will not work if you placed more than 100000 containers/Inventories. 
 # - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
 #       The script can't really filter them out though.
+# - Blue crates, explodable rocks and other objects might respawn. (Note: The author can not find/remember an example of this happening)
+# - You might notice that the planet - on which you started in the secondary save - doesn't show the basic unlocks in the blueprint screen.
+#		This is a game feature and happens because that planet is not the planet where you started on in the merged save file.
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
 # - Toxic water depletion (-> 'count' property) isn't merged (added in v1.6XX). Possible TODO, but no support for planet merging is intended.
 #     If one save file has cleaned lakes, use that one as the primaryFileName to carry that progress over to the merged file.
-# - NOTE: This script was created for the moons update (v1.518 - v1.526) and it will break when the save file format changes.
+# - Before deciding to merge: Auto-Crafter setups (from both save files) might be redundant and therefore reduce performance unnecessarily.
+# - Before deciding to merge: Terraforming a planet anew doesn't take as long as starting on it.
+# - NOTE: This script was created for the moons update (v1.518 - v1.526) and it will break when the save file format changes. 
+# 		Make sure you have the latest version of the script. Please contact the author about bugs or script updates.
 # 
-# Last tested game version: v1.610
+# Last tested game version: v1.615
 #
 # Script author: Nicki0
-# Version: 6
+# 	Contact: Nicki0 on the Planet Crafter (MijuGames) discord server; Or open an issue in the github repo.
+# Script version: 7
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -62,10 +65,16 @@ import os
 # Changelog v6:
 # - added support to merge unitPurificationLevel for Toxicity
 #
+# Changelog v7:
+# - added support for merging multiple save files
+# - added additional game version checks
+# - added parameter to set the in-game save file name
+#
 
 # - start config
 primaryFileName = "Survival-1.json" # replace with first file name, preferably use the bigger save file
 secondaryFileName = "Survival-2.json" # replace with second file name
+newSaveFileIngameName = "" # Set a name that will be shown in-game; if empty, the default is "merged_<in-game name of primary save file>"
 # - end config
 
 # Do not change anything below if you don't know what you are doing.
@@ -97,6 +106,26 @@ if not "\"openedInstanceSeed\":0," in sectionsS[0]:
 	print(secondaryFileName + " has an open portal. Please close it before merging save files.")
 	exit()
 
+# find version
+containsVersionPSF = "version" in sectionsP[8]
+containsVersionSSf = "version" in sectionsS[8]
+if containsVersionPSF and containsVersionSSf:
+	_, versionPrimarySaveFile = sectionsP[8].split('"version":"', 1)
+	versionPrimarySaveFile, _ = versionPrimarySaveFile.split('"', 1)
+	_, versionSecondarySaveFile = sectionsS[8].split('version":"', 1)
+	versionSecondarySaveFile, _ = versionSecondarySaveFile.split('"', 1)
+	if versionPrimarySaveFile != versionSecondarySaveFile:
+		print("The save files weren't saved in the same version. Please save them in the latest game version.")
+		exit()
+else:
+	if (not containsVersionPSF) and (not containsVersionSSf):
+		print("Warning: Save files aren't saved in the latest version.")
+		input("Press Enter to continue anyway...")
+	else:
+		print("The save files weren't saved in the same version. Please save them in the latest game version.")
+		exit()
+
+# check for colliding world objects and inventories
 dictIdsP = {}
 dictIdsSChange = {}
 dictLiIdsSChange = {}
@@ -136,12 +165,20 @@ for i in range(len(itemsS[4])):
 for i in range(len(itemsS[10])):
 	for key in dictIdsSChange.keys():
 		itemsS[10][i] = itemsS[10][i].replace(key, dictIdsSChange[key])
-# move inventors ids to 100000 to prevent collision
+# move inventors ids to [free inventory id range] to prevent collision
+largestIdInPrimary = 0
+for i in range(len(itemsP[4])):# find highest inventory id
+	a,_ = itemsP[4][i].split(',', 1)
+	if len(a) < 15:
+		size = int(a[6:])
+		if size > largestIdInPrimary:
+			largestIdInPrimary = size
+inventoryIdOffset = ((largestIdInPrimary + 100000) // 100000) * 100000 # ceil(largestIdInPrimary + 1 / 100000)
 for i in range(len(itemsS[4])):
 	a,_ = itemsS[4][i].split(',', 1)
 	a = a.strip()
 	if len(a) < 15:
-		newSize = 100000 + int(a[6:])
+		newSize = inventoryIdOffset + int(a[6:])
 		itemsS[4][i] = itemsS[4][i].replace(a, a[:6] + str(newSize))
 		dictLiIdsSChange[a[6:]] = str(newSize)
 # apply changed inv ids to liId
@@ -240,7 +277,6 @@ for i in range(len(itemsS[1])):
 items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + ',"unitPurificationLevel":' + str(planets[i][7]) + '}' for i in range(len(planets))]
 
 # Combine crafted item count
-#{"craftedObjects":1043463
 ciP = itemsP[5][0].split(',', 1)[0][18:]
 ciS = itemsS[5][0].split(',', 1)[0][18:]
 items[5][0] = items[5][0].replace(ciP, str(int(ciP) + int(ciS)))
@@ -257,12 +293,21 @@ itemsP[0][0] = itemsP[0][0].replace(unlockedGroupsPOrigToReplace, ','.join(unloc
 
 # rename merged save
 #{"saveDisplayName":"
-items[8][0] = items[8][0][:20] + "merged_" + items[8][0][20:]
+_, ingameSaveName = items[8][0].split('":"', 1)
+ingameSaveName, _ = ingameSaveName.split('"', 1)
+if newSaveFileIngameName == "":
+	newSaveFileIngameName = "merged_" + ingameSaveName
+items[8][0] = items[8][0][:20] + newSaveFileIngameName + ('"' + items[8][0][20:].split('"', 1)[1])#"merged_" + items[8][0][20:]
 
 for key in dictIdsP.keys():
 	pass
 	#print(key, dictIdsP[key])
 with open(primaryFilePath[:-5] + "-merged.json", 'w', encoding="utf8") as outputFile:
-	outputFile.write('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))]))
+	outputFile.write('\n' + ('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))])))
 
 print("done")
+
+#
+# Weird things:
+# - SpaceMultiplier work even though they are doubled...
+#
