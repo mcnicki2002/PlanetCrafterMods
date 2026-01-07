@@ -1,4 +1,4 @@
-// Copyright 2025-2025 Nicolas Schäfer & Contributors
+// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
@@ -21,7 +21,6 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		/*
 		 *	TODO:
 		 *	- Map Background should be black, not dust-orange
-		 *	- disable larvae spawning
 		 *	First fall quite extreme... bug in TPC: game does not reset fall speed while standing.
 		 *	
 		 *	Long-term:
@@ -38,7 +37,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		static readonly string planetSceneName = "SpaceStation_EmptyScene";
 		static readonly Vector3 planetPosition = new Vector3(2000, 200, 2000);
 		static readonly Dictionary<string, string[]> planetNameLocalized = new() {
-			{ "english", new string[] { "Space Station", "Terraform Space! Or at least create a livable environment inside your space station." } }
+			{ "english", new string[] { "Space Station", "Terraform Space! Or at least create a livable environment inside your space station." } },
+			{ "german", new string[] { "Raumstation", "Terraformiere den Weltraum! Oder immerhin das Innere deiner Raumstation." } }
 		};
 
 		public void Awake() {
@@ -81,7 +81,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			log.LogInfo(____planets[1].steamAppId);
 
 			newPlanet.id = planetName;
-			newPlanet.name = planetName;
+			newPlanet.name = "PlanetData-" + planetName;
 			newPlanet.steamAppId = 0;
 			newPlanet.sceneName = planetSceneName;
 			newPlanet.showInBuild = true;
@@ -138,6 +138,11 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			newPlanet.availableStoryEvents.Clear();
 			newPlanet.manualStoryEvents.Clear();
 
+			newPlanet.planetSpaceViewPrefab = Instantiate(newPlanet.GetPlanetSpaceView());
+			DontDestroyOnLoad(newPlanet.planetSpaceViewPrefab);
+			newPlanet.planetSpaceViewPrefab.name = "PlanetView" + planetName;
+			newPlanet.planetSpaceViewPrefab.GetComponent<PlanetChanger>().atmosphere.gameObject.SetActive(false);
+			newPlanet.planetSpaceViewPrefab.GetComponentInChildren<Turn_Move>().transform.localScale = new Vector3(0.000001f, 0.000001f, 0.000001f);
 
 			//RenderSettings.skybox = new Material(Material.GetDefaultParticleMaterial());
 			//RenderSettings.skybox.color = Color.black;
@@ -312,6 +317,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			{ "EnergyGenerator5", [DataConfig.HomemadeTag.SurfaceFloor]}
 		};
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.High)]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
 
@@ -494,6 +500,14 @@ namespace Nicki0.FeatSpaceStationPlanet {
 				_shakeValue *= 0.2f;
 			}
 		}
+
+		// --- Prevent Larvae Spawning --->
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlayerLarvaeAround), "PlaceLarvae")]
+		static bool PlayerLarvaeAround_PlaceLarvae() {
+			return !IsOnPlanet();
+		}
+		// <--- Prevent Larvae Spawning ---
 
 		/*[HarmonyPostfix]
 		[HarmonyPatch(typeof(SystemViewHandler), "Start")]
