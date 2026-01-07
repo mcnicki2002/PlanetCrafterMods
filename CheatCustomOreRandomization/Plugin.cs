@@ -1,4 +1,4 @@
-// Copyright 2025-2025 Nicolas Schäfer & Contributors
+// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
@@ -57,6 +57,7 @@ namespace Nicki0.CheatCustomOreRandomization {
 			if (!Managers.GetManager<GameSettingsHandler>().GetCurrentGameSettings().GetRandomizeMineables()) { return; }
 
 			bool configExists = GetData(out Dictionary<string, string> oreConfig);
+			if (oreConfig == null) return;
 
 			if (!configExists) {
 				Dictionary<string, string> newOreConfig = new Dictionary<string, string>();

@@ -1,4 +1,4 @@
-﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+﻿// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;

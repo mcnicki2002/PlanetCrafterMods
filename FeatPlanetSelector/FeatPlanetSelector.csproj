@@ -19,8 +19,8 @@
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
 
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(SourceDir)..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)Plugin.cs" DestinationFolder="$(SourceDir)..\..\PlanetCrafterMods\$(AssemblyName)\" />
 		<ZipDirectory
 		SourceDirectory="$(TargetDir)\$(AssemblyName)"
 		DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip"

@@ -1,4 +1,4 @@
-﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+﻿// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
@@ -192,10 +192,10 @@ public class Plugin : BaseUnityPlugin {
 	public static bool Static_WorldUnit_GetDisplayStringForValue(List<string> unitLabels, double givenValue, /*bool roundFinalNum, int labelIndex, bool useExponent,*/ ref string __result) {
 		if (!configActive.Value) return true;
 
-		if (SelectedWorldUnitType == DataConfig.WorldUnitType.Null) {
+		/*if (SelectedWorldUnitType == DataConfig.WorldUnitType.Null) {
 			if (configDebug.Value) log.LogWarning("Static_WorldUnit_GetDisplayStringForValue called from " + new System.Diagnostics.StackTrace(true).ToString());
 			return true;
-		}
+		}*/ // Doesn't work properly because of inlining of the setting methods... 
 
 		switch (configExponentDisplay.Value) {
 			case EXPONENT_DISPLAY.NORMAL:
