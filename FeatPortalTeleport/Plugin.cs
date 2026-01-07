@@ -1,4 +1,4 @@
-﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+﻿// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
@@ -16,20 +16,15 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using static UnityEngine.ParticleSystem;
 
 namespace Nicki0.FeatPortalTeleport {
 
 	[BepInPlugin("Nicki0.theplanetcraftermods.FeatPortalTeleport", "(Feat) Portal Travel", PluginInfo.PLUGIN_VERSION)]
-	[BepInDependency("Nicki0.theplanetcraftermods.SpaceStationPlanet", BepInDependency.DependencyFlags.SoftDependency)] // So StaticDataHandler_LoadStaticData changes notAllowedPlanetsRequirement after space station planet is added
 	public class Plugin : BaseUnityPlugin {
 
 		/*
 		 *	TODO:
-		 *	Set color for 
-		 *	PortalTunnel(Clone)/Container/
-		 *	- ParticleComplex (1)
-		 *	- FloorDust
-		 *		ParticleSystem -> startColor
 		 *	
 		 *	
 		 *	BUGS:
@@ -60,6 +55,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
 		static MethodInfo method_MachinePortalGenerator_SetParticles;
+		static MethodInfo method_UiWindowPortalGenerator_SelectFirstButtonInGrid;
 		static AccessTools.FieldRef<Recipe, List<Group>> field_Recipe_recipe;
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
@@ -88,6 +84,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
 			method_MachinePortalGenerator_SetParticles = AccessTools.Method(typeof(MachinePortalGenerator), "SetParticles");
+			method_UiWindowPortalGenerator_SelectFirstButtonInGrid = AccessTools.Method(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
@@ -328,6 +325,10 @@ namespace Nicki0.FeatPortalTeleport {
 				foreach (Transform transform in __instance.transform.Find("Container/UiPortalList/SpaceView/IconsContainer")) {
 					transform.gameObject.SetActive(active);
 				}
+
+				// Make selectable for controller
+				//Instance.StartCoroutine(delegate() { method_UiWindowPortalGenerator_SelectFirstButtonInGrid.Invoke(__instance, []); }));
+				Instance.StartCoroutine((IEnumerator)method_UiWindowPortalGenerator_SelectFirstButtonInGrid.Invoke(__instance, []));
 			}
 		}
 
@@ -358,9 +359,9 @@ namespace Nicki0.FeatPortalTeleport {
 
 			SetUiVisibility(true, __instance);
 		}
-		private static IEnumerator ExecuteLater(Action toExecute) {
+		private static IEnumerator ExecuteLater(Action toExecute, int waitFrames = 1) {
 			//yield return new WaitForSeconds(0.01f);
-			yield return new WaitForEndOfFrame();
+			for (int i = 0; i < waitFrames; i++) yield return new WaitForEndOfFrame();
 			toExecute.Invoke();
 		}
 
@@ -659,8 +660,10 @@ namespace Nicki0.FeatPortalTeleport {
 
 			PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(____seed);
 			if (pd == null) return;
-			____seedLabel = pd.GetPlanetId();
-			__result = pd.GetPlanetId();
+			string localizedName = Readable.GetPlanetLabel(pd);
+			if (string.IsNullOrEmpty(localizedName)) localizedName = pd.GetPlanetId();
+			____seedLabel = localizedName + "";
+			__result = localizedName + "";
 		}
 
 		// prevent difficulty and rarity strings from displaying
@@ -673,9 +676,14 @@ namespace Nicki0.FeatPortalTeleport {
 			___rarity.text = "";
 		}
 
+		struct GoInsidePortalState {
+			public bool enterPortal;
+			public bool tunnelChanged;
+			public GameObject portalTunnel;
+		}
 		[HarmonyPrefix] // do not execute WorldInstanceHandler.SetWorldInstanceActive(true)
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state, ref MachinePortal __instance, ref float ____timeInTunnel) {
+		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref GoInsidePortalState __state, ref MachinePortal __instance, ref float ____timeInTunnel) {
 			if (enableKeepPortalOpen) {
 				int woid = PortalToWoId(__instance);
 				if (woid != -1) {
@@ -702,20 +710,30 @@ namespace Nicki0.FeatPortalTeleport {
 				}
 			}
 
-			__state = ____enterPortal;
+			__state.enterPortal = ____enterPortal;
+			__state.tunnelChanged = false; // init value
 			if (portalCreatedByMod) {
 				if (configTimeInPortal.Value >= 0.001f) {
 					____timeInTunnel = configTimeInPortal.Value;
 				}
 
 				____enterPortal = false;
+
+				__state.portalTunnel = Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject();
+				SetPortalTunnelColor();
+				__state.tunnelChanged = true;
 			}
 			return true;
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static void Post_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref bool __state) {
-			____enterPortal = __state;
+		private static void Post_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref GoInsidePortalState __state) {
+			____enterPortal = __state.enterPortal;
+
+			if (__state.tunnelChanged) {
+				Destroy(Managers.GetManager<VisualsResourcesHandler>().portalTunnel, configTimeInPortal.Value);
+				Managers.GetManager<VisualsResourcesHandler>().portalTunnel = __state.portalTunnel;
+			}
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachinePortal), "GoToFinalPosition")]
@@ -815,6 +833,7 @@ namespace Nicki0.FeatPortalTeleport {
 		// --- Activate Portal everywhere --->
 		private static HashSet<int> planetsExcludingPortalGenerator = new HashSet<int>();
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.VeryLow)] // So notAllowedPlanetsRequirement is changed after e.g. space station planet is added
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(ref List<GroupData> ___groupsData) {
 			GroupDataConstructible portalGroupDataContructible = ___groupsData.Find(e => e.id == "PortalGenerator1") as GroupDataConstructible;
@@ -911,11 +930,10 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 		}
 		private static readonly Dictionary<int, Color> PlanetColor = new Dictionary<int, Color>();
-		private static bool DefaultPortalColorSet = true;
 		private static Color DefaultPortalColor = new Color(767, 112, 568, 1);
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachinePortalGenerator), "SetParticles")]
-		static void MachinePortalGenerator_SetParticles(List<ParticleSystem> ___particlesOnOpen, MachinePortalGenerator __instance) {
+		static void MachinePortalGenerator_SetParticles(List<ParticleSystem> ___particlesOnOpen, MachinePortalGenerator __instance, ref bool playParticles) {
 			if (!enableKeepPortalOpen) { return; }
 			if (!enableColorPortals) { return; }
 
@@ -923,7 +941,7 @@ namespace Nicki0.FeatPortalTeleport {
 				ParticleSystemRenderer particleCircles = particle.GetComponent<ParticleSystemRenderer>();
 				Instance.StartCoroutine(ExecuteLater(delegate () {
 
-					if (/*!portalToWoId.ContainsKey(__instance.machinePortal)*/__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
+					if (__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
 						SetMaterialColor(particleCircles, Color.clear);
 						return;
 					}
@@ -932,35 +950,104 @@ namespace Nicki0.FeatPortalTeleport {
 							SetMaterialColor(particleCircles, planetColor);
 							return;
 						}
-					}
-					if (DefaultPortalColorSet) {
-						SetMaterialColor(particleCircles, DefaultPortalColor, true);
+					} else {
+						SetMaterialColor(particleCircles, DefaultPortalColor);
 					}
 				}));
 			}
-		}
-		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color color, bool useDefaultColor = false) {
-			if (!renderer.sharedMaterial.HasColor("_EmissionColor")) {
-				ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
-				mm.startColor = Color.clear;
+			if (playParticles) { // Color is only changed in next frame, so particles are started only after that
+				playParticles = false;
+				Instance.StartCoroutine(ExecuteLater(delegate () {
+					foreach (ParticleSystem particleSystem in ___particlesOnOpen) {
+
+						particleSystem.Play();
+					}
+				}, 1));
 			}
-
+		}
+		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color color) {
+			/*
+			 * _EmissionColor -> ring particles
+			 * _TintColor -> dot particles
+			 */
 			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer). This means that the object has been instantiated and configured already, which is done here
-				ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
-
-				if (configEnableStrudel.Value) {
+				if (configEnableStrudel.Value && renderer.sharedMaterial.HasColor("_EmissionColor")) {
+					ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
 					mm.startSpeed = 1;
-
 					renderer.transform.position -= renderer.transform.forward * 4;
 				}
 
 				renderer.sharedMaterial = Instantiate(renderer.sharedMaterial); // Can't set the color on the original material, as the color would be the same everywhere
 			}
-			if (!useDefaultColor || DefaultPortalColorSet) {
-				renderer.sharedMaterial.SetColor("_EmissionColor", useDefaultColor ? DefaultPortalColor : color);
+
+			// Prevent switching back to default color when portal is closed
+			if (!renderer.transform.GetComponentInParent<MachinePortalGenerator>()?.machinePortal?.gameObject.activeSelf ?? false) return;
+
+			if (renderer.sharedMaterial.HasColor("_EmissionColor")) renderer.sharedMaterial.SetColor("_EmissionColor", color);
+			if (renderer.sharedMaterial.HasColor("_TintColor")) {
+				ParticleSystem dotParticles = renderer.GetComponent<ParticleSystem>();
+
+				if (color != DefaultPortalColor) {
+					if (color.r >= 0 || color.g >= 0 || color.b >= 0) {
+
+						renderer.sharedMaterial.SetColor("_TintColor", NormalizeAndScaleColor(color, 0.4f));
+
+						ParticleSystem.ColorOverLifetimeModule dotParticlesColorOL = dotParticles.colorOverLifetime;
+						dotParticlesColorOL.enabled = false;
+					} else { // don't use dot particles on black portals
+						ParticleSystem.MainModule dotParticlesMM = dotParticles.main;
+						dotParticlesMM.startColor = Color.clear;
+					}
+				}
+
+				if (configEnableStrudel.Value) { // only show when opening the portal if the strudel is enabled
+					ParticleSystem.MainModule dotParticlesMM = dotParticles.main;
+					dotParticlesMM.loop = false;
+				}
 			}
 		}
+		private static Color NormalizeAndScaleColor(Color color, float scale = 1) {
+			float largestValue = Math.Max(Math.Max(Math.Abs(color.r), Math.Abs(color.g)), Math.Abs(color.b)) / scale;
+			return new Color(color.r / largestValue, color.g / largestValue, color.b / largestValue, color.a);
+		}
 		// <--- Color Portals ---
+		// --- Color Portal Tunnel --->
+		private static void SetPortalTunnelColor() {
+			GameObject configuredPortalTunnel = Instantiate(Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject());
+			Managers.GetManager<VisualsResourcesHandler>().portalTunnel = configuredPortalTunnel;
+
+			if (!PlanetColor.TryGetValue(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetHash(), out Color sourcePlanetColor)) {
+				sourcePlanetColor = DefaultPortalColor;
+			}
+			if (!PlanetColor.TryGetValue(planetToTeleportToHash, out Color destinationPlanetColor)) {
+				destinationPlanetColor = DefaultPortalColor;
+			}
+
+			foreach (ParticleSystemRenderer renderer in configuredPortalTunnel.transform.root.gameObject.GetComponentsInChildren<ParticleSystemRenderer>()) {
+				if (renderer.gameObject.name.Contains("ParticleComplex")) {
+					ParticleSystem particle = renderer.GetComponent<ParticleSystem>();
+					ParticleSystem.ColorOverLifetimeModule coltm = particle.colorOverLifetime;
+					Gradient gradient = new Gradient();
+					gradient.SetKeys(
+						new GradientColorKey[] {
+							new GradientColorKey(NormalizeAndScaleColor(destinationPlanetColor), 0.7f),
+							new GradientColorKey(Color.white, 0.8f),
+							new GradientColorKey(NormalizeAndScaleColor(sourcePlanetColor), 0.9f)
+						},
+						new GradientAlphaKey[] { new GradientAlphaKey(1, 0) }
+						);
+					coltm.color = new MinMaxGradient(gradient);
+				}
+				if (renderer.gameObject.name.Contains("FloorDust")) {
+					ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
+					mm.startColor = NormalizeAndScaleColor(sourcePlanetColor, 0.2f);
+
+					ParticleSystem.MinMaxGradient color_mmg = mm.startColor;
+					color_mmg.mode = ParticleSystemGradientMode.Color;
+				}
+			}
+		}
+		// <--- Color Portal Tunnel ---
 
 
 
