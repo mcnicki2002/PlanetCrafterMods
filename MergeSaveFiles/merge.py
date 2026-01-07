@@ -36,6 +36,8 @@ import os
 # - You might notice that the planet - on which you started in the secondary save - doesn't show the basic unlocks in the blueprint screen.
 #		This is a game feature and happens because that planet is not the planet where you started on in the merged save file.
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
+# - If saves with the same planet are merged, then it can happen that blue crates / lockers with loot disappear or have loot from the secondary save file.
+# 		If you stored or left important items in scene storage containers, then you should take them out before merging. Same is true for story items / inventories.
 # - Toxic water depletion (-> 'count' property) isn't merged (added in v1.6XX). Possible TODO, but no support for planet merging is intended.
 #     If one save file has cleaned lakes, use that one as the primaryFileName to carry that progress over to the merged file.
 # - Before deciding to merge: Auto-Crafter setups (from both save files) might be redundant and therefore reduce performance unnecessarily.
