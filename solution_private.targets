@@ -3,20 +3,29 @@
 		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
 		<PackageReference Include="BepInEx.Core" Version="5.*" />
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-		<PackageReference Include="UnityEngine.Modules" Version="6000.0.49" IncludeAssets="compile" />
+		<PackageReference Include="UnityEngine.Modules" Version="6000.3.2" IncludeAssets="compile" />
 	</ItemGroup>
+	<Import Project="$(SolutionDir)\paths.targets" />
 	<PropertyGroup>
-		<GameDir>D:\SteamLibrary\steamapps\common\The Planet Crafter</GameDir>
+		<GameDir>$(PrivatePath_GameDir)</GameDir>
 		<GameManaged>$(GameDir)\Planet Crafter_Data\Managed</GameManaged>
 		<PluginsFolder>$(GameDir)\BepInEx\plugins</PluginsFolder>
+		<akarnokdLibCommon>$(PrivatePath_akarnokdLibCommon)</akarnokdLibCommon>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AuthorName>Nicki0</AuthorName>
 		<Destination>$(PluginsFolder)\$(AuthorName) - $(Description)</Destination>
 	</PropertyGroup>
 	
+	<ItemGroup Condition="'$(Publicize)' == 'true'">
+		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	
 	<ItemGroup>
-		<Reference Include="Assembly-CSharp">
+		<Reference Include="Assembly-CSharp" Publicize="$(Publicize)" >
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>$(GameManaged)\Assembly-CSharp.dll</HintPath>
 			<Private>False</Private>

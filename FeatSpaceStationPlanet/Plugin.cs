@@ -31,7 +31,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 
 		static ManualLogSource log;
 
-		static MethodInfo method_Asteroid_SetFxStatuts;
+		//static MethodInfo method_Asteroid_SetFxStatuts;
 
 		static readonly string planetName = "SpaceStation";
 		static readonly string planetSceneName = "SpaceStation_EmptyScene";
@@ -45,7 +45,12 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			log = Logger;
 			Instance = this;
 
-			method_Asteroid_SetFxStatuts = AccessTools.Method(typeof(Asteroid), "SetFxStatuts");
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+				// return; // skip the mod, it might fail anyways
+			}
+
+			//method_Asteroid_SetFxStatuts = AccessTools.Method(typeof(Asteroid), "SetFxStatuts");
 
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -54,7 +59,11 @@ namespace Nicki0.FeatSpaceStationPlanet {
 
 
 		[HarmonyPrefix]
-		[HarmonyPatch(typeof(PlanetList), "InitPlanetList")]
+		//[HarmonyPatch(typeof(PlanetList), MethodType.Constructor)]
+		[HarmonyPatch(typeof(PlanetList), nameof(PlanetList.InitPlanetList))]
+		/*[HarmonyPatch(typeof(PlanetList), nameof(PlanetList.GetDefaultPlanet))]
+		[HarmonyPatch(typeof(PlanetList), nameof(PlanetList.GetPlanetFromId))]
+		[HarmonyPatch(typeof(PlanetList), nameof(PlanetList.GetPlanetFromIdHash))]*/
 		public static void PlanetList_InitPlanetList(ref PlanetData[] ____planets) {
 			foreach (PlanetData pd in ____planets) if (pd.id == planetName) return;
 
@@ -83,6 +92,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			newPlanet.id = planetName;
 			newPlanet.name = "PlanetData-" + planetName;
 			newPlanet.steamAppId = 0;
+			newPlanet.gogProductId = 0;
 			newPlanet.sceneName = planetSceneName;
 			newPlanet.showInBuild = true;
 			newPlanet.startingPlanet = false;
@@ -92,14 +102,14 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			TerraformStage completeStage = Instantiate(newPlanet.allTerraStages.Last());
 			newPlanet.allTerraStages.RemoveRange(1, newPlanet.allTerraStages.Count - 1);
 			newPlanet.allTerraStages.Add(completeStage);
-			AccessTools.FieldRefAccess<TerraformStage, double>(completeStage, "startValue") = 1000100000000;
+			completeStage.startValue = 1000100000000;//AccessTools.FieldRefAccess<TerraformStage, double>(completeStage, "startValue") = 1000100000000;
 
 
 			TerraformStage neverStage = ScriptableObject.CreateInstance<TerraformStage>();//new TerraformStage();
-			AccessTools.FieldRefAccess<TerraformStage, string>(neverStage, "id") = "Never";
-			AccessTools.FieldRefAccess<TerraformStage, DataConfig.WorldUnitType>(neverStage, "unitType") = DataConfig.WorldUnitType.Terraformation;
-			AccessTools.FieldRefAccess<TerraformStage, double>(neverStage, "startValue") = double.MaxValue;
-			AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);
+			neverStage.id = "Never"; //AccessTools.FieldRefAccess<TerraformStage, string>(neverStage, "id") = "Never";
+			neverStage.unitType = DataConfig.WorldUnitType.Terraformation; //AccessTools.FieldRefAccess<TerraformStage, DataConfig.WorldUnitType>(neverStage, "unitType") = DataConfig.WorldUnitType.Terraformation;
+			neverStage.startValue = double.MaxValue; //AccessTools.FieldRefAccess<TerraformStage, double>(neverStage, "startValue") = double.MaxValue;
+			neverStage.icon = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f); //AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);
 
 			newPlanet.skyChangeTerraStage = neverStage;
 			newPlanet.startCloudsTerraStage = neverStage;
@@ -446,8 +456,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			____startPoint = __instance.transform.position;
 			____impactPoint = __instance.transform.position + __instance.transform.forward * 4000;
 
-			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerTail, true }); //this.SetFxStatuts(__instance.fxContainerTail, true);
-			method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerImpact, false }); //this.SetFxStatuts(__instance.fxContainerImpact, false);
+			__instance.SetFxStatuts(__instance.fxContainerTail, true);//method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerTail, true }); //this.SetFxStatuts(__instance.fxContainerTail, true);
+			__instance.SetFxStatuts(__instance.fxContainerImpact, false);//method_Asteroid_SetFxStatuts.Invoke(__instance, new object[] { __instance.fxContainerImpact, false }); //this.SetFxStatuts(__instance.fxContainerImpact, false);
 			UnityEngine.Object.Destroy(__instance.gameObject, ___maxLiveTime);
 			__instance.audioExplosion?.Stop();
 			__instance.audioTrail?.Play();
@@ -509,10 +519,12 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}
 		// <--- Prevent Larvae Spawning ---
 
-		/*[HarmonyPostfix]
-		[HarmonyPatch(typeof(SystemViewHandler), "Start")]
-		private static void SystemViewHandler_Start(List<SpacePlanetView> ___spacePlanetViews) {
-			SpacePlanetView spacePlanet;
+		/*//[HarmonyPostfix] // Doesn't work, because it's needed before the space station planet is created and that is(?) not be possible before selenea is initialized
+		//[HarmonyPatch(typeof(SystemViewHandler), nameof(SystemViewHandler.Start))]
+		private static void SystemViewHandler_Start(List<SpacePlanetView> ___spacePlanetViews, SpacePlanetView ___spacePlanetViewHumble) {
+			GameObject planetViewSpaceStation = new GameObject();
+			planetViewSpaceStation.transform.position = new Vector3(-5049.94f, -4000.50f, 15.13f);
+			SpacePlanetView spacePlanet = planetViewSpaceStation.AddComponent<SpacePlanetView>();
 			spacePlanet.InitPlanetSpaceView(planetName);
 			___spacePlanetViews.Add(spacePlanet);
 		}*/
@@ -527,7 +539,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			Vector3 vector = new Vector3(-5049.94f, -4000.50f, 15.13f);//spacePlanetView.transform.position; //(-5049.94, -3994.29, 17.13)-3992.50
 			vector += new Vector3((float)___zoomValueOnPlanets, 0f, 0f);
 			log.LogInfo(vector + " is the space station zoom spot");
-			AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] { vector });
+			__instance.ActivateZoomTarget(vector);//AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] { vector });
 			return false;
 		}
 		//[Error  :  HarmonyX] Failed to patch void SpaceCraft.SystemViewHandler::ZoomOnPlanet(SpaceCraft.PlanetData planetData): HarmonyLib.InvalidHarmonyPatchArgumentException: (static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews)): Return type of pass through postfix static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews) does not match type of its first parameter

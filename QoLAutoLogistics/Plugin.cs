@@ -35,7 +35,7 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	
 		 *	- Add groups lists to logistic selector
 		 
-		 *	
+		 *	- Convert to netstandard2.1, e.g. by including dedicated images for priority numbers
 		 *	
 		 *	
 		 *	TO TEST

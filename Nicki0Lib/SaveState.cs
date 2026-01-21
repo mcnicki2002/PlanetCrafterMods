@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpaceCraft;
 using System;
+using System.ComponentModel;
 
 namespace Nicki0 {
 
@@ -23,6 +24,7 @@ namespace Nicki0 {
 		/// 1: json
 		/// </summary>
 		private static readonly int StateFormatVersion = 1;
+		// private readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings() { DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate, NullValueHandling = NullValueHandling.Ignore };
 
 		class State {
 			public int stateFormatVersion; // State Format Version
@@ -73,7 +75,7 @@ namespace Nicki0 {
 		public ERROR_CODE GetDataFormatVersion(out int dataFormatVersion) {
 			if (GetStateObject(out WorldObject wo)) {
 				try {
-					State state = JsonConvert.DeserializeObject<State>(wo.GetText());
+					State state = JsonConvert.DeserializeObject<State>(wo.GetText()/*, serializerSettings*/);
 
 					if (state == null) {
 						dataFormatVersion = default;
@@ -128,7 +130,7 @@ namespace Nicki0 {
 				state.dhash = Convert.ToBase64String(hashValue);
 			}*/
 
-			string serializedData = JsonConvert.SerializeObject(state);
+			string serializedData = JsonConvert.SerializeObject(state/*, serializerSettings*/);
 			if (serializedData.Contains("@") || serializedData.Contains("|")) {
 				Log("String contains invalid characters");
 				return false;
@@ -151,7 +153,7 @@ namespace Nicki0 {
 		public ERROR_CODE GetData<T>(out T data) {
 			if (GetStateObject(out WorldObject wo)) {
 				try {
-					State state = JsonConvert.DeserializeObject<State>(wo.GetText() ?? "");
+					State state = JsonConvert.DeserializeObject<State>(wo.GetText() ?? ""/*, serializerSettings*/);
 					if (state == null) {
 						data = default(T);
 						return ERROR_CODE.INVALID_JSON;

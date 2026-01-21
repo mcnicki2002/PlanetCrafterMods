@@ -41,6 +41,11 @@ namespace Nicki0.CheatMachineConfig {
 		private void Awake() {
 			log = Logger;
 
+
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			enableMod = Config.Bind<bool>("General", "enable", true, "Enable Mod");
 
 			t2recycler_time = Config.Bind<int>("Config_Recycler", "T2Recycler_time", 0, "[Default: 45] Time to recycle an item (in seconds)");
@@ -96,10 +101,15 @@ namespace Nicki0.CheatMachineConfig {
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineGrowerIfLinkedGroup), "Awake")]
-		public static void MachineGrowerIfLinkedGroup_Awake(ref float ___timeToGrow) {
-			if (Math.Abs(___timeToGrow - 1f) < 0.01) { // Incubator has a default time of 1
+		public static void MachineGrowerIfLinkedGroup_Awake(MachineGrowerIfLinkedGroup __instance, ref float ___timeToGrow) {
+			/*if (Math.Abs(___timeToGrow - 1f) < 0.01) { // Incubator has a default time of 1
 				if (incubator_time.Value != 0) ___timeToGrow = incubator_time.Value;
 			} else if (Math.Abs(___timeToGrow - 4f) < 0.01) { // DNA Manipulator has a default time of 4
+				if (dnaManipulator_time.Value != 0) ___timeToGrow = dnaManipulator_time.Value;
+			}*/
+			if (__instance.name.Contains("Incubator1")) {
+				if (incubator_time.Value != 0) ___timeToGrow = incubator_time.Value;
+			} else if (__instance.name.Contains("GeneticManipulator1")) {
 				if (dnaManipulator_time.Value != 0) ___timeToGrow = dnaManipulator_time.Value;
 			}
 		}

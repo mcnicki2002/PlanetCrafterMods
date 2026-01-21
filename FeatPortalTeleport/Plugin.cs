@@ -65,6 +65,10 @@ namespace Nicki0.FeatPortalTeleport {
 			log = Logger;
 			Instance = this;
 
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
 			configItemsCost = Config.Bind<string>("General", "costItems", "FusionEnergyCell", "Cost to open a portal (Comma separated list of item IDs)");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");

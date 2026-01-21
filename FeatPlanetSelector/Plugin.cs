@@ -26,6 +26,10 @@ namespace Nicki0.FeatPlanetSelector {
 			log = Logger;
 			Instance = this;
 
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 		}
