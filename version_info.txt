@@ -1,0 +1,28 @@
+# (Cheat) Custom Ore Randomization
+Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0
+# (Cheat) Drone Speed
+Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.0
+# (Cheat) Machine Config
+Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.7.0
+# (Feat) Large Screens
+Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.1.0
+# (Feat) Planet Selector
+Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.3.0
+# (Feat) Portal Travel
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.4.0
+# (Feat) Space Station
+Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.4.0
+# (Feat) Terrain Height Tool
+Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.0
+# (Fix) Rocket Return
+Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0
+# (Item) More Fuses
+Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.2.0
+# (QoL) Auto-Logistics
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.22.0
+# (UI) Confine Mouse
+Nicki0.theplanetcraftermods.UiConfineMouse=1.0.1.0
+# (UI) More Units
+Nicki0.theplanetcraftermods.UiMoreUnits=1.0.1.0
+# (Visual) Hide Objects
+Nicki0.theplanetcraftermods.VisualHideObjects=1.0.1.0
