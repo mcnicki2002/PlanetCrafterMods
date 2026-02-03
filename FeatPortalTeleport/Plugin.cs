@@ -331,8 +331,20 @@ namespace Nicki0.FeatPortalTeleport {
 				}
 
 				// Make selectable for controller
-				//Instance.StartCoroutine(delegate() { method_UiWindowPortalGenerator_SelectFirstButtonInGrid.Invoke(__instance, []); }));
 				Instance.StartCoroutine((IEnumerator)method_UiWindowPortalGenerator_SelectFirstButtonInGrid.Invoke(__instance, []));
+				// Select procedural instance buttons when no button in the grid is available (e.g. when opening the PortalGenerator UI on Aqualis)
+				Instance.StartCoroutine(ExecuteLater(delegate () {
+					if (GamepadConfig.Instance.GetIsUsingController()) {
+						Selectable componentInChildren = __instance.gridForInstances.GetComponentInChildren<Selectable>();
+						if (componentInChildren == null) {
+							componentInChildren = (active ? buttonTabProceduralInstance : buttonTabPortalTravel).GetComponentInChildren<Selectable>();
+						}
+						if (componentInChildren != null) {
+							componentInChildren.Select();
+							__instance.gamepadSelectButton.SetActive(value: true);
+						}
+					}
+				}, 2));
 			}
 		}
 
@@ -520,8 +532,11 @@ namespace Nicki0.FeatPortalTeleport {
 				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(new WorldInstanceData("PlanetTravelInfo", -10, 0, recipe, 0, 0), recipe.GetIngredientsGroupInRecipe(), list, new Action<UiWorldInstanceSelector>(delegate (UiWorldInstanceSelector uiWorldInstanceSelector) { }), false);
 
 				gameObject.transform.Find("ContentContainer/Name").GetComponent<RectTransform>().sizeDelta = new Vector2(1000, 80);
-				gameObject.GetComponent<UiWorldInstanceSelector>().buttonOpen.transform.position = new Vector3(10000, 0, 0);
-				gameObject.GetComponent<UiWorldInstanceSelector>().buttonClose.transform.position = new Vector3(10000, 0, 0);
+
+				//gameObject.GetComponent<UiWorldInstanceSelector>().buttonOpen.transform.position = new Vector3(10000, 0, 0);
+				//gameObject.GetComponent<UiWorldInstanceSelector>().buttonClose.transform.position = new Vector3(10000, 0, 0);
+				gameObject.GetComponent<UiWorldInstanceSelector>().buttonOpen.SetActive(false); // Setting inactive (instead of to x=10000) such that the controller can't select it.
+				gameObject.GetComponent<UiWorldInstanceSelector>().buttonClose.SetActive(false);// --- " ---
 			}
 		}
 

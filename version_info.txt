@@ -9,7 +9,7 @@ Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.1.0
 # (Feat) Planet Selector
 Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.4.0
 # (Feat) Portal Travel
-Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.5.0
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.6.0
 # (Feat) Space Station
 Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.5.0
 # (Feat) Terrain Height Tool
