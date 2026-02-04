@@ -7,7 +7,9 @@ using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Nicki0.CheatMachineConfig {
@@ -16,6 +18,7 @@ namespace Nicki0.CheatMachineConfig {
 	public class Plugin : BaseUnityPlugin {
 
 		static ManualLogSource log;
+		static Plugin Instance;
 
 		public static ConfigEntry<bool> enableMod;
 
@@ -38,8 +41,10 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<float> TradePlatform1_time;
 		public static ConfigEntry<float> InterplanetaryExchangePlatform1_time;
 
+
 		private void Awake() {
 			log = Logger;
+			Instance = this;
 
 
 			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
@@ -67,6 +72,8 @@ namespace Nicki0.CheatMachineConfig {
 			TradePlatform1_time = Config.Bind<float>("Config_RocketBackAndForth", "TradePlatform1_time", 0, "[Default: 600] Time to return of the trade rocket");
 			InterplanetaryExchangePlatform1_time = Config.Bind<float>("Config_RocketBackAndForth", "InterplanetaryExchangePlatform1_time", 0, "[Default: 600] Time to return of the interplanetary exchange shuttle");
 
+			
+
 			// Plugin startup logic
 
 			if (!enableMod.Value) {
@@ -78,6 +85,10 @@ namespace Nicki0.CheatMachineConfig {
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 		}
 
+		private static IEnumerator ExecuteLater(Action toExecute) {
+			yield return new WaitForEndOfFrame();
+			toExecute.Invoke();
+		}
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MachineDisintegrator), nameof(MachineDisintegrator.SetDisintegratorInventory))]
@@ -137,8 +148,8 @@ namespace Nicki0.CheatMachineConfig {
 
 			float multiplier = drone_speed.Value;
 			___forwardSpeed = multiplier * baseForwardSpeed;
-			___distanceMinToTarget = /*multiplier * */baseDistanceMinToTarget;
-			___rotationSpeed = multiplier * baseRotationSpeed;
+			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
+			___rotationSpeed = /*multiplier **/ baseRotationSpeed;
 		}
 
 		// "look rotation viewing vector is zero"-fix
@@ -189,6 +200,57 @@ namespace Nicki0.CheatMachineConfig {
 			} else if (__instance is MachineRocketBackAndForthInterplanetaryExchange) {
 				if (t2machineOptimizer_affectedMachineCount.Value != 0) ___updateGrowthEvery = InterplanetaryExchangePlatform1_time.Value / 100.0f;
 			}
+		}
+
+		static Dictionary<string, ConfigEntry<int>> MachineGenerator_times = [];
+		static Dictionary<string, ConfigEntry<float>> MachineGrowerVegetationHarvestable_times = [];
+		[HarmonyPostfix]
+		[HarmonyPriority(Priority.High)]
+		[HarmonyPatch(typeof(Intro), "Start")]
+		private static void Intro_Start() {
+			StaticDataHandler sdh = Managers.GetManager<StaticDataHandler>();
+			foreach (GroupData gd in sdh.staticAvailableObjects.groupsData) {
+				if (gd == null) continue;
+				if (gd.associatedGameObject == null) continue;
+				if (gd.associatedGameObject.TryGetComponent<MachineGenerator>(out MachineGenerator mg)) {
+					if (mg == null) continue;
+
+					string typeName = Regex.Replace(gd.id, @"[\d-]", string.Empty);
+					if (!MachineGenerator_times.ContainsKey(gd.id)) {
+						MachineGenerator_times.Add(gd.id, Instance.Config.Bind<int>("Config_" + typeName, gd.id + "_time", 0, "[Default: " + mg.spawnEveryXSec + "] Time to generate an item (in seconds)"));
+					}
+				} else if (gd.associatedGameObject.TryGetComponent<MachineGrowerVegetationHarvestable>(out MachineGrowerVegetationHarvestable mgvh)) {
+					if (mgvh == null) continue;
+
+					string typeName = Regex.Replace(gd.id, @"[\d-]", string.Empty);
+					if (!MachineGrowerVegetationHarvestable_times.ContainsKey(gd.id)) {
+						MachineGrowerVegetationHarvestable_times.Add(gd.id, Instance.Config.Bind<float>("Config_" + typeName, gd.id + "_growTime", 0, "[Default: " + mgvh.growSpeed + "] Grow speed"));
+					}
+				}
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachineGenerator), nameof(MachineGenerator.SetGeneratorInventory))]
+		public static void MachineGenerator_SetGeneratorInventory(MachineGenerator __instance, ref int ___spawnEveryXSec) {
+			WorldObject worldObject = __instance.GetComponent<WorldObjectAssociated>().GetWorldObject();
+			if (MachineGenerator_times.TryGetValue(worldObject.GetGroup().GetId(), out ConfigEntry<int> ce)) {
+				if (ce.Value != 0) {
+					___spawnEveryXSec = ce.Value;
+				}
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MachineGrowerVegetationHarvestable), "Awake")]
+		public static void MachineGrowerVegetationHarvestable_Awake(MachineGrowerVegetationHarvestable __instance) {
+			__instance.StartCoroutine(ExecuteLater(delegate () {
+				WorldObject worldObject = __instance.GetComponent<WorldObjectAssociated>().GetWorldObject();
+				if (worldObject == null) return;
+				if (MachineGrowerVegetationHarvestable_times.TryGetValue(worldObject.GetGroup().GetId(), out ConfigEntry<float> ce)) {
+					if (ce.Value != 0) {
+						__instance.growSpeed = ce.Value;
+					}
+				}
+			}));
 		}
 	}
 }

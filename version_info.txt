@@ -3,7 +3,7 @@ Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0
 # (Cheat) Drone Speed
 Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.0
 # (Cheat) Machine Config
-Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.7.0
+Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.8.0
 # (Feat) Large Screens
 Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.1.0
 # (Feat) Planet Selector
