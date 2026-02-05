@@ -1,8 +1,9 @@
-﻿// Copyright 2025-2025 Nicolas Schäfer & Contributors
+﻿// Copyright 2025-2026 Nicolas Schäfer & Contributors
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
@@ -10,8 +11,12 @@ using UnityEngine;
 namespace Nicki0.CheatDroneSpeed {
 	[BepInPlugin("Nicki0.theplanetcraftermods.CheatDroneSpeed", "(Cheat) Drone Speed", PluginInfo.PLUGIN_VERSION)]
 	public class Plugin : BaseUnityPlugin {
+
+		private static ManualLogSource log;
+
 		private void Awake() {
 			// Plugin startup logic
+			log = Logger;
 
 			droneSpeedMultiplier = Config.Bind<float>("General", "droneSpeedMultiplier", 1.0f, "Multiplier for drone speed");
 
@@ -42,11 +47,20 @@ namespace Nicki0.CheatDroneSpeed {
 			float multiplier = droneSpeedMultiplier.Value;
 			___forwardSpeed = multiplier * baseForwardSpeed;
 			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
-			___rotationSpeed = multiplier * baseRotationSpeed;
+			___rotationSpeed = /*Mathf.Sqrt(multiplier) * */baseRotationSpeed;
+		}
+
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(LogisticManager), nameof(LogisticManager.AddDroneToFleet))]
+		private static void LogisticManager_AddRoneToFleet(Drone drone) {
+			return; // TODO HÄÄÄÄÄÄÄÄÄÄÄ???????????????
+			drone.forwardSpeed = droneSpeedMultiplier.Value * baseForwardSpeed;
+			drone.distanceMinToTarget = droneSpeedMultiplier.Value * baseDistanceMinToTarget;
+			drone.rotationSpeed = droneSpeedMultiplier.Value * baseRotationSpeed;
 		}
 
 		// "look rotation viewing vector is zero"-fix
-		[HarmonyPrefix]
+		/*[HarmonyPrefix]
 		[HarmonyPatch(typeof(Drone), "MoveToTarget")]
 		public static bool Drone_MoveToTarget(ref Vector3 targetPosition, ref GameObject ____droneRoot, float ___forwardSpeed, float ___rotationSpeed) {
 			targetPosition += Vector3.up * 2f;
@@ -57,6 +71,6 @@ namespace Nicki0.CheatDroneSpeed {
 				droneTransform.rotation = Quaternion.Slerp(droneTransform.rotation, Quaternion.LookRotation(targetPositionDifference), ___rotationSpeed * Time.deltaTime);
 			}
 			return false;
-		}
+		}*/
 	}
 }

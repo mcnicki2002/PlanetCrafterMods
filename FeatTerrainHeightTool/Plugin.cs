@@ -27,6 +27,10 @@ namespace Nicki0.FeatTerrainHeightTool {
 			// Plugin startup logic
 			log = Logger;
 
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			saveState = new SaveState(typeof(Plugin), StateDataFormat);
 
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");

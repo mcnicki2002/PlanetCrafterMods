@@ -28,6 +28,10 @@ namespace Nicki0.VisualHideObjects {
 			// Plugin startup logic
 			log = Logger;
 
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			occlusionDistanceEnabled = Config.Bind<bool>("Config", "enableDistanceOcclusion", false, "Enable the occlusion of objects when the player is far away from them (distance configurable)");
 			occulsionNames = Config.Bind<string>("Config", "namesOfObjectsToHide", "TreesSpreader", "comma separated list of objects to hide when far away. For specific tree spreaders, use TreesSpreader0,TreesSpreader1,TreesSpreader2");
 			occulsionDistance = Config.Bind<int>("Config", "hideDistance", 15, "Distance from player to object to show it.");

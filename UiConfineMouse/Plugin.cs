@@ -14,6 +14,10 @@ namespace Nicki0.UiConfineMouse {
 		public static ConfigEntry<bool> enableMod;
 		private void Awake() {
 			// Plugin startup logic
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			enableMod = Config.Bind<bool>("Config", "enable", true, "Enable mod (requires restart to take effekt)");
 			if (enableMod.Value) {
 				Harmony.CreateAndPatchAll(typeof(Plugin));

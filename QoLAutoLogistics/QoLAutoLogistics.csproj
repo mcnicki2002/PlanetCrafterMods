@@ -63,11 +63,11 @@
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
 		
-		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\IconData.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(PrivatePath_GitRepo)\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)Plugin.cs" DestinationFolder="$(PrivatePath_GitRepo)\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)IconData.cs" DestinationFolder="$(PrivatePath_GitRepo)\$(AssemblyName)\" />
 		
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
-		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip" Overwrite="true" />
+		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(PrivatePath_ZipOutput)\Nicki0-$(AssemblyName).zip" Overwrite="true" />
 	</Target>
 </Project>

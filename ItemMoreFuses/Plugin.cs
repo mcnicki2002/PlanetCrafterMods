@@ -81,6 +81,10 @@ namespace Nicki0.ItemMoreFuses {
 
 			log = Logger;
 
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
+
 			Assembly me = Assembly.GetExecutingAssembly();
 			dir = Path.GetDirectoryName(me.Location);
 

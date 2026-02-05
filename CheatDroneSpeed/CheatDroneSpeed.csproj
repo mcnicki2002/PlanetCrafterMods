@@ -9,18 +9,19 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.CheatDroneSpeed</RootNamespace>
 	</PropertyGroup>
+	
+	<PropertyGroup>
+		<!--<Deploy>true</Deploy>-->
+		<DeployLocal>true</DeployLocal>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<!--<AdditionalSourceFiles Include="" />-->
+	</ItemGroup>
 	<Import Project="$(SolutionDir)\solution_private.targets" />
 	
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-	</ItemGroup>
 	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip" Overwrite="true" />
+		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)Plugin.cs" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
 	</Target>
 </Project>

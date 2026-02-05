@@ -117,6 +117,10 @@ public class Plugin : BaseUnityPlugin {
 		// Plugin startup logic
 		log = Logger;
 
+		if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+			LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+		}
+
 		configActive = Config.Bind("General", "Enabled", true, "Enable mod");
 		configDebug = Config.Bind("General", "Debug", false, "Enable Debug");
 		//configExponent = Config.Bind("General", "ShowExponent", false, "Show Exponent instead of Unit");

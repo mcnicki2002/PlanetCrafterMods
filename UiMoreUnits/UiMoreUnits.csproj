@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
@@ -9,19 +9,14 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.UiMoreUnits</RootNamespace>
 	</PropertyGroup>
-	<Import Project="$(SolutionDir)\solution_private.targets" />
 	
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Deploy>true</Deploy>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<!--<AdditionalSourceFiles Include="" />-->
 	</ItemGroup>
-	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-
-		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
-		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip" Overwrite="true" />
- 	</Target>
+	<Import Project="$(SolutionDir)\solution_private.targets" />
 </Project>

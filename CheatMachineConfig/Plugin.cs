@@ -46,7 +46,6 @@ namespace Nicki0.CheatMachineConfig {
 			log = Logger;
 			Instance = this;
 
-
 			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
 				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
 			}

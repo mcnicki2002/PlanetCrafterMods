@@ -9,24 +9,17 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.FeatTerrainHeightTool</RootNamespace>
 	</PropertyGroup>
+	
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Deploy>true</Deploy>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<!--<AdditionalSourceFiles Include="" />-->
+	</ItemGroup>
 	<Import Project="$(SolutionDir)\solution_private.targets" />
 	<ItemGroup>
 		<Compile Include="..\Nicki0Lib\SaveState.cs" Link="SaveState.cs" />
 	</ItemGroup>
-	
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-	</ItemGroup>
-	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\$(AssemblyName).csproj" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<Copy SourceFiles="$(TargetDir)..\..\..\Plugin.cs" DestinationFolder="$(TargetDir)..\..\..\..\..\PlanetCrafterMods\$(AssemblyName)\" />
-		<ZipDirectory
-		SourceDirectory="$(TargetDir)\$(AssemblyName)"
-		DestinationFile="$(OutputPath)\..\..\..\..\Nicki0-$(AssemblyName).zip"
-		Overwrite="true" />
-	</Target>
 </Project>
