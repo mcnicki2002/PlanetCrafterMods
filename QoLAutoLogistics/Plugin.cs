@@ -34,8 +34,6 @@ namespace Nicki0.QoLAutoLogistics {
 		 *	- Set/Change Group lists in UI
 		 *	
 		 *	- Add groups lists to logistic selector
-		 
-		 *	- Convert to netstandard2.1, e.g. by including dedicated images for priority numbers
 		 *	
 		 *	
 		 *	TO TEST
@@ -112,11 +110,15 @@ namespace Nicki0.QoLAutoLogistics {
 		private static Sprite SpriteCopy;
 		private static Sprite SpritePaste;
 
-		private static System.Drawing.Font LogisticsFont;
+		//private static System.Drawing.Font LogisticsFont;
 
 		void Awake() {
 			// Plugin startup logic
 			log = Logger;
+
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			}
 
 			// Transfer old config file
 			String pathToConfigFolder = Paths.ConfigPath;
@@ -176,7 +178,7 @@ namespace Nicki0.QoLAutoLogistics {
 			SpriteCopy = IconData.CreateSprite(IconData.ImageCopy, IconData.ImageCopy_Width, IconData.ImageCopy_Height);
 			SpritePaste = IconData.CreateSprite(IconData.ImagePaste, IconData.ImagePaste_Width, IconData.ImagePaste_Height);
 
-			LogisticsFont = new System.Drawing.Font(System.Drawing.SystemFonts.DefaultFont.OriginalFontName, 28);
+			// LogisticsFont = new System.Drawing.Font(System.Drawing.SystemFonts.DefaultFont.OriginalFontName, 28);
 
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -795,8 +797,11 @@ namespace Nicki0.QoLAutoLogistics {
 				ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_supply"), GetSprite(SpriteType.supply)));
 				ingredientsGroupInRecipe.AddRange(lsa.supplyGroups.ToList());
 			}
-			Texture2D textureWithString = DrawText(lsa.priority.ToString(), LogisticsFont, System.Drawing.Color.White, System.Drawing.Color.Transparent);
-			ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_priority") + ": " + ((lsa.priority < -3 || lsa.priority > 3) ? lsa.priority : Localization.GetLocalizedString("Ui_Logistics_Priority" + lsa.priority)), Sprite.Create(textureWithString, new Rect(0.0f, 0.0f, textureWithString.width, textureWithString.height), new Vector2(0.5f, 0.5f), 100.0f)));
+			Texture2D textureWithString = Texture2D.normalTexture;//DrawText(lsa.priority.ToString(), LogisticsFont, System.Drawing.Color.White, System.Drawing.Color.Transparent);
+			GroupCustomIcon gci = GroupWithCustomIcon(Localization.GetLocalizedString("Logistic_menu_priority") + ": " + ((lsa.priority < -3 || lsa.priority > 3) ? lsa.priority : Localization.GetLocalizedString("Ui_Logistics_Priority" + lsa.priority)), Sprite.Create(textureWithString, new Rect(0.0f, 0.0f, textureWithString.width, textureWithString.height), new Vector2(0.5f, 0.5f), 100.0f));
+			gci.isPriority = true;
+			gci.priority = lsa.priority;
+			ingredientsGroupInRecipe.Add(gci);
 			if (lsa.setting > 0) ingredientsGroupInRecipe.Add(GroupWithCustomIcon(Localization.GetLocalizedString("Ui_settings_title") + ": " + Localization.GetLocalizedString("Ui_settings_on")/*"Auto launch: active"*/, GetSprite(SpriteType.setting)));
 			if (lsa.linkedPlanet != 0) {
 				PlanetData linkedPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(lsa.linkedPlanet);
@@ -808,7 +813,13 @@ namespace Nicki0.QoLAutoLogistics {
 
 			return ingredientsGroupInRecipe;
 		}
-		private static Group GroupWithCustomIcon(string name, Sprite sprite) {
+		public class GroupCustomIcon : Group {
+			public bool isPriority = false;
+			public int priority = 0;
+			public GroupCustomIcon(GroupData groupData) : base(groupData) {
+			}
+		}
+		private static GroupCustomIcon GroupWithCustomIcon(string name, Sprite sprite) {
 			GroupData iconGroupData = (GroupData)ScriptableObject.CreateInstance(typeof(GroupData));
 			iconGroupData.icon = sprite;
 			iconGroupData.id = name;
@@ -826,9 +837,9 @@ namespace Nicki0.QoLAutoLogistics {
 			iconGroupData.secondaryInventoriesSize = new List<int>();
 			//iconGroupData.associatedGameObject : GameObject
 			//iconGroupData.terraformStageUnlock : TerraformStage
-			return (Group)constructor_Group.Invoke(new object[] { iconGroupData });
+			return new GroupCustomIcon(iconGroupData);//(Group)constructor_Group.Invoke(new object[] { iconGroupData });
 		}
-		private static Texture2D DrawText(String text, System.Drawing.Font font, System.Drawing.Color textColor, System.Drawing.Color backColor) {
+		/*private static Texture2D DrawText(String text, System.Drawing.Font font, System.Drawing.Color textColor, System.Drawing.Color backColor) {
 			// https://stackoverflow.com/questions/2070365/how-to-generate-an-image-from-text-on-fly-at-runtime
 			System.Drawing.Bitmap img = new System.Drawing.Bitmap(1, 1);
 			System.Drawing.Graphics drawing = System.Drawing.Graphics.FromImage(img);
@@ -855,6 +866,19 @@ namespace Nicki0.QoLAutoLogistics {
 			t.LoadImage(buffer);
 
 			return t;
+		}*/
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(GroupDisplayer), nameof(GroupDisplayer.SetGroupAndUpdateDisplay))]
+		private static void GroupDisplayer_SetGroupAndUpdateDisplay(GroupDisplayer __instance, Group group) {
+			if (group is GroupCustomIcon && ((GroupCustomIcon)group).isPriority) {
+				__instance.image.gameObject.SetActive(false);
+				GameObject priorityLabel = new GameObject("PriorityLabel");
+				priorityLabel.gameObject.transform.SetParent(__instance.image.gameObject.transform.parent);
+				TextMeshProUGUI TMProText = priorityLabel.AddComponent<TextMeshProUGUI>();
+				TMProText.alignment = TextAlignmentOptions.Center;
+				TMProText.text = ((GroupCustomIcon)group).priority.ToString();
+				priorityLabel.transform.localPosition = Vector3.zero;
+			}
 		}
 
 		// Copy logistics when closing the menu

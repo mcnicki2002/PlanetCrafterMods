@@ -1,15 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<!--<TargetFramework>net46</TargetFramework>-->
 		<AssemblyName>QoLAutoLogistics</AssemblyName>
 		<Description>(QoL) Auto-Logistics</Description>
-		<Version>1.0.22.1</Version>
+		<Version>1.0.23.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.QoLAutoLogistics</RootNamespace>
 	</PropertyGroup>
-	<Import Project="$(SolutionDir)\paths.targets" />
+	
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Deploy>true</Deploy>
+	</PropertyGroup>
+	<ItemGroup>
+		<AdditionalSourceFiles Include="$(SourceDir)IconData.cs" />
+	</ItemGroup>
+	<Import Project="$(SolutionDir)\solution_private.targets" />
+	<!--<Import Project="$(SolutionDir)\paths.targets" />
 	<PropertyGroup>
 		<GameDir>$(PrivatePath_GameDir)</GameDir>
 		<GameManaged>$(GameDir)\Planet Crafter_Data\Managed</GameManaged>
@@ -70,5 +80,5 @@
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(TargetDir)\$(AssemblyName)\Nicki0 - $(Description)" />
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PrivatePath_ZipOutput)\all\Nicki0 - $(Description)" />
 		<ZipDirectory SourceDirectory="$(TargetDir)\$(AssemblyName)" DestinationFile="$(PrivatePath_ZipOutput)\Nicki0-$(AssemblyName).zip" Overwrite="true" />
-	</Target>
+	</Target>-->
 </Project>

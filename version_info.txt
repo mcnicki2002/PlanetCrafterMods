@@ -19,7 +19,7 @@ Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0
 # (Item) More Fuses
 Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.2.0
 # (QoL) Auto-Logistics
-Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.22.1
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.23.0
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.0
 # (UI) Confine Mouse
