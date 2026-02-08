@@ -15,5 +15,6 @@
 		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
 		<Copy SourceFiles="$(SourceDir)SaveState.cs" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
 		<Copy SourceFiles="$(SourceDir)SaveState_v0.cs" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)MaterialsHelper.cs" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
 	</Target>
 </Project>
