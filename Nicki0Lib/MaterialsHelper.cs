@@ -76,8 +76,6 @@ namespace Nicki0 {
 		[HarmonyPriority(Priority.First)]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
-			Stopwatch timer = Stopwatch.StartNew();
-
 			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
 			if (materialsHelper.materialDictionary != null) {
 				return;
@@ -155,23 +153,6 @@ namespace Nicki0 {
 
 			
 
-			// --- Add materials of all Renderers ---
-			foreach (Renderer r in Resources.FindObjectsOfTypeAll(typeof(Renderer))) {
-				if (r == null) continue;
-				foreach (Material m in r.sharedMaterials) {
-					if (m == null) continue;
-					materialsHelper.materialDictionary.TryAdd(m.name.Replace("(Instance)", "").Replace("(Clone)", "").Trim(), m);
-				}
-			}
-
-			foreach (Renderer renderer in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
-				if (renderer == null) continue;
-
-				foreach (Material m in renderer.sharedMaterials) {
-					if (m == null) continue;
-					materialsHelper.materialDictionary.TryAdd(m.name.Replace("(Instance)", "").Replace("(Clone)", "").Trim(), m);
-				}
-			}
 
 			// --- Add materials from MaterialList objects ---
 			foreach (MaterialList ml in UnityEngine.Object.FindObjectsByType(typeof(MaterialList), FindObjectsSortMode.None)) {
@@ -196,10 +177,6 @@ namespace Nicki0 {
 					materialsHelper.completeMaterialDictionary.TryAdd(m.name, m);
 				}
 			}*/
-			
-
-
-			log.LogInfo("Material collection took: " + timer.Elapsed.TotalMilliseconds + " ms");
 		}
 
 	}
