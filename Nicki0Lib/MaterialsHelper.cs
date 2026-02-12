@@ -40,7 +40,7 @@ namespace Nicki0 {
 		}
 
 
-		public static bool ApplyGameMaterials(GameObject toFix, bool normalizeName = false, bool fromCompleteCollection = false) {
+		public static bool ApplyGameMaterials(GameObject toFix, bool normalizeName = false, bool fromCompleteCollection = false, bool setSharedMaterials = true) {
 			if (materialsHelperObject == null) {
 				Console.WriteLine("[Fatal] MaterialsHelper not initialized");
 				return false;
@@ -65,8 +65,11 @@ namespace Nicki0 {
 					}
 				}
 
-				//mr.SetMaterialArray(materials);
-				mr.SetSharedMaterials(materials.ToList()); // Difference???
+				if (setSharedMaterials) {
+					mr.SetSharedMaterials(materials.ToList());
+				} else {
+					mr.SetMaterialArray(materials);
+				}
 			}
 
 			return true;
