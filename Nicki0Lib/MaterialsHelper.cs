@@ -40,7 +40,7 @@ namespace Nicki0 {
 		}
 
 
-		public static bool ApplyGameMaterials(GameObject toFix, bool normalizeName = false, bool fromCompleteCollection = false, bool setSharedMaterials = true) {
+		public static bool ApplyGameMaterials(GameObject toFix, bool normalizeName = false, bool fromCompleteCollection = false, bool setSharedMaterials = false) {
 			if (materialsHelperObject == null) {
 				Console.WriteLine("[Fatal] MaterialsHelper not initialized");
 				return false;
@@ -52,7 +52,7 @@ namespace Nicki0 {
 
 			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
 
-			foreach (Renderer mr in toFix.GetComponentsInChildren<Renderer>()) {
+			foreach (Renderer mr in toFix.GetComponentsInChildren<MeshRenderer>()) {
 				Material[] materials = mr.GetSharedMaterialArray();
 
 				for (int i = 0; i < materials.Length; i++) {
