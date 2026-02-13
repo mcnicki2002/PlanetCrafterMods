@@ -25,7 +25,6 @@ namespace Nicki0 {
 
 			public Dictionary<string, Material> materialDictionary;
 			public Dictionary<string, Material> completeMaterialDictionary;
-			public Dictionary<string, Material> completeMaterialDictionary2;
 		}
 		static GameObject materialsHelperObject;
 		public static void InitMaterialsHelper(ManualLogSource pLog) {
@@ -89,7 +88,6 @@ namespace Nicki0 {
 			}
 			materialsHelper.materialDictionary = new Dictionary<string, Material>();
 			materialsHelper.completeMaterialDictionary = new Dictionary<string, Material>();
-			materialsHelper.completeMaterialDictionary2 = new Dictionary<string, Material>();
 
 			// --- Add materials from GroupDataConstructable ---
 			// ~18ms
@@ -175,7 +173,7 @@ namespace Nicki0 {
 			// ~0.6 ms
 			foreach (Material m in Resources.FindObjectsOfTypeAll(typeof(Material))) {
 				if (m == null) continue;
-				materialsHelper.completeMaterialDictionary2.TryAdd(m.name, m);
+				materialsHelper.completeMaterialDictionary.TryAdd(m.name, m);
 			}
 			
 			// ~70ms
