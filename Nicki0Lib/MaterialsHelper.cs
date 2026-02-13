@@ -16,9 +16,13 @@ using UnityEngine.SceneManagement;
 namespace Nicki0 {
 
 	internal class MaterialsHelper {
+
 		static ManualLogSource log;
 
 		class Nicki0_MaterialsHelper : MonoBehaviour {
+			public static readonly Version VERSION = new Version(1, 3);
+			public static readonly string GOName = "Nicki0_MaterialsHelperObject_v";
+
 			public Dictionary<string, Material> materialDictionary;
 			public Dictionary<string, Material> completeMaterialDictionary;
 			public Dictionary<string, Material> completeMaterialDictionary2;
@@ -27,9 +31,9 @@ namespace Nicki0 {
 		public static void InitMaterialsHelper(ManualLogSource pLog) {
 			log = pLog;
 
-			materialsHelperObject = GameObject.Find("Nicki0_MaterialsHelperObject");
+			materialsHelperObject = GameObject.Find(Nicki0_MaterialsHelper.GOName + Nicki0_MaterialsHelper.VERSION.ToString());
 			if (materialsHelperObject == null) {
-				materialsHelperObject = new GameObject("Nicki0_MaterialsHelperObject");
+				materialsHelperObject = new GameObject(Nicki0_MaterialsHelper.GOName + Nicki0_MaterialsHelper.VERSION.ToString());
 
 				materialsHelperObject.AddComponent<Nicki0_MaterialsHelper>();
 
