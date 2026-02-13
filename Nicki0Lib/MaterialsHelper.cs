@@ -6,12 +6,9 @@ using HarmonyLib;
 using SpaceCraft;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Nicki0 {
 
@@ -113,7 +110,7 @@ namespace Nicki0 {
 					materialsHelper.materialDictionary.TryAdd(returnedMaterial.name, returnedMaterial);
 				}
 			}
-			
+
 
 			/*
 			// --- Add materials from procedural wrecks --- Does not add any additional Materials ---
@@ -175,7 +172,7 @@ namespace Nicki0 {
 				if (m == null) continue;
 				materialsHelper.completeMaterialDictionary.TryAdd(m.name, m);
 			}
-			
+
 			// ~70ms
 			/*foreach (UnityEngine.Object obj in Resources.FindObjectsOfTypeAll<UnityEngine.Object>()) {
 				if (obj is Material m) {

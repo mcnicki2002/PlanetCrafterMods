@@ -355,6 +355,15 @@ namespace Nicki0.FeatSpaceStationPlanet {
 					}
 				}
 			}
+
+			// make Aquarium2 be able to grow algae
+			GroupData aquarium2 = ___groupsData.Find(e => e.id == "Aquarium2");
+			GameObject waterGO = aquarium2.associatedGameObject.transform.Find("BiodomeBase/Volumes/Water/MeshColliderWater").gameObject;
+			if (waterGO == null) { return; }
+			if (!waterGO.TryGetComponent<HomemadeTag>(out _)) return;
+			waterGO.layer = LayerMask.NameToLayer(GameConfig.layerWaterName);
+			HomemadeTag surfaceTag = waterGO.AddComponent<HomemadeTag>();
+			surfaceTag.homemadeTag = DataConfig.HomemadeTag.SurfaceWater;
 		}
 
 		private static PlanetLoader planetLoader = null;
@@ -546,5 +555,18 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		//at HarmonyLib.Public.Patching.HarmonyManipulator.WritePostfixes (HarmonyLib.Internal.Util.ILEmitter+Label returnLabel) [0x0035a] in <474744d65d8e460fa08cd5fd82b5d65f>:0
 		//at HarmonyLib.Public.Patching.HarmonyManipulator.WriteImpl () [0x00234] in <474744d65d8e460fa08cd5fd82b5d65f>:0
 		//[Error  : Unity Log] InvalidHarmonyPatchArgumentException: (static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews)): Return type of pass through postfix static bool SpaceStationPlanet.Plugin::SystemViewHandler_Start(SpaceCraft.PlanetData planetData, SpaceCraft.SystemViewHandler __instance, int ___zoomValueOnPlanets, System.Collections.Generic.List<SpaceCraft.SpacePlanetView> ___spacePlanetViews) does not match type of its first parameter
+
+		static Color? defaultMapBackgroundColor;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(UiWindowMap), nameof(UiWindowMap.OnOpen))]
+		static void UiWindowMap_OnOpen(Camera ___cameraMap) {
+			defaultMapBackgroundColor ??= new Color(___cameraMap.backgroundColor.r, ___cameraMap.backgroundColor.g, ___cameraMap.backgroundColor.b, ___cameraMap.backgroundColor.a);
+
+			if (!IsOnPlanet()) {
+				___cameraMap.backgroundColor = defaultMapBackgroundColor.Value;
+			} else {
+				___cameraMap.backgroundColor = Color.black;
+			}
+		}
 	}
 }

@@ -89,9 +89,9 @@
 	</ItemGroup>
 	
 	<Target Name="CopyDLLsDeployLocal" AfterTargets="Build" Condition="'$(DeployLocal)' == 'true'">
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
-		<Copy SourceFiles="@(AdditionalModFiles)" DestinationFolder="$(PluginsFolder)\Nicki0 - $(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)\Nicki0\Nicki0 - $(Description)" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(PluginsFolder)\Nicki0\Nicki0 - $(Description)" />
+		<Copy SourceFiles="@(AdditionalModFiles)" DestinationFolder="$(PluginsFolder)\Nicki0\Nicki0 - $(Description)" />
 	</Target>
 	<Target Name="CopyDLLsDeploy" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
 		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
