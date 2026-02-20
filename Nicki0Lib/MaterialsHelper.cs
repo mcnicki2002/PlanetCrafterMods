@@ -59,7 +59,13 @@ namespace Nicki0 {
 
 			foreach (Renderer renderer in toFix.GetComponentsInChildren<MeshRenderer>()) {
 				if (renderer == null) { continue; }
-				Material[] materials = renderer.GetSharedMaterialArray();
+				Material[] materials;
+				if (setSharedMaterials) {
+					materials = renderer.GetSharedMaterialArray();
+				} else {
+					materials = renderer.GetMaterialArray();
+				}
+
 				if (materials == null) { continue; }
 
 				for (int i = 0; i < materials.Length; i++) {
