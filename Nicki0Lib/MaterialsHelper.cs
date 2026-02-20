@@ -50,10 +50,17 @@ namespace Nicki0 {
 				return false;
 			}
 
+			if (toFix == null) {
+				log.LogError("GameObject is null");
+				return false;
+			}
+
 			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
 
-			foreach (Renderer mr in toFix.GetComponentsInChildren<MeshRenderer>()) {
-				Material[] materials = mr.GetSharedMaterialArray();
+			foreach (Renderer renderer in toFix.GetComponentsInChildren<MeshRenderer>()) {
+				if (renderer == null) { continue; }
+				Material[] materials = renderer.GetSharedMaterialArray();
+				if (materials == null) { continue; }
 
 				for (int i = 0; i < materials.Length; i++) {
 					if (fromCompleteCollection) {
@@ -66,9 +73,9 @@ namespace Nicki0 {
 				}
 
 				if (setSharedMaterials) {
-					mr.SetSharedMaterials(materials.ToList());
+					renderer.SetSharedMaterials(materials.ToList());
 				} else {
-					mr.SetMaterialArray(materials);
+					renderer.SetMaterialArray(materials);
 				}
 			}
 
