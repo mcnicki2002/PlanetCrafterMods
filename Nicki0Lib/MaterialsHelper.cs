@@ -35,6 +35,8 @@ namespace Nicki0 {
 
 				GameObject.DontDestroyOnLoad(materialsHelperObject);
 
+				log.LogInfo("This plugin creates the MaterialsHelper dictionary for version " + Nicki0_MaterialsHelper.VERSION.ToString());
+
 				Harmony.CreateAndPatchAll(typeof(MaterialsHelper));
 			}
 		}
@@ -45,7 +47,39 @@ namespace Nicki0 {
 				Console.WriteLine("[Fatal] MaterialsHelper not initialized");
 				return false;
 			}
-			if (materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>().materialDictionary == null) {
+			Dictionary<string, Material> materialDictionary = null;
+
+			string nameOfDictionaryToUse = fromCompleteCollection ? nameof(Nicki0_MaterialsHelper.completeMaterialDictionary) : nameof(Nicki0_MaterialsHelper.materialDictionary);
+			bool foundHaterialsHelperObject = false;
+			bool foundHaterialsHelperObjectDictionary = false;
+			foreach (MonoBehaviour script in materialsHelperObject.GetComponents<MonoBehaviour>()) {
+				if (script == null || string.IsNullOrEmpty(script.GetScriptClassName()) || script.GetType() == null) { continue; }
+
+				if (script.GetScriptClassName().Contains(nameof(Nicki0_MaterialsHelper))) {
+					foundHaterialsHelperObject = true;
+					if (script.GetType().GetFields().Select(e => e.Name == nameOfDictionaryToUse).Any()) {
+						foundHaterialsHelperObjectDictionary = true;
+						try {
+							materialDictionary = AccessTools.FieldRefAccess<Dictionary<string, Material>>(script.GetType(), nameOfDictionaryToUse).Invoke(script);
+						} catch {
+							log.LogError("Could not get dictionary from helper script");
+							return false;
+						}
+						break;
+					}
+				}
+			}
+
+			if (!foundHaterialsHelperObject) {
+				log.LogFatal("Nicki0_MaterialsHelper script not found");
+				return false;
+			}
+			if (!foundHaterialsHelperObjectDictionary) {
+				log.LogFatal("Nicki0_MaterialsHelper dictionary not found");
+				return false;
+			}
+
+			if (materialDictionary == null) {
 				log.LogFatal("Materials not yet initialized");
 				return false;
 			}
@@ -55,25 +89,13 @@ namespace Nicki0 {
 				return false;
 			}
 
-			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
-
 			foreach (Renderer renderer in toFix.GetComponentsInChildren<MeshRenderer>()) {
 				if (renderer == null) { continue; }
-				Material[] materials;
-				if (setSharedMaterials) {
-					materials = renderer.GetSharedMaterialArray();
-				} else {
-					materials = renderer.GetMaterialArray();
-				}
-
+				Material[] materials = setSharedMaterials ? renderer.GetSharedMaterialArray() : renderer.GetMaterialArray();
 				if (materials == null) { continue; }
 
 				for (int i = 0; i < materials.Length; i++) {
-					if (fromCompleteCollection) {
-						if (materialsHelper.completeMaterialDictionary.TryGetValue(normalizeName ? materials[i].name.CanonicalizeString() : materials[i].name, out Material gameMaterial)) {
-							materials[i] = gameMaterial;
-						}
-					} else if (materialsHelper.materialDictionary.TryGetValue(normalizeName ? materials[i].name.CanonicalizeString() : materials[i].name, out Material gameMaterial)) {
+					if (materialDictionary.TryGetValue(normalizeName ? materials[i].name.CanonicalizeString() : materials[i].name, out Material gameMaterial)) {
 						materials[i] = gameMaterial;
 					}
 				}
