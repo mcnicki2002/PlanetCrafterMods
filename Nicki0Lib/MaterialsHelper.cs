@@ -17,7 +17,7 @@ namespace Nicki0 {
 		static ManualLogSource log;
 
 		class Nicki0_MaterialsHelper : MonoBehaviour {
-			public static readonly Version VERSION = new Version(1, 3);
+			public static readonly Version VERSION = new Version(1, 4);
 			public static readonly string GOName = "Nicki0_MaterialsHelperObject_v";
 
 			public Dictionary<string, Material> materialDictionary;
