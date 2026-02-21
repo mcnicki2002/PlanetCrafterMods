@@ -82,6 +82,11 @@
 			<HintPath>$(GameManaged)\Newtonsoft.Json.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="Tessera">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Tessera.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
