@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<AssemblyName>ItemWallAquarium</AssemblyName>
+		<Description>(Item) Wall Aquarium</Description>
+		<Version>1.0.0.0</Version>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>Nicki0.ItemWallAquarium</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Deploy>true</Deploy>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<AdditionalSourceFiles Include="$(SourceDir)Resources\WallAquarium.png" />
+	</ItemGroup>
+	<Import Project="$(SolutionDir)\solution_private.targets" />
+	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+</Project>

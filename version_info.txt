@@ -20,6 +20,8 @@ Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.0
 Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0
 # (Item) More Fuses
 Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.2.0
+# (Item) Wall Aquarium
+Nicki0.theplanetcraftermods.ItemWallAquarium=1.0.0.0
 # (QoL) Auto-Logistics
 Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.23.0
 # (QoL) Meteor Debris Config
