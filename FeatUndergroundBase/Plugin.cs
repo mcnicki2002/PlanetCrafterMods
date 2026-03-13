@@ -2,7 +2,6 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
@@ -18,6 +17,7 @@ namespace Nicki0.FeatUndergroundBase {
 
 	[BepInPlugin("Nicki0.theplanetcraftermods.FeatUndergroundBase", "(Feat) Underground Base", PluginInfo.PLUGIN_VERSION)]
 	public class Plugin : BaseUnityPlugin {
+		public static bool debugPrint = false;
 
 		/*
 		 * TODO
@@ -173,10 +173,10 @@ namespace Nicki0.FeatUndergroundBase {
 				//foreach (string id in groupsWithRockAsWindows) {
 				//	___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<ChangeGlassToRockIfBelowGround>();
 				//}
-				___groupsData.Find(e => e.id == "biodome").associatedGameObject.transform.Find("Container").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
-				___groupsData.Find(e => e.id == "Megadome1").associatedGameObject.transform.Find("City_Dome_Top").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
-				___groupsData.Find(e => e.id == "Pod9xB").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
-				___groupsData.Find(e => e.id == "podAngle").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
+				___groupsData.Find(e => e.id == "biodome").associatedGameObject.transform.Find("Container").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
+				___groupsData.Find(e => e.id == "Megadome1").associatedGameObject.transform.Find("City_Dome_Top").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
+				___groupsData.Find(e => e.id == "Pod9xB").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
+				___groupsData.Find(e => e.id == "podAngle").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
 
 				isInitialized = true;
 			}
@@ -408,13 +408,13 @@ namespace Nicki0.FeatUndergroundBase {
 			 * 
 			 */
 			bool anythingBelow = false;
-			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerRoverExcludeName }).ToArray()));
+			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerPlayerAndRoverExcludeName }).ToArray()));
 			foreach (RaycastHit hit in hitsBelow) {
 				if (hit.collider.GetComponent<MachineGenerationGroupVein>() == null &&
 					hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null
 					) {
 					anythingBelow = true;
-					Console.WriteLine(string.Join("/", hit.collider.gameObject.GetComponentsInParent<Transform>().Select(t => t.name).Reverse().ToArray()));
+					if (Plugin.debugPrint) Console.WriteLine("Collider hit by underground glass cover rock raycase: " + string.Join("/", hit.collider.gameObject.GetComponentsInParent<Transform>().Select(t => t.name).Reverse().ToArray()));
 				}
 			}
 
@@ -432,14 +432,12 @@ namespace Nicki0.FeatUndergroundBase {
 
 
 			bool isAgainstRock = !CheckIfInLivable();
-			Console.WriteLine(!isAgainstRock);
 			if (!this.transform.GetChild(0).gameObject.activeSelf && isAgainstRock) {
 				foreach (Transform t in this.transform) {
 					t.gameObject.SetActive(true);
 				}
 				this.GetComponent<Collider>().enabled = true;
 			} else if (this.transform.GetChild(0).gameObject.activeSelf && !isAgainstRock) {
-				Console.WriteLine("Disabling this");
 				foreach (Transform t in this.transform) {
 					t.gameObject.SetActive(false);
 				}
@@ -459,8 +457,7 @@ namespace Nicki0.FeatUndergroundBase {
 					}
 					this.GetComponent<Collider>().enabled = true;
 				} else if (this.transform.GetChild(0).gameObject.activeSelf && !isAgainstRock) {
-					Console.WriteLine("Disabling this_2: " + !isAgainstRock);
-					CheckIfInLivable(true);
+					CheckIfInLivable();
 					foreach (Transform t in this.transform) {
 						t.gameObject.SetActive(false);
 					}
@@ -473,11 +470,10 @@ namespace Nicki0.FeatUndergroundBase {
 				}
 			}
 		}
-		private bool CheckIfInLivable(bool print = false) {
+		private bool CheckIfInLivable() {
 			foreach (Collider collider in Physics.OverlapSphere(this.transform.position + (-2) * this.transform.up, 0)) {
 				foreach (HomemadeTag homemadeTag in collider.transform.GetComponentsInChildren<HomemadeTag>().Union(collider.transform.GetComponentsInParent<HomemadeTag>())) {
 					if (homemadeTag.GetHomemadeTag() == DataConfig.HomemadeTag.IsInsideLivable) {
-						if (print) Console.WriteLine((this.transform.position + (-2) * this.transform.up) + " : " + collider.transform.root.name);
 						return true;
 					}
 				}
@@ -499,7 +495,7 @@ namespace Nicki0.FeatUndergroundBase {
 	public class Nicki0_ChangeGlassToRockIfBelowGround : MonoBehaviour {
 		public static string rockMaterialOverwrite = "";
 		public string rockMaterial = "Material_AW_01";
-		public (int, int) materialRange = (0, /*-1*/58);
+		public (int, int) materialRange = (0, -1);
 
 		public void Start() {
 			if (this.transform.position.y >= 0) { return; }
@@ -516,7 +512,7 @@ namespace Nicki0.FeatUndergroundBase {
 			if (!string.IsNullOrEmpty(rockMaterialOverwrite)) {
 				replacementMaterial = materialDict[rockMaterialOverwrite];
 			} else if (materialRange.Item2 >= 0) {
-				VehicleCheckSurroundingRocks vcsr = GroupsHandler.GetGroupViaId("VehicleTruck").GetAssociatedGameObject().GetComponentInChildren<VehicleCheckSurroundingRocks>();
+				VehicleCheckSurroundingRocks vcsr = GroupsHandler.GetGroupViaId("VehicleTruck").GetAssociatedGameObject().GetComponentInChildren<VehicleCheckSurroundingRocks>(true);
 				MaterialList lst = AccessTools.FieldRefAccess<VehicleCheckSurroundingRocks, MaterialList>(vcsr, "_materialsToFilter");
 				//int randomizedMaterial = new System.Random().Next(Math.Max(0, materialRange.Item1), Math.Min(lst.materials.Length, materialRange.Item2));
 				int minIndex = Math.Max(0, materialRange.Item1);

@@ -125,10 +125,10 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			newPlanet.envDataStart = envEmpty;
 			newPlanet.envDataEnd = envEmpty;
 			newPlanet.envDataNight = envEmpty;
+			
+			//newPlanet.layersToMoss.Clear();
+			//newPlanet.mossPotentialColors.Clear();
 
-
-			newPlanet.layersToMoss.Clear();
-			newPlanet.mossPotentialColors.Clear();
 			//newPlanet.meteoEvents.Clear();
 			newPlanet.evolutionners.Clear();
 			newPlanet.disableMusicsSectorsLimitations = true;
@@ -513,10 +513,10 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}
 
 		[HarmonyPrefix]
-		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] { typeof(bool), typeof(float), typeof(float) })]
-		static void PlayerCameraShake_SetShaking(ref float _shakeValue) {
+		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(float), typeof(float) })]
+		static void PlayerCameraShake_SetShaking(ref float shakeValue) {
 			if (IsOnPlanet()) {
-				_shakeValue *= 0.2f;
+				shakeValue *= 0.2f;
 			}
 		}
 
@@ -545,7 +545,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 
 			//foreach (SpacePlanetView spacePlanetView in ___spacePlanetViews) log.LogInfo(spacePlanetView.transform.position);
 
-			Vector3 vector = new Vector3(-5049.94f, -4000.50f, 15.13f);//spacePlanetView.transform.position; //(-5049.94, -3994.29, 17.13)-3992.50
+			Vector3 vector = new Vector3(-39.7284f, 0.1491f, 19f); //spacePlanetView.transform.position; //new Vector3(-5049.94f, -4000.50f, 15.13f);
 			vector += new Vector3((float)___zoomValueOnPlanets, 0f, 0f);
 			log.LogInfo(vector + " is the space station zoom spot");
 			__instance.ActivateZoomTarget(vector);//AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] { vector });

@@ -235,6 +235,7 @@ namespace Nicki0.ItemWallAquarium {
 		static void PR_GPGO_GPGC(PanelsResources __instance) {
 			if (__instance.panelsSubtypes.Contains(WallAquariumSubPanelType)) return;
 
+			if (GroupsHandler.GetAllGroups() == null) return;
 			Group aquariumGroup = GroupsHandler.GetGroupViaId(WallAquariumId);
 
 			__instance.panelsSubtypes.Add(WallAquariumSubPanelType);
