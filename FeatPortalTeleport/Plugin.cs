@@ -104,6 +104,8 @@ namespace Nicki0.FeatPortalTeleport {
 			if (enableKeepPortalOpen) { SetColorConfig(); }
 		}
 
+		private static bool TeleportAnyway() => Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().GetFlyMode();
+
 		private static Dictionary<int, int> woidsToPlanetidhashstate = null;
 		private static Dictionary<int, int> GetWoIdsToPlanetIdHashes() {
 			if (woidsToPlanetidhashstate != null) { return woidsToPlanetidhashstate; }
@@ -318,6 +320,8 @@ namespace Nicki0.FeatPortalTeleport {
 					view.texture = SpaceVH.GetComponentInChildren<Camera>(true).targetTexture;
 					view.uvRect = new Rect(0.3f, 0.5f, 0.5f, 0.17f); // default values as of v1.611
 				} else {
+					Managers.GetManager<SpaceViewHandler>().SetVisibiltity(false, 0, 75, true); // Otherwise the planet view would overlap system view
+
 					SystemViewHandler SolarVH = Managers.GetManager<SystemViewHandler>();
 					SolarVH.ResetCameraPosition();
 					SolarVH.SetVisibiltity(true, 90);
@@ -473,7 +477,7 @@ namespace Nicki0.FeatPortalTeleport {
 				if (wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
 
 				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(groupPortalGenerator, pd.GetPlanetHash());
-				if (woPortalGenerator == null) continue;
+				if (woPortalGenerator == null && !TeleportAnyway()) continue;
 
 
 
@@ -708,7 +712,7 @@ namespace Nicki0.FeatPortalTeleport {
 				if (woid != -1) {
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
 						// check if portal still exists
-						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null) {
+						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null && !TeleportAnyway()) {
 							field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData(
 								Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f),
 								"No portal on destination planet",
@@ -830,8 +834,13 @@ namespace Nicki0.FeatPortalTeleport {
 							}
 						}
 					}
-					pos = woPortalGenerator.GetPosition();
-					rot = woPortalGenerator.GetRotation();
+					if (TeleportAnyway()) {
+						pos = Vector3.zero;
+						rot = Quaternion.identity;
+					} else {
+						pos = woPortalGenerator.GetPosition();
+						rot = woPortalGenerator.GetRotation();
+					}
 				} else {
 					WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash());
 					if (woPortalGenerator != null) { // should never be null as the portal should only show if there is a portal generator on the planet
@@ -987,7 +996,7 @@ namespace Nicki0.FeatPortalTeleport {
 		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color color) {
 			/*
 			 * _EmissionColor -> ring particles
-			 * _TintColor -> dot particles
+			 * ~~_TintColor -> dot particles~~ wrong since v2.000
 			 */
 			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer). This means that the object has been instantiated and configured already, which is done here
 				if (configEnableStrudel.Value && renderer.sharedMaterial.HasColor("_EmissionColor")) {
@@ -1002,14 +1011,14 @@ namespace Nicki0.FeatPortalTeleport {
 			// Prevent switching back to default color when portal is closed
 			if (!renderer.transform.GetComponentInParent<MachinePortalGenerator>()?.machinePortal?.gameObject.activeSelf ?? false) return;
 
-			if (renderer.sharedMaterial.HasColor("_EmissionColor")) renderer.sharedMaterial.SetColor("_EmissionColor", color);
-			if (renderer.sharedMaterial.HasColor("_TintColor")) {
+			if (renderer.gameObject.name.Contains("Particle System Circles")/*renderer.sharedMaterial.HasColor("_EmissionColor")*/) renderer.sharedMaterial.SetColor("_EmissionColor", color);
+			if (renderer.gameObject.name.Contains("ParticleComplex")/*renderer.sharedMaterial.HasColor("_TintColor")*/) {
 				ParticleSystem dotParticles = renderer.GetComponent<ParticleSystem>();
 
 				if (color != DefaultPortalColor) {
 					if (color.r >= 0 || color.g >= 0 || color.b >= 0) {
 
-						renderer.sharedMaterial.SetColor("_TintColor", NormalizeAndScaleColor(color, 0.4f));
+						renderer.sharedMaterial.SetColor("_EmissionColor"/*"_TintColor"*/, NormalizeAndScaleColor(color, 0.4f));
 
 						ParticleSystem.ColorOverLifetimeModule dotParticlesColorOL = dotParticles.colorOverLifetime;
 						dotParticlesColorOL.enabled = false;
