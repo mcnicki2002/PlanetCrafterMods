@@ -89,6 +89,11 @@
 			<HintPath>$(GameManaged)\Tessera.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="Collections">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Unity.Collections.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

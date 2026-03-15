@@ -60,6 +60,7 @@ namespace Nicki0.FeatPortalTeleport {
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
 
+		static bool isOnDevPC = false;
 
 		private void Awake() {
 			log = Logger;
@@ -95,6 +96,8 @@ namespace Nicki0.FeatPortalTeleport {
 
 			saveState = new SaveState(typeof(Plugin), DataFormatVersion);
 
+			isOnDevPC = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TPC_ON_DEV_PC"));
+
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -104,7 +107,7 @@ namespace Nicki0.FeatPortalTeleport {
 			if (enableKeepPortalOpen) { SetColorConfig(); }
 		}
 
-		private static bool TeleportAnyway() => Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().GetFlyMode();
+		private static bool TeleportAnyway() => Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().GetFlyMode() && isOnDevPC;
 
 		private static Dictionary<int, int> woidsToPlanetidhashstate = null;
 		private static Dictionary<int, int> GetWoIdsToPlanetIdHashes() {
@@ -435,6 +438,8 @@ namespace Nicki0.FeatPortalTeleport {
 			WorldUnitsHandler wuh = Managers.GetManager<WorldUnitsHandler>();
 			Group groupPortalGenerator = GroupsHandler.GetGroupViaId("PortalGenerator1");
 
+			bool teleportAnyway = TeleportAnyway();
+
 			bool worldInstanceSelectorAdded = false;
 
 			bool isCurrentPlanetTerraformed = false;
@@ -453,12 +458,12 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 
 
-			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
+			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(teleportAnyway)) {
 				if (!isCurrentPlanetTerraformed) break;
 
 				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId()) continue;
 
-				if (!wuh.AreUnitsInited(pd.GetPlanetId())) {
+				if (!wuh.AreUnitsInited(pd.GetPlanetId()) && !teleportAnyway) {
 					if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Units not initialized");
 					continue;
 				}
@@ -474,10 +479,10 @@ namespace Nicki0.FeatPortalTeleport {
 					}
 				}
 
-				if (wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
+				if (!teleportAnyway && wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
 
 				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(groupPortalGenerator, pd.GetPlanetHash());
-				if (woPortalGenerator == null && !TeleportAnyway()) continue;
+				if (woPortalGenerator == null && !teleportAnyway) continue;
 
 
 
@@ -835,7 +840,7 @@ namespace Nicki0.FeatPortalTeleport {
 						}
 					}
 					if (TeleportAnyway()) {
-						pos = Vector3.zero;
+						pos = new Vector3(0, 1000, 0);
 						rot = Quaternion.identity;
 					} else {
 						pos = woPortalGenerator.GetPosition();
