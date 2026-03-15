@@ -94,6 +94,12 @@ namespace Nicki0.ItemWallAquarium {
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
 			GroupDataConstructible gdc_WallAquarium;
 			if (!___groupsData.Where(x => x.id == WallAquariumId).Any()) {
+				GameObject aquariumGameObject = GetAquarium();
+				if (aquariumGameObject == null) {
+					log.LogWarning("Aquarium GameObject not found");
+					return;
+				}
+
 				gdc_WallAquarium = ScriptableObject.CreateInstance<GroupDataConstructible>();//new GroupDataConstructible();
 				gdc_WallAquarium.id = WallAquariumId;
 				gdc_WallAquarium.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
@@ -115,7 +121,7 @@ namespace Nicki0.ItemWallAquarium {
 				gdc_WallAquarium.terraStageRequirements = [];
 				gdc_WallAquarium.notAllowedPlanetsRequirement = [];
 
-				gdc_WallAquarium.associatedGameObject = Instantiate(GetAquarium());
+				gdc_WallAquarium.associatedGameObject = Instantiate(aquariumGameObject);
 				DontDestroyOnLoad(gdc_WallAquarium.associatedGameObject);
 				gdc_WallAquarium.associatedGameObject.SetName(gdc_WallAquarium.id);
 				gdc_WallAquarium.associatedGameObject.transform.position += new Vector3(0, -1_000, 0); // move instantiated object away from playing area
@@ -200,6 +206,7 @@ namespace Nicki0.ItemWallAquarium {
 			if (pih == null) {
 				pih = FindFirstObjectByType<ProceduralInstancesHandler>();
 			}
+			if (pih == null) return null;
 			Array generatorArray = (Array)(AccessTools.GetDeclaredFields(typeof(ProceduralInstancesHandler)).Where(x => x.Name == "_generators").First().GetValue(pih));
 
 			Type generatorDataType = AccessTools.FirstInner(typeof(ProceduralInstancesHandler), x => x.Name.Contains("GeneratorData"));
