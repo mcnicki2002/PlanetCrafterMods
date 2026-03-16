@@ -91,8 +91,6 @@ namespace Nicki0 {
 		[HarmonyPriority(Priority.First)]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
-			if (new StackTrace(true).ToString().Contains("CreateNewFile", StringComparison.InvariantCultureIgnoreCase)) return;
-
 			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
 			if (materialsHelper.materialDictionary != null) {
 				return;
@@ -117,13 +115,16 @@ namespace Nicki0 {
 			}
 
 			// ~0.4ms
-			foreach (MethodInfo mi in AccessTools.GetDeclaredMethods(typeof(VisualsResourcesHandler))) {
-				if (mi.ReturnType == typeof(Material) && mi.GetParameters().Length == 0) {
-					Material returnedMaterial = mi.Invoke(Managers.GetManager<VisualsResourcesHandler>(), []) as Material;
-					if (returnedMaterial == null || string.IsNullOrEmpty(returnedMaterial.name)) continue;
-					materialsHelper.materialDictionary.TryAdd(returnedMaterial.name, returnedMaterial);
+			if (Managers.GetManager<VisualsResourcesHandler>() != null) {
+				foreach (MethodInfo mi in AccessTools.GetDeclaredMethods(typeof(VisualsResourcesHandler))) {
+					if (mi.ReturnType == typeof(Material) && mi.GetParameters().Length == 0) {
+						Material returnedMaterial = mi.Invoke(Managers.GetManager<VisualsResourcesHandler>(), []) as Material;
+						if (returnedMaterial == null || string.IsNullOrEmpty(returnedMaterial.name)) continue;
+						materialsHelper.materialDictionary.TryAdd(returnedMaterial.name, returnedMaterial);
+					}
 				}
 			}
+			
 
 			foreach (GroupData gd in ___groupsData) {
 				if (gd == null || gd.associatedGameObject == null) continue;
