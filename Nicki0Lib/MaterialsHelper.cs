@@ -6,6 +6,7 @@ using HarmonyLib;
 using SpaceCraft;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -90,6 +91,8 @@ namespace Nicki0 {
 		[HarmonyPriority(Priority.First)]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
+			if (new StackTrace(true).ToString().Contains("CreateNewFile", StringComparison.InvariantCultureIgnoreCase)) return;
+
 			Nicki0_MaterialsHelper materialsHelper = materialsHelperObject.GetComponent<Nicki0_MaterialsHelper>();
 			if (materialsHelper.materialDictionary != null) {
 				return;
