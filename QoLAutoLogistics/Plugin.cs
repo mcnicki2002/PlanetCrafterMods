@@ -1093,7 +1093,7 @@ namespace Nicki0.QoLAutoLogistics {
 			button.transform.localPosition = pos;
 			button.GetComponent<RectTransform>().sizeDelta = new Vector2(25, 25);
 			button.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
-			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
+			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent(0.1f * Vector3.one);
 			button.GetComponent<Image>().sprite = image;
 
 			GameObject backgroundImageGameObjectA = new GameObject("BackgroundHexagonImage");

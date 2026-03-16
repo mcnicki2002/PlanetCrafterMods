@@ -77,7 +77,7 @@ namespace Nicki0.FeatPlanetSelector {
 
 						GameObjects.DestroyAllChildren(____planetContainer, false);
 						GameObject newPlanetObject = Instantiate<GameObject>(pd.GetPlanetSpaceView(), ____planetContainer.transform);
-						foreach (Transform childGO in newPlanetObject.GetComponentsInChildren<Transform>()) childGO.gameObject.layer = 0;
+						foreach (Transform childGO in newPlanetObject.GetComponentsInChildren<Transform>()) childGO.gameObject.layer = 0; // LayerMask.NameToLayer(GameConfig.layerDefaultName)
 						PlanetChanger planetChanger = newPlanetObject.GetComponentInChildren<PlanetChanger>();
 						planetChanger.Init();
 						WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
