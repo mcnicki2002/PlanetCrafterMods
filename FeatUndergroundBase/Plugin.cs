@@ -60,6 +60,8 @@ namespace Nicki0.FeatUndergroundBase {
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
 
+			if (new StackTrace(true).ToString().Contains("CreateNewFile", StringComparison.InvariantCultureIgnoreCase)) return;
+
 			if (!isInitialized) {
 				GameObject rock02 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_02").gameObject;
 				GameObject rock10 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_10").gameObject;

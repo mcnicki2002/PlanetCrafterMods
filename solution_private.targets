@@ -94,6 +94,11 @@
 			<HintPath>$(GameManaged)\Unity.Collections.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="Steamworks">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\com.rlabrecque.steamworks.net.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

@@ -244,10 +244,16 @@ namespace Nicki0.ItemWallAquarium {
 
 			if (GroupsHandler.GetAllGroups() == null) return;
 			Group aquariumGroup = GroupsHandler.GetGroupViaId(WallAquariumId);
+			GroupDataConstructible gdc = null;
+			if (aquariumGroup == null) {
+				gdc = AccessTools.FieldRefAccess<StaticDataHandler, List<GroupData>>(Managers.GetManager<StaticDataHandler>(), "groupsData").Find(e => e.id == WallAquariumId) as GroupDataConstructible;
+			} else {
+				gdc = aquariumGroup.GetGroupData() as GroupDataConstructible;
+			}
 
 			__instance.panelsSubtypes.Add(WallAquariumSubPanelType);
-			__instance.panelsGroupItems.Add((GroupDataConstructible)aquariumGroup.GetGroupData());
-			__instance.panelsGameObjects.Add(aquariumGroup.GetAssociatedGameObject());
+			__instance.panelsGroupItems.Add(gdc);
+			__instance.panelsGameObjects.Add(gdc.associatedGameObject);
 		}
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(Panel), "SetPanel")]
