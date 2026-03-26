@@ -65,84 +65,110 @@ namespace Nicki0.UiSoundConfig {
 		}
 
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayUiHover))]
-		private static bool GlobalAudioHandler_PlayUiHover(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayUiHover(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.uiHoverSound, config_volume_PlayUiHover.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayUiMove))]
-		private static bool GlobalAudioHandler_PlayUiMove(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayUiMove(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.uiTransferSound, config_volume_PlayUiMove.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayUiOpen))]
-		private static bool GlobalAudioHandler_PlayUiOpen(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayUiOpen(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.uiOpenSound, config_volume_PlayUiOpen.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayUiClose))]
-		private static bool GlobalAudioHandler_PlayUiClose(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayUiClose(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.uiCloseSound, config_volume_PlayUiClose.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayUiSelectElement))]
-		private static bool GlobalAudioHandler_PlayUiSelectElement(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayUiSelectElement(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.uiSelectElement, config_volume_PlayUiSelectElement.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayAlertLow))]
-		private static bool GlobalAudioHandler_PlayAlertLow(AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayAlertLow(bool __runOriginal, AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerAlert.PlayOneShot(___audioResourcesHandler.alertLowSound, config_volume_PlayAlertLow.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayAlertCritical))]
-		private static bool GlobalAudioHandler_PlayAlertCritical(AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayAlertCritical(bool __runOriginal, AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerAlert.PlayOneShot(___audioResourcesHandler.alertCriticalSound, config_volume_PlayAlertCritical.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayCheckTutorial))]
-		private static bool GlobalAudioHandler_PlayCheckTutorial(AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayCheckTutorial(bool __runOriginal, AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerAlert.PlayOneShot(___audioResourcesHandler.alertTutorialCheck, config_volume_PlayCheckTutorial.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayEnergyLack))]
-		private static bool GlobalAudioHandler_PlayEnergyLack(AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayEnergyLack(bool __runOriginal, AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerAlert.PlayOneShot(___audioResourcesHandler.energyLack, config_volume_PlayEnergyLack.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayEnergyRestored))]
-		private static bool GlobalAudioHandler_PlayEnergyRestored(AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayEnergyRestored(bool __runOriginal, AudioSource ___soundContainerAlert, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerAlert.PlayOneShot(___audioResourcesHandler.energyRestored, config_volume_PlayEnergyRestored.Value);
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayDropObject))]
-		private static bool GlobalAudioHandler_PlayDropObject(GlobalAudioHandler __instance, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayDropObject(GlobalAudioHandler __instance, bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			if ((bool)method_GlobalAudioHandler_CanPlaySound.Invoke(__instance, [])) {
 				___soundContainerUi.PlayOneShot(___audioResourcesHandler.drop, config_volume_PlayDropObject.Value);
 			}
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayCantDo))]
-		private static bool GlobalAudioHandler_PlayCantDo(GlobalAudioHandler __instance, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayCantDo(GlobalAudioHandler __instance, bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			if ((bool)method_GlobalAudioHandler_CanPlaySound.Invoke(__instance, [])) {
 				___soundContainerUi.PlayOneShot(___audioResourcesHandler.cantDo, config_volume_PlayCantDo.Value);
 			}
 			return false;
 		}
 		[HarmonyPrefix]
+		[HarmonyPriority(Priority.Low)]
 		[HarmonyPatch(typeof(GlobalAudioHandler), nameof(GlobalAudioHandler.PlayTeleport))]
-		private static bool GlobalAudioHandler_PlayTeleport(AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+		private static bool GlobalAudioHandler_PlayTeleport(bool __runOriginal, AudioSource ___soundContainerUi, AudioResourcesHandler ___audioResourcesHandler) {
+			if (!__runOriginal) { return __runOriginal; }
 			___soundContainerUi.PlayOneShot(___audioResourcesHandler.teleport, config_volume_PlayTeleport.Value);
 			return false;
 		}
