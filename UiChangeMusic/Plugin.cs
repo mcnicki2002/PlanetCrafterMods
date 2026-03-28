@@ -47,10 +47,10 @@ namespace Nicki0.UiChangeMusic {
 			foreach (string musicPath in musicFiles) {
 				if (File.Exists(musicPath)) {
 					AudioType audioType;
-					if (musicPath.EndsWith("mp3")) audioType = AudioType.MPEG;
-					else if (musicPath.EndsWith("ogg")) audioType = AudioType.OGGVORBIS;
-					else if (musicPath.EndsWith("wav")) audioType = AudioType.WAV;
-					else if (musicPath.EndsWith("dll")) continue;
+					if (musicPath.EndsWith("mp3", System.StringComparison.InvariantCultureIgnoreCase)) audioType = AudioType.MPEG;
+					else if (musicPath.EndsWith("ogg", System.StringComparison.InvariantCultureIgnoreCase)) audioType = AudioType.OGGVORBIS;
+					else if (musicPath.EndsWith("wav", System.StringComparison.InvariantCultureIgnoreCase)) audioType = AudioType.WAV;
+					else if (musicPath.EndsWith("dll", System.StringComparison.InvariantCultureIgnoreCase)) continue;
 					else {
 						log.LogWarning($"Unknown audio type for file {musicPath}");
 						continue;
