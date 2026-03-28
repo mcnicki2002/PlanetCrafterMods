@@ -28,6 +28,8 @@ Nicki0.theplanetcraftermods.ItemWallAquarium=1.0.2.0
 Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.23.0
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.0
+# (UI) Change Music
+Nicki0.theplanetcraftermods.UiChangeMusic=1.0.0.0
 # (UI) Confine Mouse
 Nicki0.theplanetcraftermods.UiConfineMouse=1.0.1.0
 # (UI) More Units

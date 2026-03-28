@@ -99,6 +99,11 @@
 			<HintPath>$(GameManaged)\com.rlabrecque.steamworks.net.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="GameOptions">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\GameOptions.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
