@@ -134,6 +134,7 @@
 	
 	<ItemGroup Condition="'$(Deploy)' == 'true'">
 		<Compile Include="$(akarnokdLibCommon)\ModVersionCheck.cs" Link="ModVersionCheck.cs" />
+		<Compile Include="$(akarnokdLibCommon)\HarmonyIntegrityCheck.cs" Link="HarmonyIntegrityCheck.cs" />
 	</ItemGroup>
 
 	<Target Name="CopyToGit" AfterTargets="Build">

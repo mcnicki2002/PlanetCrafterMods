@@ -129,8 +129,8 @@ namespace Nicki0.QoLAutoLogistics {
 				log.LogInfo("Old config transfered");
 			}
 
-			field_CanvasPinedRecipes_groupsAdded = AccessTools.FieldRefAccess<CanvasPinedRecipes, List<Group>>("groupsAdded");
-			field_CanvasPinedRecipes_informationDisplayers = AccessTools.FieldRefAccess<CanvasPinedRecipes, List<InformationDisplayer>>("informationDisplayers");
+			field_CanvasPinedRecipes_groupsAdded = AccessTools.FieldRefAccess<CanvasPinedRecipes, List<Group>>("_groupsAdded");
+			field_CanvasPinedRecipes_informationDisplayers = AccessTools.FieldRefAccess<CanvasPinedRecipes, List<InformationDisplayer>>("_informationDisplayers");
 			field_UiWindowContainer__inventoryRight = AccessTools.FieldRefAccess<UiWindowContainer, Inventory>("_inventoryRight");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
 			field_Inventory__unauthorizedGroups = AccessTools.FieldRefAccess<Inventory, HashSet<Group>>("_unauthorizedGroups");

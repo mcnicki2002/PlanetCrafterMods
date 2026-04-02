@@ -26,6 +26,8 @@ namespace Nicki0.FeatUndergroundBase {
 		 * 
 		 * Move bottom death barrier (in a better way)
 		 * 
+		 * BUG: rock shows in humble south-east cave, probably due to being below 0
+		 * 
 		 */
 
 		private static ManualLogSource log;
@@ -194,6 +196,7 @@ namespace Nicki0.FeatUndergroundBase {
 			GroupDataConstructible downwardsLadder = Instantiate(ladderGDC);
 			downwardsLadder.id = LadderDownId;
 			downwardsLadder.associatedGameObject = Instantiate(downwardsLadder.associatedGameObject);
+			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
 			downwardsLadder.recipeIngredients.Reverse();
 			Texture2D textureLadderDown = new Texture2D(2, 2);
 			ImageConversion.LoadImage(textureLadderDown, Properties.Resources.LadderDown);
@@ -212,6 +215,7 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder.id = LadderStartId;
 			startLadder.recipeIngredients.AddRange(___groupsData.Find(e => e.id == "pod").recipeIngredients);
 			startLadder.associatedGameObject = Instantiate(startLadder.associatedGameObject);
+			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
 			Destroy(startLadder.associatedGameObject.GetComponent<ConstructibleGhost>());
 			startLadder.associatedGameObject.name = startLadder.id;
 			Texture2D textureStartLadder = new Texture2D(2, 2);
@@ -394,6 +398,11 @@ namespace Nicki0.FeatUndergroundBase {
 				___disableIfPlayerIsFarerThan = 200;
 			}
 		}
+
+		// Fix NRE
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(ConstraintNotColliding), "Update")]
+		static bool ConstraintNotColliding_Update(ConstraintNotColliding __instance) => __instance.GetComponent<Collider>() != null;
 	}
 	public class Nicki0_DestroyIfAboveGround : MonoBehaviour {
 		public void Start() {

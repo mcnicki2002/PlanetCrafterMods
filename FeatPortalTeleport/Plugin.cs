@@ -100,6 +100,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			isOnDevPC = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TPC_ON_DEV_PC"));
 
+			LibCommon.HarmonyIntegrityCheck.Check(typeof(Plugin));
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");

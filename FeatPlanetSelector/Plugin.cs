@@ -77,11 +77,11 @@ namespace Nicki0.FeatPlanetSelector {
 
 						GameObjects.DestroyAllChildren(____planetContainer, false);
 						GameObject newPlanetObject = Instantiate<GameObject>(pd.GetPlanetSpaceView(), ____planetContainer.transform);
-						foreach (Transform childGO in newPlanetObject.GetComponentsInChildren<Transform>()) childGO.gameObject.layer = 0; // LayerMask.NameToLayer(GameConfig.layerDefaultName)
+						newPlanetObject.transform.SetLayerRecursively(0); // LayerMask.NameToLayer(GameConfig.layerDefaultName)
 						PlanetChanger planetChanger = newPlanetObject.GetComponentInChildren<PlanetChanger>();
 						planetChanger.Init();
 						WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
-						planetChanger.SetColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
+						planetChanger.SetPlanetChangerColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
 
 
 						LightSource lightSource = planetChanger.GetComponent<LightSource>();
@@ -108,7 +108,7 @@ namespace Nicki0.FeatPlanetSelector {
 						if (pd == null) { return; }
 						WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
 						double value = (worldUnit == null) ? 0 : worldUnit.GetValue();
-						mpc.GetComponentInChildren<PlanetChanger>()?.SetColors((float)value);
+						mpc.GetComponentInChildren<PlanetChanger>()?.SetPlanetChangerColors((float)value);
 
 
 						LightSource lightSource = mpc.GetComponentInChildren<LightSource>();
@@ -215,11 +215,11 @@ namespace Nicki0.FeatPlanetSelector {
 
 					GameObjects.DestroyAllChildren(planetContainer, false);
 					GameObject newPlanetObject = Instantiate<GameObject>(pd.GetPlanetSpaceView(), planetContainer.transform);
-					foreach (Transform childGO in newPlanetObject.GetComponentsInChildren<Transform>()) childGO.gameObject.layer = 0;
+					newPlanetObject.transform.SetLayerRecursively(0);
 					PlanetChanger planetChanger = newPlanetObject.GetComponentInChildren<PlanetChanger>();
 					planetChanger.Init();
 					WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>().GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
-					planetChanger.SetColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
+					planetChanger.SetPlanetChangerColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
 
 
 					LightSource lightSource = planetChanger.GetComponent<LightSource>();

@@ -9,15 +9,15 @@ Nicki0.theplanetcraftermods.CheatStoreToxinsInToxicStorage=1.0.0.0
 # (Feat) Large Screens
 Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.2.0
 # (Feat) Planet Selector
-Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.5.0
+Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.0
 # (Feat) Portal Travel
-Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.7.1
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.8.0
 # (Feat) Space Station
-Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.7.0
+Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.0
 # (Feat) Terrain Height Tool
 Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.0
 # (Feat) Underground Base
-Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.1.0
+Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.2.0
 # (Fix) Rocket Return
 Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0
 # (Item) More Fuses
@@ -25,7 +25,7 @@ Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.2.0
 # (Item) Wall Aquarium
 Nicki0.theplanetcraftermods.ItemWallAquarium=1.0.2.0
 # (QoL) Auto-Logistics
-Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.23.0
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.0
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.0
 # (UI) Change Music
