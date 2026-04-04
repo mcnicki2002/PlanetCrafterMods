@@ -28,7 +28,6 @@ namespace Nicki0.FeatPortalTeleport {
 		 *	
 		 *	
 		 *	BUGS:
-		 *	- (vanilla bug:) color in portal tube wrong
 		 *	
 		 *	- dot particles play for *every* portal when portal-world portal is opened
 		 *	Clients can close all portals by closing the procedural instance

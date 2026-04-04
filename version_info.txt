@@ -20,6 +20,8 @@ Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.0
 Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.2.0
 # (Fix) Rocket Return
 Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0
+# (Fix) Water Wave Config
+Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.0
 # (Item) More Fuses
 Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.2.0
 # (Item) Wall Aquarium
@@ -28,6 +30,8 @@ Nicki0.theplanetcraftermods.ItemWallAquarium=1.0.2.0
 Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.0
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.0
+# (QoL) Skip Tutorial
+Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.0.0
 # (UI) Change Music
 Nicki0.theplanetcraftermods.UiChangeMusic=1.0.0.0
 # (UI) Confine Mouse

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<AssemblyName>FixWaterWaveConfig</AssemblyName>
+		<Description>(Fix) Water Wave Config</Description>
+		<Version>1.0.0.0</Version>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>Nicki0.FixWaterWaveConfig</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Deploy>true</Deploy>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<!--<AdditionalSourceFiles Include="" />-->
+	</ItemGroup>
+	<Import Project="$(SolutionDir)\solution_private.targets" />
+</Project>
