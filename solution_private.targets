@@ -89,6 +89,21 @@
 			<HintPath>$(GameManaged)\Tessera.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="Collections">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Unity.Collections.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Steamworks">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\com.rlabrecque.steamworks.net.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="GameOptions">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\GameOptions.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -119,6 +134,7 @@
 	
 	<ItemGroup Condition="'$(Deploy)' == 'true'">
 		<Compile Include="$(akarnokdLibCommon)\ModVersionCheck.cs" Link="ModVersionCheck.cs" />
+		<Compile Include="$(akarnokdLibCommon)\HarmonyIntegrityCheck.cs" Link="HarmonyIntegrityCheck.cs" />
 	</ItemGroup>
 
 	<Target Name="CopyToGit" AfterTargets="Build">

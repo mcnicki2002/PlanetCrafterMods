@@ -2,6 +2,7 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
@@ -21,6 +22,8 @@ namespace Nicki0.FeatPlanetSelector {
 		private static ManualLogSource log;
 		private static Plugin Instance;
 
+		public static ConfigEntry<double> config_angle;
+
 		private void Awake() {
 			// Plugin startup logic
 			log = Logger;
@@ -29,6 +32,8 @@ namespace Nicki0.FeatPlanetSelector {
 			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
 				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
 			}
+
+			config_angle = Config.Bind<double>("General", "sunAngle", -24.73, "Angle of the sun in the planet viewer");
 
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 			Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -71,10 +76,19 @@ namespace Nicki0.FeatPlanetSelector {
 						MachinePlanetChanger mpc = wo.GetGameObject().GetComponent<MachinePlanetChanger>();
 
 						GameObjects.DestroyAllChildren(____planetContainer, false);
-						PlanetChanger componentInChildren = Instantiate<GameObject>(pd.GetPlanetSpaceView(), ____planetContainer.transform).GetComponentInChildren<PlanetChanger>();
-						componentInChildren.Init();
-						double? value = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id)?.GetValue();
-						if (value.HasValue) componentInChildren.SetColors((float)value);
+						GameObject newPlanetObject = Instantiate<GameObject>(pd.GetPlanetSpaceView(), ____planetContainer.transform);
+						newPlanetObject.transform.SetLayerRecursively(0); // LayerMask.NameToLayer(GameConfig.layerDefaultName)
+						PlanetChanger planetChanger = newPlanetObject.GetComponentInChildren<PlanetChanger>();
+						planetChanger.Init();
+						WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
+						planetChanger.SetPlanetChangerColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
+
+
+						LightSource lightSource = planetChanger.GetComponent<LightSource>();
+						Vector3? newSunPosition = GetNewSunPosition(lightSource, pd);
+						if (newSunPosition.HasValue) {
+							lightSource.Sun.transform.localPosition = newSunPosition.Value;
+						}
 					}
 				});
 			}));
@@ -91,16 +105,39 @@ namespace Nicki0.FeatPlanetSelector {
 				mpc.GetComponent<WorldObjectAssociatedProxy>().GetWorldObjectDetails(delegate (WorldObject wo) {
 					if (wo != null) {
 						PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(wo.GetPlanetLinkedHash());
-						double? value = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd?.id ?? null)?.GetValue();
-						if (!value.HasValue) {
-							return;
+						if (pd == null) { return; }
+						WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>()?.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
+						double value = (worldUnit == null) ? 0 : worldUnit.GetValue();
+						mpc.GetComponentInChildren<PlanetChanger>()?.SetPlanetChangerColors((float)value);
+
+
+						LightSource lightSource = mpc.GetComponentInChildren<LightSource>();
+						Vector3? newSunPosition = GetNewSunPosition(lightSource, pd);
+						if (newSunPosition.HasValue) {
+							lightSource.Sun.transform.localPosition = newSunPosition.Value;
 						}
-						mpc.GetComponentInChildren<PlanetChanger>()?.SetColors((float)value);
 					}
 				});
 
 				yield return wait;
 			}
+		}
+		public static Vector3? GetNewSunPosition(LightSource lightSource, PlanetData pd) {
+			if (lightSource != null && lightSource.Sun != null && pd != null) {
+				Transform sunTransform = lightSource.Sun.transform;
+
+				double alphaAsRad = config_angle.Value * Math.PI / 180.0;
+				// lightSource.Sun would be null if the line below would be null
+				Vector3 newSunPosition = (pd.GetPlanetSpaceView().GetComponentInChildren<LightSource>().Sun.transform).localPosition * 1.0f; // to definitely copy vector
+				newSunPosition.y = 0; // calc vector on horizontal plane
+				newSunPosition.Normalize(); // -"-
+				newSunPosition *= (float)Math.Cos(alphaAsRad); // scale x-z distance
+				newSunPosition.y = -(float)Math.Sin(alphaAsRad); // set y height
+				newSunPosition *= sunTransform.localPosition.magnitude; // move to final position
+
+				return newSunPosition;
+			}
+			return null;
 		}
 	}
 
@@ -171,15 +208,26 @@ namespace Nicki0.FeatPlanetSelector {
 				label.text = name;
 				label.GetComponent<LocalizedText>().textId = "Planet_" + pd.id;
 
-				menuObject.AddComponent<EventHoverIncrease>().SetHoverGroupEvent(default);
+				menuObject.AddComponent<EventHoverIncrease>().SetHoverGroupEvent(0.1f * Vector3.one);
 				EventsHelpers.AddTriggerEvent(menuObject, EventTriggerType.PointerClick, new Action<EventTriggerCallbackData>(delegate (EventTriggerCallbackData d) {
 					MachinePlanetChanger mpc = this.GetWorldObject().GetGameObject().GetComponent<MachinePlanetChanger>();
 					GameObject planetContainer = AccessTools.FieldRefAccess<MachinePlanetChanger, GameObject>(mpc, "_planetContainer");
 
 					GameObjects.DestroyAllChildren(planetContainer, false);
-					PlanetChanger planetChanger = Instantiate<GameObject>(pd.GetPlanetSpaceView(), planetContainer.transform).GetComponentInChildren<PlanetChanger>();
+					GameObject newPlanetObject = Instantiate<GameObject>(pd.GetPlanetSpaceView(), planetContainer.transform);
+					newPlanetObject.transform.SetLayerRecursively(0);
+					PlanetChanger planetChanger = newPlanetObject.GetComponentInChildren<PlanetChanger>();
 					planetChanger.Init();
-					planetChanger.SetColors((float)Managers.GetManager<WorldUnitsHandler>().GetUnit(DataConfig.WorldUnitType.Terraformation, null).GetValue());
+					WorldUnit worldUnit = Managers.GetManager<WorldUnitsHandler>().GetUnit(DataConfig.WorldUnitType.Terraformation, pd.id);
+					planetChanger.SetPlanetChangerColors(worldUnit == null ? 0 : (float)worldUnit.GetValue());
+
+
+					LightSource lightSource = planetChanger.GetComponent<LightSource>();
+					Vector3? newSunPosition = Plugin.GetNewSunPosition(lightSource, pd);
+					if (newSunPosition.HasValue) {
+						lightSource.Sun.transform.localPosition = newSunPosition.Value;
+					}
+
 
 					this.GetWorldObject().SetPlanetLinkedHash(pd.GetPlanetHash());
 				}), new EventTriggerCallbackData(pd));

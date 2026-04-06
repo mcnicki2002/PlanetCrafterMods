@@ -29,6 +29,7 @@ namespace Nicki0.FeatPortalTeleport {
 		 *	
 		 *	BUGS:
 		 *	
+		 *	- dot particles play for *every* portal when portal-world portal is opened
 		 *	Clients can close all portals by closing the procedural instance
 		 */
 		private static bool enableKeepPortalOpen = true;
@@ -60,6 +61,7 @@ namespace Nicki0.FeatPortalTeleport {
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
 
+		static bool isOnDevPC = false;
 
 		private void Awake() {
 			log = Logger;
@@ -95,6 +97,9 @@ namespace Nicki0.FeatPortalTeleport {
 
 			saveState = new SaveState(typeof(Plugin), DataFormatVersion);
 
+			isOnDevPC = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TPC_ON_DEV_PC"));
+
+			LibCommon.HarmonyIntegrityCheck.Check(typeof(Plugin));
 			// Plugin startup logic
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -103,6 +108,8 @@ namespace Nicki0.FeatPortalTeleport {
 		public static void OnModConfigChanged(ConfigEntryBase _) {
 			if (enableKeepPortalOpen) { SetColorConfig(); }
 		}
+
+		private static bool TeleportAnyway() => Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().GetFlyMode() && isOnDevPC;
 
 		private static Dictionary<int, int> woidsToPlanetidhashstate = null;
 		private static Dictionary<int, int> GetWoIdsToPlanetIdHashes() {
@@ -163,10 +170,14 @@ namespace Nicki0.FeatPortalTeleport {
 		static GameObject buttonTabPortalTravel = null;
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "Start")]
-		static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance) {
+		static void UiWindowPortalGenerator_Start(UiWindowPortalGenerator __instance, ref float ____scanningTime) {
 			buttonTabProceduralInstance = CreateButton(__instance, "ButtonProceduralInstance", new Vector3(-850, 340, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/ContentRocketOnSite/RightContent/SelectedPlanet/PlanetIcon");
 			buttonTabPortalTravel = CreateButton(__instance, "ButtonPortalTravel", new Vector3(-850, 240, 0), "MainScene/BaseStack/UI/WindowsHandler/UiWindowInterplanetaryExhange/Container/Title/Image");
 
+			if (isOnDevPC) {
+				____scanningTime = 0.25f;
+			}
+			
 			// Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
 				if (!enableKeepPortalOpen) {
@@ -187,7 +198,10 @@ namespace Nicki0.FeatPortalTeleport {
 				}
 
 				SetUiVisibility(true, __instance);
-				__instance.btnScan.SetActive(true);
+				if (Managers.GetManager<WorldInstanceHandler>().GetOpenedWorldInstanceData() == null) {
+					__instance.btnScan.SetActive(true);
+					__instance.gamepadScanButton.SetActive(true);
+				}
 
 				if (enableKeepPortalOpen) {
 					Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
@@ -224,6 +238,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 				SetUiVisibility(false, __instance);
 				__instance.btnScan.SetActive(false);
+				__instance.gamepadScanButton.SetActive(false);
 			});
 		}
 		private static GameObject CreateButton(UiWindowPortalGenerator __instance, string name, Vector3 pos, string imagePath) {
@@ -235,7 +250,7 @@ namespace Nicki0.FeatPortalTeleport {
 			button.transform.localPosition = pos;
 			button.GetComponent<RectTransform>().sizeDelta = new Vector2(60, 60);
 			button.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "";
-			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent();
+			button.AddComponent<EventHoverIncrease>().SetHoverGroupEvent(0.1f * Vector3.one);
 			button.GetComponent<Image>().sprite = GameObject.Find(imagePath).GetComponent<Image>().sprite;
 
 			GameObject backgroundImageGameObjectA = new GameObject("BackgroundHexagonImage");
@@ -318,6 +333,8 @@ namespace Nicki0.FeatPortalTeleport {
 					view.texture = SpaceVH.GetComponentInChildren<Camera>(true).targetTexture;
 					view.uvRect = new Rect(0.3f, 0.5f, 0.5f, 0.17f); // default values as of v1.611
 				} else {
+					Managers.GetManager<SpaceViewHandler>().SetVisibiltity(false, 0, 75, true); // Otherwise the planet view would overlap system view
+
 					SystemViewHandler SolarVH = Managers.GetManager<SystemViewHandler>();
 					SolarVH.ResetCameraPosition();
 					SolarVH.SetVisibiltity(true, 90);
@@ -330,21 +347,8 @@ namespace Nicki0.FeatPortalTeleport {
 					transform.gameObject.SetActive(active);
 				}
 
-				// Make selectable for controller
+				// Make selectable for controller -> See patch Postfix_UiWindowPortalGenerator_SelectFirstButtonInGrid
 				Instance.StartCoroutine((IEnumerator)method_UiWindowPortalGenerator_SelectFirstButtonInGrid.Invoke(__instance, []));
-				// Select procedural instance buttons when no button in the grid is available (e.g. when opening the PortalGenerator UI on Aqualis)
-				Instance.StartCoroutine(ExecuteLater(delegate () {
-					if (GamepadConfig.Instance.GetIsUsingController()) {
-						Selectable componentInChildren = __instance.gridForInstances.GetComponentInChildren<Selectable>();
-						if (componentInChildren == null) {
-							componentInChildren = (active ? buttonTabProceduralInstance : buttonTabPortalTravel).GetComponentInChildren<Selectable>();
-						}
-						if (componentInChildren != null) {
-							componentInChildren.Select();
-							__instance.gamepadSelectButton.SetActive(value: true);
-						}
-					}
-				}, 2));
 			}
 		}
 
@@ -431,6 +435,8 @@ namespace Nicki0.FeatPortalTeleport {
 			WorldUnitsHandler wuh = Managers.GetManager<WorldUnitsHandler>();
 			Group groupPortalGenerator = GroupsHandler.GetGroupViaId("PortalGenerator1");
 
+			bool teleportAnyway = TeleportAnyway();
+
 			bool worldInstanceSelectorAdded = false;
 
 			bool isCurrentPlanetTerraformed = false;
@@ -449,12 +455,12 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 
 
-			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
+			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(teleportAnyway)) {
 				if (!isCurrentPlanetTerraformed) break;
 
-				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId()) continue;
+				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId() && !teleportAnyway) continue;
 
-				if (!wuh.AreUnitsInited(pd.GetPlanetId())) {
+				if (!wuh.AreUnitsInited(pd.GetPlanetId()) && !teleportAnyway) {
 					if (configEnableDebug.Value) log.LogInfo(pd.GetPlanetId() + " Units not initialized");
 					continue;
 				}
@@ -470,15 +476,17 @@ namespace Nicki0.FeatPortalTeleport {
 					}
 				}
 
-				if (wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
+				if (!teleportAnyway && wuh.GetUnit(DataConfig.WorldUnitType.Terraformation, pd.GetPlanetId()).GetValue() < completeTi) continue;
 
 				WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(groupPortalGenerator, pd.GetPlanetHash());
-				if (woPortalGenerator == null) continue;
+				if (woPortalGenerator == null && !teleportAnyway) continue;
 
 
 
 				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
 				gameObject.name = "UiWorldInstanceSelector_PlanetTravel";
+				gameObject.transform.Find("ContentContainer/DifficultyLevel").gameObject.SetActive(false);
+				gameObject.transform.Find("ContentContainer/RarityLevel").gameObject.SetActive(false);
 				Recipe recipe = new Recipe(new List<GroupDataItem>());
 				if (configRequireCost.Value) {
 					foreach (string groupStringRaw in configItemsCost.Value.Split(",")) {
@@ -527,6 +535,8 @@ namespace Nicki0.FeatPortalTeleport {
 			if (!worldInstanceSelectorAdded) {
 				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.uiWorldInstanceSelector, __instance.gridForInstances.transform);
 				gameObject.name = "UiWorldInstanceSelector_PlanetTravelInfo";
+				gameObject.transform.Find("ContentContainer/DifficultyLevel").gameObject.SetActive(false);
+				gameObject.transform.Find("ContentContainer/RarityLevel").gameObject.SetActive(false);
 				Recipe recipe = new Recipe(new List<GroupDataItem>());
 				List<bool> list = new List<bool>() { };
 				gameObject.GetComponent<UiWorldInstanceSelector>().SetValues(new WorldInstanceData("PlanetTravelInfo", -10, 0, recipe, 0, 0), recipe.GetIngredientsGroupInRecipe(), list, new Action<UiWorldInstanceSelector>(delegate (UiWorldInstanceSelector uiWorldInstanceSelector) { }), false);
@@ -686,14 +696,14 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 
 		// prevent difficulty and rarity strings from displaying
-		[HarmonyPostfix]
+		/*[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWorldInstanceSelector), nameof(UiWorldInstanceSelector.SetValues))]
 		private static void UiWorldInstanceSelector_SetValues(WorldInstanceData worldInstanceData, TextMeshProUGUI ___difficulty, TextMeshProUGUI ___rarity) {
 			PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(worldInstanceData.GetSeed());
 			if (pd == null && worldInstanceData.GetSeed() != -10) return;
 			___difficulty.text = "";
 			___rarity.text = "";
-		}
+		}*/
 
 		struct GoInsidePortalState {
 			public bool enterPortal;
@@ -708,7 +718,7 @@ namespace Nicki0.FeatPortalTeleport {
 				if (woid != -1) {
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
 						// check if portal still exists
-						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null) {
+						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null && !TeleportAnyway()) {
 							field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData(
 								Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f),
 								"No portal on destination planet",
@@ -830,8 +840,13 @@ namespace Nicki0.FeatPortalTeleport {
 							}
 						}
 					}
-					pos = woPortalGenerator.GetPosition();
-					rot = woPortalGenerator.GetRotation();
+					if (TeleportAnyway()) {
+						pos = new Vector3(0, 1000, 0);
+						rot = Quaternion.identity;
+					} else {
+						pos = woPortalGenerator.GetPosition();
+						rot = woPortalGenerator.GetRotation();
+					}
 				} else {
 					WorldObject woPortalGenerator = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), pd.GetPlanetHash());
 					if (woPortalGenerator != null) { // should never be null as the portal should only show if there is a portal generator on the planet
@@ -961,7 +976,7 @@ namespace Nicki0.FeatPortalTeleport {
 				Instance.StartCoroutine(ExecuteLater(delegate () {
 
 					if (__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
-						SetMaterialColor(particleCircles, Color.clear);
+						SetMaterialColor(particleCircles, null);
 						return;
 					}
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(__instance.machinePortal), out int planetIdHash)) {
@@ -970,7 +985,7 @@ namespace Nicki0.FeatPortalTeleport {
 							return;
 						}
 					} else {
-						SetMaterialColor(particleCircles, DefaultPortalColor);
+						SetMaterialColor(particleCircles, null);
 					}
 				}));
 			}
@@ -978,45 +993,53 @@ namespace Nicki0.FeatPortalTeleport {
 				playParticles = false;
 				Instance.StartCoroutine(ExecuteLater(delegate () {
 					foreach (ParticleSystem particleSystem in ___particlesOnOpen) {
-
 						particleSystem.Play();
 					}
 				}, 1));
 			}
 		}
-		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color color) {
+		private static void SetMaterialColor(ParticleSystemRenderer renderer, Color? _color) {
 			/*
 			 * _EmissionColor -> ring particles
-			 * _TintColor -> dot particles
+			 * ~~_TintColor -> dot particles~~ wrong since v2.000
 			 */
-			if (!renderer.sharedMaterial.GetName().EndsWith(")")) { // "(Clone)" or "(Instance)"(<-from UnityExplorer). This means that the object has been instantiated and configured already, which is done here
-				if (configEnableStrudel.Value && renderer.sharedMaterial.HasColor("_EmissionColor")) {
+			bool isRingParticle = renderer.gameObject.name.Contains("Particle System Circles");
+			bool isDotParticle = renderer.gameObject.name.Contains("ParticleComplex");
+
+			Color color = _color.HasValue ? _color.Value : DefaultPortalColor;//(isRingParticle ? DefaultPortalColor : DefaultPortalColorDots);
+
+			if (!renderer.sharedMaterial.GetName().Contains("UniqueForPortal")) { // object has been instantiated and is configured already, which is done here
+				if (configEnableStrudel.Value && isRingParticle) {
 					ParticleSystem.MainModule mm = renderer.GetComponent<ParticleSystem>().main;
 					mm.startSpeed = 1;
 					renderer.transform.position -= renderer.transform.forward * 4;
 				}
 
 				renderer.sharedMaterial = Instantiate(renderer.sharedMaterial); // Can't set the color on the original material, as the color would be the same everywhere
+				renderer.sharedMaterial.name += "UniqueForPortal";
 			}
 
 			// Prevent switching back to default color when portal is closed
 			if (!renderer.transform.GetComponentInParent<MachinePortalGenerator>()?.machinePortal?.gameObject.activeSelf ?? false) return;
 
-			if (renderer.sharedMaterial.HasColor("_EmissionColor")) renderer.sharedMaterial.SetColor("_EmissionColor", color);
-			if (renderer.sharedMaterial.HasColor("_TintColor")) {
+			if (isRingParticle/*renderer.sharedMaterial.HasColor("_EmissionColor")*/) renderer.sharedMaterial.SetColor("_EmissionColor", color);
+			if (isDotParticle/*renderer.sharedMaterial.HasColor("_TintColor")*/) {
+				color = ScaleColor(color, 0.1f);
 				ParticleSystem dotParticles = renderer.GetComponent<ParticleSystem>();
 
-				if (color != DefaultPortalColor) {
+				if (_color.HasValue) {
+					EmissionModule dotParticleEmission = dotParticles.emission;
 					if (color.r >= 0 || color.g >= 0 || color.b >= 0) {
-
-						renderer.sharedMaterial.SetColor("_TintColor", NormalizeAndScaleColor(color, 0.4f));
+						dotParticleEmission.enabled = true;
+						renderer.sharedMaterial.SetColor("_EmissionColor", color);
 
 						ParticleSystem.ColorOverLifetimeModule dotParticlesColorOL = dotParticles.colorOverLifetime;
 						dotParticlesColorOL.enabled = false;
 					} else { // don't use dot particles on black portals
-						ParticleSystem.MainModule dotParticlesMM = dotParticles.main;
-						dotParticlesMM.startColor = Color.clear;
+						dotParticleEmission.enabled = false;
 					}
+				} else {
+					renderer.sharedMaterial.SetColor("_EmissionColor", color);
 				}
 
 				if (configEnableStrudel.Value) { // only show when opening the portal if the strudel is enabled
@@ -1024,6 +1047,9 @@ namespace Nicki0.FeatPortalTeleport {
 					dotParticlesMM.loop = false;
 				}
 			}
+		}
+		private static Color ScaleColor(Color color, float scale) {
+			return new Color(color.r * scale, color.g * scale, color.b * scale, color.a);
 		}
 		private static Color NormalizeAndScaleColor(Color color, float scale = 1) {
 			float largestValue = Math.Max(Math.Max(Math.Abs(color.r), Math.Abs(color.g)), Math.Abs(color.b)) / scale;
@@ -1068,6 +1094,52 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 		// <--- Color Portal Tunnel ---
 
+		// --- Controller button support --->
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
+		static void Postfix_UiWindowPortalGenerator_SelectFirstButtonInGrid(UiWindowPortalGenerator __instance) {
+			// Select procedural instance buttons when no button in the grid is available (e.g. when opening the PortalGenerator UI on Aqualis)
+			Instance.StartCoroutine(ExecuteLater(delegate () {
+				if (GamepadConfig.Instance.GetIsUsingController()) {
+					Selectable componentInChildren = __instance.gridForInstances.GetComponentInChildren<Selectable>();
+					if (componentInChildren == null) {
+						bool active = __instance.transform.Find("Container/UiPortalList/InstancesList/CategoryTitles/RarityLevel").gameObject.activeSelf;
+						componentInChildren = (active ? buttonTabProceduralInstance : buttonTabPortalTravel).GetComponentInChildren<Selectable>();
+					}
+					if (componentInChildren != null) {
+						componentInChildren.Select();
+						__instance.gamepadSelectButton.SetActive(value: true);
+					}
+				}
+			}, 2));
+		}
+		// <--- Controller button support ---
+
+		// --- NullRef fix --->
+		// When searching for locations on moons, CreateRecipe throws a NullRef because instanceSceneData is null
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(WorldInstanceGenerator), "CreateRecipe")]
+		static bool WorldInstanceGenerator_CreateRecipe(ref Recipe __result) {
+			if (Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().instanceScenesData == null) {
+				GroupDataItem pulsar = (GroupDataItem)GroupsHandler.GetGroupViaId("PulsarQuartz").GetGroupData();
+				__result = new Recipe([pulsar, pulsar, pulsar]);
+				return false;
+			}
+			return true;
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(WorldInstanceGenerator), "GetRandomInstanceSceneName")]
+		static bool WorldInstanceGenerator_GetRandomInstanceSceneName(ref string __result) {
+			if (Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().instanceScenesData == null) {
+				foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList()) {
+					if (pd.instanceScenesData == null || pd.instanceScenesData.instanceSceneNames == null || pd.instanceScenesData.instanceSceneNames.Count == 0) continue;
+					__result = pd.instanceScenesData.instanceSceneNames[0];
+					return false;
+				}
+			}
+			return true;
+		}
+		// <--- NullRef fix ---
 
 
 		private static void OpenPortal(MachinePortalGenerator mpg) {

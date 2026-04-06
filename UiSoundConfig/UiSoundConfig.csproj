@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
+
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<AssemblyName>FeatPortalTeleport</AssemblyName>
-		<Description>(Feat) Portal Travel</Description>
-		<Version>1.2.8.1</Version>
+		<AssemblyName>UiSoundConfig</AssemblyName>
+		<Description>(UI) Sound Config</Description>
+		<Version>1.0.0.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
-		<RootNamespace>Nicki0.FeatPortalTeleport</RootNamespace>
+		<RootNamespace>Nicki0.UiSoundConfig</RootNamespace>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<DeployLocal>true</DeployLocal>
 		<Deploy>true</Deploy>
@@ -19,8 +19,4 @@
 		<!--<AdditionalSourceFiles Include="" />-->
 	</ItemGroup>
 	<Import Project="$(SolutionDir)\solution_private.targets" />
-	<ItemGroup>
-		<Compile Include="..\Nicki0Lib\SaveState.cs" Link="SaveState.cs" />
-		<Compile Include="..\Nicki0Lib\SaveState_v0.cs" Link="SaveState_v0.cs" />
-	</ItemGroup>
 </Project>

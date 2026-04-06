@@ -45,11 +45,11 @@ import os
 # - NOTE: This script was created for the moons update (v1.518 - v1.526) and it will break when the save file format changes. 
 # 		Make sure you have the latest version of the script. Please contact the author about bugs or script updates.
 # 
-# Last tested game version: v1.615
+# Last tested game version: v2.004
 #
 # Script author: Nicki0
 # 	Contact: Nicki0 on the Planet Crafter (MijuGames) discord server; Or open an issue in the github repo.
-# Script version: 7
+# Script version: 8
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -72,6 +72,10 @@ import os
 # - added additional game version checks
 # - added parameter to set the in-game save file name
 #
+# Changelog v8:
+# - Fix UTF-8 BOM problems
+# - Removed layer section to adapt to v2.00X save file format changes
+#
 
 # - start config
 primaryFileName = "Survival-1.json" # replace with first file name, preferably use the bigger save file
@@ -93,9 +97,9 @@ if not os.path.exists(secondaryFilePath):
 	exit()
 
 with open(primaryFilePath, 'r', encoding="utf8") as filePrimary:
-	sectionsP = filePrimary.read().replace("\r", "").replace("\n", "").split('@')
+	sectionsP = ('{' + filePrimary.read().replace("\r", "").replace("\n", "").split('{', 1)[1]).split('@') # To fix UTF-8 BOM problems
 with open(secondaryFilePath, 'r', encoding="utf8") as fileSecundary:
-	sectionsS = fileSecundary.read().replace("\r", "").replace("\n", "").split('@')
+	sectionsS = ('{' + fileSecundary.read().replace("\r", "").replace("\n", "").split('{', 1)[1]).split('@')
 
 if not "{\"terraTokens\":" in sectionsP[0]:
 	print(primaryFileName + " is not converted. Please save it again in the new version.")
@@ -164,9 +168,9 @@ for i in range(len(itemsS[4])):
 	for key in dictIdsSChange.keys():
 		itemsS[4][i] = itemsS[4][i].replace(key, dictIdsSChange[key])
 # apply ids to wreck section
-for i in range(len(itemsS[10])):
+for i in range(len(itemsS[9])):
 	for key in dictIdsSChange.keys():
-		itemsS[10][i] = itemsS[10][i].replace(key, dictIdsSChange[key])
+		itemsS[9][i] = itemsS[9][i].replace(key, dictIdsSChange[key])
 # move inventors ids to [free inventory id range] to prevent collision
 largestIdInPrimary = 0
 for i in range(len(itemsP[4])):# find highest inventory id
@@ -209,25 +213,13 @@ for i in range(len(itemsS[3])):
 			
 print("collision counter:", ctr)
 
-# Combine Layers
-itemsS9AfterLayersRemoved = []
-layerPlanetIDsFoundInItemsP9 = set()
-for i in range(len(itemsP[9])):
-	if 'planet":' in itemsP[9][i]:
-		planetIdOfLayer = itemsP[9][i].split('planet":', 1)[1].split(',', 1)[0]
-		layerPlanetIDsFoundInItemsP9.add(planetIdOfLayer)
-for i in range(len(itemsS[9])):
-	if 'planet":' in itemsS[9][i]:
-		planetIdOfLayer = itemsS[9][i].split('planet":', 1)[1].split(',', 1)[0]
-		if planetIdOfLayer not in layerPlanetIDsFoundInItemsP9:
-			itemsS9AfterLayersRemoved.append(itemsS[9][i])
-itemsS[9] = itemsS9AfterLayersRemoved
+
 	
 
 items = []
 for el in itemsP:
 	items.append(el)
-for i in [3,4,6,7,9,10]:
+for i in [3,4,6,7,9]:
 	itemsP[i][-1] = itemsP[i][-1].strip()
 	items[i] = itemsP[i] + itemsS[i]
 

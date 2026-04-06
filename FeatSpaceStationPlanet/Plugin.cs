@@ -3,6 +3,7 @@
 
 using BepInEx;
 using BepInEx.Logging;
+using EVP;
 using HarmonyLib;
 using SpaceCraft;
 using System;
@@ -11,8 +12,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static UnityEngine.LowLevelPhysics2D.PhysicsComposer;
 
 namespace Nicki0.FeatSpaceStationPlanet {
 
@@ -22,6 +25,9 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		 *	TODO:
 		 *	- Map Background should be black, not dust-orange
 		 *	First fall quite extreme... bug in TPC: game does not reset fall speed while standing.
+		 *	
+		 *	
+		 *	
 		 *	
 		 *	Long-term:
 		 *	
@@ -56,7 +62,10 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 		}
 
-
+		private static IEnumerator ExecuteLater(Action toExecute, int waitFrames = 1) {
+			for (int i = 0; i < waitFrames; i++) yield return new WaitForEndOfFrame();
+			toExecute.Invoke();
+		}
 
 		[HarmonyPrefix]
 		//[HarmonyPatch(typeof(PlanetList), MethodType.Constructor)]
@@ -125,10 +134,10 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			newPlanet.envDataStart = envEmpty;
 			newPlanet.envDataEnd = envEmpty;
 			newPlanet.envDataNight = envEmpty;
+			
+			//newPlanet.layersToMoss.Clear();
+			//newPlanet.mossPotentialColors.Clear();
 
-
-			newPlanet.layersToMoss.Clear();
-			newPlanet.mossPotentialColors.Clear();
 			//newPlanet.meteoEvents.Clear();
 			newPlanet.evolutionners.Clear();
 			newPlanet.disableMusicsSectorsLimitations = true;
@@ -398,12 +407,69 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		[HarmonyPatch(typeof(PlayerGroundRelation), nameof(PlayerGroundRelation.GetGroundDistance))]
 		static bool PlayerGroundRelation_GetGroundDistance(ref float __result) {
 			if (IsOnPlanet()) {
-				__result = 3.5f + 2f * lastJetpackFactor - 0.1f;
+				if (Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().enabled) {
+				//if (!vehicleJetpackUpdate_height.HasValue) {
+					__result = 3.5f + 2f * lastJetpackFactor - 0.1f;
+				} else {
+					float cameraPointUpDown = Camera.main.transform.forward.y;
+					float directionChangeHeight = 0;
+					if (cameraPointUpDown > 0) {
+						directionChangeHeight = cameraPointUpDown * 20;
+					}
+					if (cameraPointUpDown < -0.7) {
+						directionChangeHeight = (cameraPointUpDown + 0.7f) / (0.3f) * 20;
+					}
+
+					directionChangeHeight *= Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().lastMoveAxis.y;
+
+					__result = 15 - directionChangeHeight; //15 - 5 - 0.1f;//vehicleJetpackUpdate_height.Value - 0.1f;
+				}
 				return false;
 			}
 			return true;
 		}
 		// <--- Player Movement ---
+		// --- Vehicle Jetpack --->
+		static float originalBaseForceApplied = float.NaN;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(VehicleController), "OnEnable")]
+		static void VehicleController_OnEnable(VehicleController __instance) {
+			Rigidbody body = __instance.GetComponent<Rigidbody>();
+			ActionTakeControl action = __instance.GetComponentInChildren<ActionTakeControl>();
+			if (float.IsNaN(originalBaseForceApplied)) originalBaseForceApplied = action._baseForceApplied;
+			log.LogFatal("OnEnable called");
+			if (IsOnPlanet()) {
+				action._baseForceApplied = -10;
+				action._forceToUpdateWhenNotGrounded.force = action._baseForceApplied * Vector3.up;
+				if (body != null) {
+					body.useGravity = false;
+				}
+			} else {
+				action._baseForceApplied = originalBaseForceApplied;
+				action._forceToUpdateWhenNotGrounded.force = action._baseForceApplied * Vector3.up;
+				if (body != null) body.useGravity = true;
+			}
+		}
+		// Remove flight max speed 50% cap
+		[HarmonyTranspiler]
+		[HarmonyPatch(typeof(VehicleJetpack), "Update")]
+		static IEnumerable<CodeInstruction> VehicleJetpack_Update(IEnumerable<CodeInstruction> instructions) {
+			List<CodeInstruction> instructionsAsList = instructions.ToList();
+
+			for (int i = 2; i < instructionsAsList.Count; i++) {
+				CodeInstruction ciP2 = instructionsAsList[i - 2]; // P = Previous
+				CodeInstruction ciP1 = instructionsAsList[i - 1];
+				CodeInstruction ci = instructionsAsList[i];
+				if ((ciP2.opcode == OpCodes.Ldfld && ciP2.operand.ToString().Contains("maxSpeedReverse")
+					|| ciP1.opcode == OpCodes.Ldfld && ciP1.operand.ToString().Contains("maxSpeedForward"))
+					&& ci.opcode == OpCodes.Ldc_R4 && ci.operand is float && (float)ci.operand == 0.5) {
+
+					ci.operand = 1f;
+				}
+			}
+			return instructionsAsList.AsEnumerable();
+		}
+		// <--- Vehicle Jetpack ---
 
 		// --- Meteors --->
 		static readonly Vector3 meteorCenter = new Vector3(planetPosition.x, planetPosition.y + 1000, planetPosition.z);
@@ -513,10 +579,10 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}
 
 		[HarmonyPrefix]
-		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] { typeof(bool), typeof(float), typeof(float) })]
-		static void PlayerCameraShake_SetShaking(ref float _shakeValue) {
+		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(float), typeof(float) })]
+		static void PlayerCameraShake_SetShaking(ref float shakeValue) {
 			if (IsOnPlanet()) {
-				_shakeValue *= 0.2f;
+				shakeValue *= 0.2f;
 			}
 		}
 
@@ -539,13 +605,13 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}*/
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(SystemViewHandler), nameof(SystemViewHandler.ZoomOnPlanet))]
-		static bool SystemViewHandler_ZoomOnPlanet(PlanetData planetData, SystemViewHandler __instance, int ___zoomValueOnPlanets, List<SpacePlanetView> ___spacePlanetViews) {
+		static bool SystemViewHandler_ZoomOnPlanet(PlanetData planetData, SystemViewHandler __instance, int ___zoomValueOnPlanets/*, List<SpacePlanetView> ___spacePlanetViews*/) {
 			if (planetData == null) return true;
 			if (planetData.GetPlanetId() != planetName) return true;
 
 			//foreach (SpacePlanetView spacePlanetView in ___spacePlanetViews) log.LogInfo(spacePlanetView.transform.position);
 
-			Vector3 vector = new Vector3(-5049.94f, -4000.50f, 15.13f);//spacePlanetView.transform.position; //(-5049.94, -3994.29, 17.13)-3992.50
+			Vector3 vector = new Vector3(-39.7284f, 0.1491f, 19f); //spacePlanetView.transform.position; //new Vector3(-5049.94f, -4000.50f, 15.13f);
 			vector += new Vector3((float)___zoomValueOnPlanets, 0f, 0f);
 			log.LogInfo(vector + " is the space station zoom spot");
 			__instance.ActivateZoomTarget(vector);//AccessTools.Method(typeof(SystemViewHandler), "ActivateZoomTarget").Invoke(__instance, new object[] { vector });
@@ -568,5 +634,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 				___cameraMap.backgroundColor = Color.black;
 			}
 		}
+
+
+		
 	}
 }

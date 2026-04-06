@@ -22,6 +22,10 @@ public class Plugin : BaseUnityPlugin {
 	private void Awake() {
 		// Plugin startup logic
 		field_WorldObjectText_proxy = AccessTools.Field(typeof(WorldObjectText), "_proxy");
+		
+		if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
+			LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+		}
 
 		config_FontSize = Config.Bind<float>("General", "FontSize", 26, "Font size of Signs");
 
@@ -67,7 +71,7 @@ public class Plugin : BaseUnityPlugin {
 		}
 
 		worldObject.GetGameObject().transform.localScale = new Vector3(1, factor, 1);
-		Transform texttransform = worldObject.GetGameObject().transform.Find("Container/Text/TV_Big_Screen_01/Screen/Canvas/Text (TMP)");
+		Transform texttransform = worldObject.GetGameObject().GetComponentInChildren<TextMeshProUGUI>().transform;
 		if (texttransform != null) {
 			if (originalLocalScaleY == 0) originalLocalScaleY = texttransform.localScale.y;
 			texttransform.localScale = new Vector3(texttransform.localScale.x, originalLocalScaleY / factor, texttransform.localScale.z);// ScaleYVector(texttransform.localScale, 1/factor);

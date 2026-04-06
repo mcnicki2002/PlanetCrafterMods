@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -276,7 +277,7 @@ namespace Nicki0.FeatTerrainHeightTool {
 					return new Dictionary<string, float[,]>();
 			}
 		}
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static float Mod(float v, float m) {
 			return (v % m + m) % m;
 		}

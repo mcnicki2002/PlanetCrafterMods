@@ -6,6 +6,7 @@ using HarmonyLib;
 using SpaceCraft;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -50,32 +51,8 @@ namespace Nicki0 {
 			Dictionary<string, Material> materialDictionary = null;
 
 			string nameOfDictionaryToUse = fromCompleteCollection ? nameof(Nicki0_MaterialsHelper.completeMaterialDictionary) : nameof(Nicki0_MaterialsHelper.materialDictionary);
-			bool foundHaterialsHelperObject = false;
-			bool foundHaterialsHelperObjectDictionary = false;
-			foreach (MonoBehaviour script in materialsHelperObject.GetComponents<MonoBehaviour>()) {
-				if (script == null || string.IsNullOrEmpty(script.GetScriptClassName()) || script.GetType() == null) { continue; }
 
-				if (script.GetScriptClassName().Contains(nameof(Nicki0_MaterialsHelper))) {
-					foundHaterialsHelperObject = true;
-					if (script.GetType().GetFields().Select(e => e.Name == nameOfDictionaryToUse).Any()) {
-						foundHaterialsHelperObjectDictionary = true;
-						try {
-							materialDictionary = AccessTools.FieldRefAccess<Dictionary<string, Material>>(script.GetType(), nameOfDictionaryToUse).Invoke(script);
-						} catch {
-							log.LogError("Could not get dictionary from helper script");
-							return false;
-						}
-						break;
-					}
-				}
-			}
-
-			if (!foundHaterialsHelperObject) {
-				log.LogFatal("Nicki0_MaterialsHelper script not found");
-				return false;
-			}
-			if (!foundHaterialsHelperObjectDictionary) {
-				log.LogFatal("Nicki0_MaterialsHelper dictionary not found");
+			if (!TryGetMaterialDictionary(nameOfDictionaryToUse, out materialDictionary)) {
 				return false;
 			}
 
@@ -138,14 +115,29 @@ namespace Nicki0 {
 			}
 
 			// ~0.4ms
-			foreach (MethodInfo mi in AccessTools.GetDeclaredMethods(typeof(VisualsResourcesHandler))) {
-				if (mi.ReturnType == typeof(Material) && mi.GetParameters().Length == 0) {
-					Material returnedMaterial = mi.Invoke(Managers.GetManager<VisualsResourcesHandler>(), []) as Material;
-					if (returnedMaterial == null || string.IsNullOrEmpty(returnedMaterial.name)) continue;
-					materialsHelper.materialDictionary.TryAdd(returnedMaterial.name, returnedMaterial);
+			if (Managers.GetManager<VisualsResourcesHandler>() != null) {
+				foreach (MethodInfo mi in AccessTools.GetDeclaredMethods(typeof(VisualsResourcesHandler))) {
+					if (mi.ReturnType == typeof(Material) && mi.GetParameters().Length == 0) {
+						Material returnedMaterial = mi.Invoke(Managers.GetManager<VisualsResourcesHandler>(), []) as Material;
+						if (returnedMaterial == null || string.IsNullOrEmpty(returnedMaterial.name)) continue;
+						materialsHelper.materialDictionary.TryAdd(returnedMaterial.name, returnedMaterial);
+					}
 				}
 			}
+			
 
+			foreach (GroupData gd in ___groupsData) {
+				if (gd == null || gd.associatedGameObject == null) continue;
+
+				foreach (MaterialList lst in gd.associatedGameObject.GetComponentsInChildren<MaterialList>()) {
+					if (lst == null) continue;
+
+					foreach (Material material in lst.materials) {
+						if (material == null) continue;
+						materialsHelper.materialDictionary.TryAdd(material.name, material);
+					}
+				}
+			}
 
 			/*
 			// --- Add materials from procedural wrecks --- Does not add any additional Materials ---
@@ -216,6 +208,54 @@ namespace Nicki0 {
 			}*/
 		}
 
+		public static Dictionary<string, Material> GetMaterials(bool completeCollection = false) {
+			if (materialsHelperObject == null) {
+				Console.WriteLine("[Fatal] MaterialsHelper not initialized");
+				return null;
+			}
+			string dictToUse = completeCollection ? nameof(Nicki0_MaterialsHelper.completeMaterialDictionary) : nameof(Nicki0_MaterialsHelper.materialDictionary);
+			if (TryGetMaterialDictionary(dictToUse, out Dictionary<string, Material> materialsDictionary)) {
+				return materialsDictionary;
+			}
+			log.LogFatal("material dictionary not found");
+			return null;
+		}
+
+		private static bool TryGetMaterialDictionary(string nameOfDictionaryToUse, out Dictionary<string, Material> materialDictionary) {
+			bool foundHaterialsHelperObject = false;
+			bool foundHaterialsHelperObjectDictionary = false;
+			foreach (MonoBehaviour script in materialsHelperObject.GetComponents<MonoBehaviour>()) {
+				if (script == null || string.IsNullOrEmpty(script.GetScriptClassName()) || script.GetType() == null) { continue; }
+
+				if (script.GetScriptClassName().Contains(nameof(Nicki0_MaterialsHelper))) {
+					foundHaterialsHelperObject = true;
+					if (script.GetType().GetFields().Select(e => e.Name == nameOfDictionaryToUse).Any()) {
+						foundHaterialsHelperObjectDictionary = true;
+						try {
+							materialDictionary = AccessTools.FieldRefAccess<Dictionary<string, Material>>(script.GetType(), nameOfDictionaryToUse).Invoke(script);
+							return true;
+						} catch {
+							log.LogError("Could not get dictionary from helper script");
+							materialDictionary = null;
+							return false;
+						}
+					}
+				}
+			}
+
+			if (!foundHaterialsHelperObject) {
+				log.LogFatal("Nicki0_MaterialsHelper script not found");
+				materialDictionary = null;
+				return false;
+			}
+			if (!foundHaterialsHelperObjectDictionary) {
+				log.LogFatal("Nicki0_MaterialsHelper dictionary not found");
+				materialDictionary = null;
+				return false;
+			}
+			materialDictionary = null; // dictionary wasn't found.
+			return false;
+		}
 	}
 	public static class StringExtension {
 		public static string CanonicalizeString(this string str) {
