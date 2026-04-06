@@ -40,7 +40,7 @@ namespace Nicki0.QoLSkipTutorial {
 
 			config_enable = Config.Bind<bool>("General", "enableMod", true, "Enable Mod");
 			config_SkipTutorial = Config.Bind<bool>("General", "skipNewTutorial", true, "Skips new tutorials");
-			config_SkipBlueSkyTutorial = Config.Bind<bool>("General", "skipBlueSkyTutorial", true, "Hides the Blue Sky tutorial steps");
+			config_SkipBlueSkyTutorial = Config.Bind<bool>("General", "skipBlueSkyTutorial", false, "Hides the Blue Sky tutorial steps");
 
 			HarmonyIntegrityCheck.Check(typeof(Plugin));
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
