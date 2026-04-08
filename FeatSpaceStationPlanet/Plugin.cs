@@ -134,7 +134,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			newPlanet.envDataStart = envEmpty;
 			newPlanet.envDataEnd = envEmpty;
 			newPlanet.envDataNight = envEmpty;
-			
+
 			//newPlanet.layersToMoss.Clear();
 			//newPlanet.mossPotentialColors.Clear();
 
