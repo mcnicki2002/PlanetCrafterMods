@@ -653,7 +653,7 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
 		private static void Post_PlanetLoader_HandleDataAfterLoad() {
 			if (!enableKeepPortalOpen) return;
-
+			
 			Dictionary<int, int> woIdToPlanet = GetWoIdsToPlanetIdHashes();
 
 			foreach (MachinePortal mp in FindObjectsByType<MachinePortal>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
@@ -666,6 +666,8 @@ namespace Nicki0.FeatPortalTeleport {
 					OpenPortal(mpg);
 				}
 			}
+
+			Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 
 			// clean stateObject
 			Dictionary<int, int> newWoIdToPlanetDict = new Dictionary<int, int>();
@@ -791,7 +793,39 @@ namespace Nicki0.FeatPortalTeleport {
 				//Managers.GetManager<SavedDataHandler>().IncrementSaveLock(); // semaphore lock saving
 				semaphoreActive = true;
 				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetToTeleportToHash);
-				if (pd != null) PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
+				if (pd != null) {
+
+					// --- From MachineDeparturePlaform.SwitchPlanet:
+					NetworkBackendProvider.GetActiveBackend().SetSessionJoinabilityAsync(SessionJoinabilityStatus.PlanetSwitch);
+					// --- From MachineDeparturePlatform.SwitchPlanetClientRpc:
+					PlanetLoader manager = Managers.GetManager<PlanetLoader>();
+
+					Action planetLoadedReplacement = null;
+					planetLoadedReplacement = new Action(delegate () {
+						Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+						Instance.StartCoroutine(ExecuteLater(delegate() {
+							Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+							float defaultDistance = Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck;
+							Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
+							Instance.StartCoroutine(ExecuteLater(delegate() {
+								Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
+							}, 100));
+						}));
+
+						// --- From MachineDeparturePlatform.PlanetLoaded:
+						PlanetLoader manager = Managers.GetManager<PlanetLoader>();
+						manager.planetIsLoaded = (Action)Delegate.Remove(manager.planetIsLoaded, new Action(planetLoadedReplacement));
+						// BlackScreen.Instance.AppearAndFade(2f, 1f); // Only here for comparison to the copied source code
+						CanvasLoading.Instance.Toggle(false);
+						// this._inputMap.Enable(); // Only here for comparison to the copied source code
+						// this._sequenceStarted = false; // Only here for comparison to the copied source code
+						NetworkBackendProvider.GetActiveBackend().SetSessionJoinabilityAsync(SessionJoinabilityStatus.Joinable);
+					});
+
+					manager.planetIsLoaded = (Action)Delegate.Combine(manager.planetIsLoaded, planetLoadedReplacement);
+
+					PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
+				}
 			}
 		}
 
