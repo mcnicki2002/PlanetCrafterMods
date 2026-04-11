@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>FeatLargeScreens</AssemblyName>
 		<Description>(Feat) Large Screens</Description>
-		<Version>1.0.2.0</Version>
+		<Version>1.0.2.10</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Nicki0.FeatLargeScreens</RootNamespace>

@@ -28,8 +28,8 @@ namespace Nicki0.VisualHideObjects {
 			// Plugin startup logic
 			log = Logger;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			occlusionDistanceEnabled = Config.Bind<bool>("Config", "enableDistanceOcclusion", false, "Enable the occlusion of objects when the player is far away from them (distance configurable)");

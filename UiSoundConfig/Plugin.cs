@@ -39,8 +39,8 @@ namespace Nicki0.UiSoundConfig {
 			log = Logger;
 			Instance = this;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			config_volume_PlayUiHover = Config.Bind("Volume", "volumeMultiplier_PlayUiHover", 1.0f, "Multiplier for the volume of the sound PlayUiHover");

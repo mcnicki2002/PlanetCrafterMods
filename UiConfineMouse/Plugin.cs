@@ -14,8 +14,8 @@ namespace Nicki0.UiConfineMouse {
 		public static ConfigEntry<bool> enableMod;
 		private void Awake() {
 			// Plugin startup logic
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			enableMod = Config.Bind<bool>("Config", "enable", true, "Enable mod (requires restart to take effekt)");

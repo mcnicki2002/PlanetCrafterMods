@@ -34,8 +34,8 @@ namespace Nicki0.QoLSkipTutorial {
 			log = Logger;
 			Instance = this;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			config_enable = Config.Bind<bool>("General", "enableMod", true, "Enable Mod");

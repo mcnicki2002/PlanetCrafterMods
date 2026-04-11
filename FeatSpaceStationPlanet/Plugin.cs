@@ -51,9 +51,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			log = Logger;
 			Instance = this;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
-				// return; // skip the mod, it might fail anyways
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			//method_Asteroid_SetFxStatuts = AccessTools.Method(typeof(Asteroid), "SetFxStatuts");
