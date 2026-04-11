@@ -5,8 +5,200 @@
 - [(Feat) Portal Travel](#feat-portal-travel)
 - [(Feat) Space Station](#feat-space-station)
 
+
+
 ## Scripts
 - [merge](#merge)
+
+## Mod Types:
+- Requested: This mod was requested by someone and I will not actively test it. If something breaks, please contact me.
+- Released: This mod should work to full extend. 
+- Proof of concept: This mod works to some extend, but it has some rough edges. If something breaks, please contact me, but I do not promise to fix it.
+- PROOFN'T OF CONCEPT: This mod probably never really worked. If something breaks, please contact me, but I do not promise to fix it.
+- Not yet finished: This mod is not yet finished due to various possible reasons (e.g. lack of knowledge etc.)
+- Discontinued: This mod is discontinued, probably because it is a native feature now. Will not receive updates.
+
+
+## (Cheat) Custom Ore Randomization
+### Features:
+- When creating a save file with randomized ores, define which ores are located where.
+- Only works when the mod is installed.
+### Config:
+- `OreConfig`: a Semicolon `;` separated list of `oreToReplace:replacementOre` pairs
+  - Example: `Uranim:Iridium;Iridium:Uranim;Alloy:Alloy` changes uranium to iridium, iridium to uranium and keeps super alloy where it should be
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested
+
+
+## (Cheat) Machine Config
+### Features:
+- Configure time and other properties of various machines
+- The value `0` won't change any values (except for the drone speed config: `1` uses the default drone speed)
+### Config:
+- See config file
+### Type: Released
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Cheat) Store Toxins in Toxic Storage
+### Features:
+- Store Toxins (and other items) in Toxic containers
+### Config:
+- `gIDsToStoreInToxicStorage`: list of IDs that can be stored in Toxic containers
+### Type: Requested/Released
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Feat) Large Screens
+### Features:
+- The character limit for signs is set to the game's limit of 125 characters in a text box
+- Prefix the text on a sign with `!NUMBER!`
+  - Example: `!3! This is a square sign` will stretch the sign to a square size where the full text is readable
+- FYI: Signs support (TMPro) Rich Text: https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichTextSupportedTags.html
+### Config:
+- `FontSize`: Font size
+### Type: Requested/Released
+### Multiplayer compatibility:
+- Not yet tested
+
+
+## (Feat) Planet Selector
+Adds a UI to change the planet displayed above the Planet Viewer. 
+Click on the Planet Viewer and select the planet that you want to see on it.
+### Features:
+- Select which planet is displayed in a Planet Viewer
+### Config:
+- `sunAngle`: Set at which angle the Planet Viewer is eluminated
+### Type: Released
+### Multiplayer compatibility:
+- Not yet tested
+
+
+## (Feat) Portal Travel
+Adds the ability to travel from the portal of one planet to the portal of another planet without any cost.
+
+### Features:
+- Travel between fully terraformed planets without any cost (\*configurable) with the portal
+  - How to use:
+    - Press the lower button on the upper-left side in the portal generator display
+    - Select the planet to travel to by pressig `Open`
+    - Walk into the opened portal
+  - Portals stay open (new v1.1.3.0) (config: keepPortalsOpen)
+    - Portals are color coded (config: activateColoredPortals, portalDestinationColors)
+
+Note: 
+- Portals on moons, which shouldn't exist in the base game, will get turned into signs (new v1.2.10.0, previously the portals got removed) if the mod is removed and those signs are loaded as portal generators when the mod is installed again. This is a safety mechanism to prevent that procedural instances can be opened on the moons after the mod is removed/isn't functional anymore.
+- Portal-traveling will close active portals
+
+### Config
+- configurable:
+  - `requireFullTerraformation`: set to false: travel before full terraformation is reached
+  - `disableOtherRequirements`: set to true: Other terraformation requirements (e.g. Purification on Toxicity) are disabled
+  - `requireCost`: set to true: opening a portal costs 1 fusion energy cell
+  - `costItems`: items that are required to open a portal (default: 1 fusion energy cell)
+
+### Type: Released
+
+### Multiplayer compatibility:
+- This mod is not fully multiplayer compatible. It only works for the host, but clients should not experience any problems.
+
+## (Feat) Space Station
+Adds a new "Planet": space
+Build your own space station and terraform it's internal biosphere.
+
+Note: 
+- I am aware of the absurdity of terraforming space. Just imagine that you are terraforming the atmosphere in your space station.
+- It isn't finished or balanced yet, but I currently don't have the time or knowledge to create what I imagined for this. 
+
+### Features:
+- Lower Gravity
+- Higher Oxygen consumption
+- Meteor resources can be harvested
+- More meteors
+- Free jetpack movement
+- Everlasting Darkness
+- High dependence on starting planet
+- Many machines are disabled (e.g. drills, as it wouldn't make sense to *drill* from pressure and ores)
+- Fly around with the vehicle
+- and more!
+
+### Type: Not yet finished
+- The features work, but the map is not nearly finished.
+
+### Multiplayer compatibility:
+- (Not yet tested)
+
+
+## (Feat) Terrain Height Tool
+Change the terrain height
+### Features:
+- Press `CTRL + T` to enable the terrain forming function
+- Hold `CTRL` while pressing the left or right mouse button to increase or decrease the terrain height
+- Warning: This will increase the save file size massively
+### Config:
+(/)
+### Type: PROOFN'T OF CONCEPT
+- The save file size, the lag and that other mountains/ores/... aren't moved is just not properly usable. 
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Feat) Underground Base
+### Features:
+- Build an underground base with the "Underground base ladder"
+- Just build living compartments inside the terrain to deform the terrain
+- Where possible, glass walls and doors are covered with rocks when they are below the ground, to create the illusion of being inside the ground
+- Ladders below the ground that don't lead to livable areas won't work, to prevent that the player can get out of an underground base and fall off the map
+### Config:
+(/)
+### Type: Proof of concept
+- You will notice that you can look below the map at various places, but in general the mod should work. Consider it "Released" with the limitation that you can look below the ground at some places.
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Fix) Rocket Return
+### Features:
+- Fixes the problem of rockets not returning due to a floating point error in the code.
+- For more infos about the bug, see https://discord.com/channels/635441508694097921/959021419595960330/1439608866005323776
+### Config:
+(/)
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Fix) Water Wave Config
+### Features:
+- Change the water height on Aqualis and the height of the waves
+### Config:
+- `aqualisOceanDisplacement`: Set the wave height on Aqualis
+- `aqualisOceanHeightOffset`: Set the height of the water surface on Aqualis
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Item) More Fuses
+### Features:
+- Adds compressed fuses (9 fuses make a T2 fuse with the boosting power of 10 fuses etc.)
+- (Adds 1000x rockets that must be edited in the save file; here for performance improvements due to item count reduction)
+### Config:
+(only by editing and recompiling the source code)
+### Type: Released
+- The rockets are for personal use, so it's best to ignore them.
+### Multiplayer compatibility:
+- Not yet tested
+
+## (Item) Wall Aquarium
+### Features:
+- Aquarium wall
+- Hold `CTRL` while clicking on the wall to open a color configurator UI where the (client-side) color for all windows in the world can be set.
+### Config:
+- `windowColor`: Changes the window color globally
+- `lodMultiplier`: Changes how far away the components start to (dis-)appear
+- `cleanMoss`: Removes the moss that is present in procedural wrecks
+### Type: Discontinued
+- It's now a native feature
+### Multiplayer compatibility:
+- Fully compatible
 
 ## (QoL) Auto-Logistics
 
@@ -96,61 +288,102 @@ Copy and paste (drone) logistic settings and automatically supply generated item
   - Allows to set logistics in inventories that have it disabled. This e.g. enables logistics in food growers, but also the extraction rocket, which has the logistics disabled and was bugged in previous game versions (new v1.018.0)
 - enableNotification: Receive notifications for copy and paste operations or invalid text inputs
 
+### Type: Released
+
 ### Multiplayer compatibility:
 - Should work for the host.
 - Does not work on client side. It is on my todo list.
-- 
-## (Feat) Portal Travel
-Adds the ability to travel from the portal of one planet to the portal of another planet without any cost.
 
+
+## (QoL) Meteor Debris Config
 ### Features:
-- Travel between fully terraformed planets without any cost (\*configurable) with the portal
-  - How to use:
-    - Press the lower button on the upper-left side in the portal generator display
-    - Select the planet to travel to by pressig `Open`
-    - Walk into the opened portal
-  - Portals stay open (new v1.1.3.0) (config: keepPortalsOpen)
-    - Portals are color coded (config: activateColoredPortals, portalDestinationColors)
-
-Note: 
-- Portals on moons, which shouldn't exist in the base game, will get turned into signs (new v1.2.10.0, previously the portals got removed) if the mod is removed and those signs are loaded as portal generators when the mod is installed again. This is a safety mechanism to prevent that procedural instances can be opened on the moons after the mod is removed/isn't functional anymore.
-- Portal-traveling will close active portals
-
-### Config
-- configurable:
-  - `requireFullTerraformation`: set to false: travel before full terraformation is reached
-  - `disableOtherRequirements`: set to true: Other terraformation requirements (e.g. Purification on Toxicity) are disabled
-  - `requireCost`: set to true: opening a portal costs 1 fusion energy cell
-  - `costItems`: items that are required to open a portal (default: 1 fusion energy cell)
-
+- Change how long the debris (rocks etc., NOT ores) of meteors persists in the world
+### Config:
+- `multiplier`: Multiplier for how long debris exists. Example: 0.1 => debris disappears 10 times faster.
+### Type: Requested
 ### Multiplayer compatibility:
-- This mod is not fully multiplayer compatible. It only works for the host, but clients should not experience any problems.
+- Not yet tested
 
-## (Feat) Space Station
-Adds a new "Planet": space
-Build your own space station and terraform it's internal biosphere.
 
-Note: 
-- I am aware of the absurdity of terraforming space. Just imagine that you are terraforming the atmosphere in your space station.
-- It isn't finished or balanced yet, but I currently don't have the time or knowledge to create what I imagined for this. 
-
+## (QoL) Skip Tutorial
 ### Features:
-- Lower Gravity
-- Higher Oxygen consumption
-- Meteor resources can be harvested
-- More meteors
-- Free jetpack movement
-- Everlasting Darkness
-- High dependence on starting planet
-- Many machines are disabled (e.g. drills, as it wouldn't make sense to *drill* from pressure and ores)
-- Fly around with the vehicle
-- and more!
-
+- Skip the tutorials.
+### Config:
+- `skipNewTutorial`: Skips new tutorials
+- `skipBlueSkyTutorial`: Hides the Blue Sky tutorial steps
+### Type: Released
 ### Multiplayer compatibility:
-- (Not yet tested)
+- Not yet tested
+
+
+## (UI) Change Music
+### Features:
+- Load different music (in mp3/ogg/wav format) by placing the files next to the mod dll
+- These are the four old (Early Access) music tracks (+links from where you can obtain a license for them):
+  - Dark Fantasy Studio - Album: "The monster that lies within": https://darkfantasystudio.com/album?id=68d43c51fee48d66350ec8da 
+    - Once upon a time
+    - Until dawn
+    - After dark
+  - By Andrew Sitkov: https://www.gamedevmarket.net/asset/cosmos-music-pack
+    - Unknown Terrain
+### Config:
+- `addInsteadOfReplace`: Add music instead of replacing it.
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested, but should be Client-side only
+
+
+## (UI) Confine Mouse
+### Features:
+- Confine the mouse to the game window
+- E.g. helpful with multiple monitors or when using compatibility layers that break mouse movement
+### Config:
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested
+
+
+## (UI) Move Units
+### Features:
+- Replace the units with your own
+### Config:
+- strings of the units displayed
+### Type: Not yet finished
+- It's more of a personal project
+### Multiplayer compatibility:
+- Not compatible, will likely lead to silent crashes when different configs are used
+
+
+## (UI) Sound Config
+### Features:
+- Set the volume for several sounds indiviually, e.g. reduce the volume of the UiClose sound
+### Config:
+- Volume configs for the sounds: UiHover, UiMove, UiOpen, UiClose, UiSelectElement, AlertLow, AlertCritical, CheckTutorial, EnergyLack, EnergyRestored, DropObject, CantDo, Teleport
+### Type: Requested
+### Multiplayer compatibility:
+- Not yet tested, but should be Client-side only
+
+
+## (Visual) Hide Objects
+### Features:
+- Prevent invisible bases etc. in occlusion objects
+- Occlude configurable machines at distances or only show them when a button is pressed.
+### Config:
+- `preventOcculsion`: Prevent occulsion in occulsion colliders (e.g. in the maze and the region north of it)
+### Type: Released (/Requested)
+- Distance/Button-enabled occlusion isn't actively tested
+### Multiplayer compatibility:
+- Not yet tested
 
 ## Merge
 
 Merge save files with different planet(s) into one combined save file
 
 ### PLEASE OPEN THE MERGE.PY FILE TO CONFIGURE THE SCRIPT AND TO FIND THE README AT THE TOP OF THE FILE
+
+## ()
+### Features:
+### Config:
+### Type: [Requested/Released/Proof of concept/PROOFN'T OF CONCEPT/Not yet finished/Discontinued]
+### Multiplayer compatibility:
+- Not yet tested
