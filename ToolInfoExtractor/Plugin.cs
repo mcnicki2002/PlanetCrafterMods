@@ -23,6 +23,8 @@ namespace Nicki0.ToolInfoExtractor {
 
 		public static ConfigEntry<string> config_outputPath;
 
+		static bool didAlreadyRun = false; // to prevent NRE when GOs are destroyed
+
 		private void Awake() {
 			// Plugin startup logic
 			log = Logger;
@@ -165,6 +167,9 @@ namespace Nicki0.ToolInfoExtractor {
 		[HarmonyPriority(Priority.First)]
 		[HarmonyPatch(typeof(StaticDataHandler), nameof(StaticDataHandler.LoadStaticData))]
 		static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
+			if (didAlreadyRun) return;
+			didAlreadyRun = true;
+
 			string dir = string.IsNullOrEmpty(config_outputPath.Value) ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : config_outputPath.Value;
 
 			Directory.CreateDirectory(dir);
