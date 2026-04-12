@@ -1,9 +1,27 @@
 # PlanetCrafterMods
-
+The latest versions of the mods can be found in the releases https://github.com/mcnicki2002/PlanetCrafterMods/releases
 ## Mods
-- [(QoL) Auto-Logistics](#qol-auto-logistics)
+- [(Cheat) Custom Ore Randomization](#cheat-custom-ore-randomization)
+- [(Cheat) Machine Config](#cheat-machine-config)
+- [(Cheat) Store Toxins in Toxic Storage](#cheat-store-toxins-in-toxic-storage)
+- [(Feat) Large Screens](#feat-large-screens)
+- [(Feat) Planet Selector](#feat-planet-selector)
 - [(Feat) Portal Travel](#feat-portal-travel)
 - [(Feat) Space Station](#feat-space-station)
+- [(Feat) Terrain Height Tool](#feat-terrain-height-tool)
+- [(Feat) Underground Base](#feat-underground-base)
+- [(Fix) Rocket Return](#fix-rocket-return)
+- [(Fix) Water Wave Config](#fix-water-wave-config)
+- [(Item) More Fuses](#item-more-fuses)
+- [(Item) Wall Aquarium](#item-wall-aquarium)
+- [(QoL) Auto-Logistics](#qol-auto-logistics)
+- [(QoL) Meteor Debris Config](#qol-meteor-debris-config)
+- [(QoL) Skip Tutorial](#qol-skip-tutorial)
+- [(UI) Change Music](#ui-change-music)
+- [(UI) Confine Mouse](#ui-confine-mouse)
+- [(UI) Move Units](#ui-move-units)
+- [(UI) Sound Config](#ui-sound-config)
+- [(Visual) Hide Objects](#visual-hide-objects)
 
 
 
