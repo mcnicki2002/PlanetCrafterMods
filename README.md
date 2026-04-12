@@ -1,4 +1,6 @@
 # PlanetCrafterMods
+[![Github All Releases](https://img.shields.io/github/downloads/mcnicki2002/PlanetCrafterMods/total.svg)](https://github.com/mcnicki2002/PlanetCrafterMods/releases/latest)
+
 The latest versions of the mods can be found in the releases https://github.com/mcnicki2002/PlanetCrafterMods/releases
 ## Mods
 - [(Cheat) Custom Ore Randomization](#cheat-custom-ore-randomization)
