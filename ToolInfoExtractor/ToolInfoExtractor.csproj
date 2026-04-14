@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<AssemblyName>ToolInfoExtractor</AssemblyName>
+		<Description>(Tool) Info Extractor</Description>
+		<Version>1.0.0.0</Version>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>Nicki0.ToolInfoExtractor</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<DeployLocal>true</DeployLocal>
+		<Publicize>true</Publicize>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<AdditionalModFiles Include="" />-->
+		<!--<AdditionalSourceFiles Include="" />-->
+	</ItemGroup>
+	
+	<Import Project="$(SolutionDir)\solution_private.targets" />
+	
+	<Target Name="CopyDLLsDeploy" AfterTargets="Build">
+		<Copy SourceFiles="$(SourceDir)$(AssemblyName).csproj" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
+		<Copy SourceFiles="$(SourceDir)Plugin.cs" DestinationFolder="$(GitRepo)\$(AssemblyName)\" />
+	</Target>
+</Project>

@@ -29,12 +29,13 @@ import os
 # - "worldSeed" (current known effect on: not generated wrecks in world, animals in world, random ores, tree position, something 'spawned on floor') 
 #     as well as the settings from secondaryFileName can't be merged.
 # - "Message_YouAreAConvict" might appear twice.
-# - PCLayers from the second save file are only merged if they are from a merged planet. Duplicated layers are a problem.
 # - There will be a few junk items in your save. They won't show in-game and shouldn't create any problems. 
 #       The script can't really filter them out though.
 # - Blue crates, explodable rocks and other objects might respawn. (Note: The author can not find/remember an example of this happening)
 # - You might notice that the planet - on which you started in the secondary save - doesn't show the basic unlocks in the blueprint screen.
 #		This is a game feature and happens because that planet is not the planet where you started on in the merged save file.
+# - When traveling to a merged planet that previously didn't have an extraction platform, you might get teleported to 0 : 0 : 0. 
+# 		Go to `ESC -> Options -> Gameplay -> I'm Stuck!` and press it twice to teleport yourself to one of your living compartments.
 # - As of v3, the script can merge the progress of planets. This does NOT mean that it can fully merge planets. Doing so is still not recommended.
 # - If saves with the same planet are merged, then it can happen that blue crates / lockers with loot disappear or have loot from the secondary save file.
 # 		If you stored or left important items in scene storage containers, then you should take them out before merging. Same is true for story items / inventories.

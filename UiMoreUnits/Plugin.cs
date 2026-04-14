@@ -117,8 +117,8 @@ public class Plugin : BaseUnityPlugin {
 		// Plugin startup logic
 		log = Logger;
 
-		if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-			LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+		if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+			LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 		}
 
 		configActive = Config.Bind("General", "Enabled", true, "Enable mod");

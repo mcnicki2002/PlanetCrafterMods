@@ -23,8 +23,8 @@ namespace Nicki0.CheatStoreToxinsInToxicStorage {
 			log = Logger;
 			Instance = this;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			config_gIDsToStoreInToxicStorage = Config.Bind<string>("Config", "gIDsToStoreInToxicStorage", "Toxins,PurifiedWater,ChlorineCapsule1,MicroPlastics", "Group/Item IDs that can be stored in toxic storage.");

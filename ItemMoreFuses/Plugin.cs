@@ -81,8 +81,8 @@ namespace Nicki0.ItemMoreFuses {
 
 			log = Logger;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			Assembly me = Assembly.GetExecutingAssembly();
@@ -185,6 +185,9 @@ namespace Nicki0.ItemMoreFuses {
 			groupDataItem.unitMultiplierAnimals *= efficiencyMultiplier;
 			groupDataItem.unitMultiplierPurification *= efficiencyMultiplier;
 
+
+			groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
+			groupDataItem.unlockingValue = 0;
 
 			//groupDataItem.terraformStageUnlock = null;
 			//groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;

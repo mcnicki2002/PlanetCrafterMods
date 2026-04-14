@@ -24,9 +24,13 @@ namespace Nicki0.FeatUndergroundBase {
 		 * 
 		 * Rock texture on other domes
 		 * 
+		 * - Add rock to rounded glass
+		 * - Add rock to aquarium glass
+		 * 
 		 * Move bottom death barrier (in a better way)
 		 * 
 		 * BUG: rock shows in humble south-east cave, probably due to being below 0
+		 * 
 		 * 
 		 */
 
@@ -36,6 +40,8 @@ namespace Nicki0.FeatUndergroundBase {
 		public static readonly string LadderDownId = "Nicki0_LadderDown";
 		public static readonly string LadderStartId = "Nicki0_LadderStart";
 
+		public static readonly float SURFACE_HEIGHT = -120; // Humble's lower area is deep in the negative area
+
 		private void Awake() {
 			// Plugin startup logic
 			log = Logger;
@@ -43,8 +49,8 @@ namespace Nicki0.FeatUndergroundBase {
 
 			MaterialsHelper.InitMaterialsHelper(Logger);
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
@@ -161,8 +167,8 @@ namespace Nicki0.FeatUndergroundBase {
 				];*/
 				List<string> groupsToDisableBelowTheSurface = [
 					"Biodome2",
-				"ButterflyDome1",
-				"Aquarium2"
+					"ButterflyDome1",
+					"Aquarium2"
 				];
 				foreach (string id in groupsToDisableBelowTheSurface) {
 					___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
@@ -170,9 +176,9 @@ namespace Nicki0.FeatUndergroundBase {
 
 				List<string> groupsWithRockAsWindows = [
 					"Pod9xB",
-				"biodome", // <- glass on inside is also replaced...
-				"Megadome1", // <- -"-
-				"podAngle"
+					"biodome", // <- glass on inside is also replaced...
+					"Megadome1", // <- -"-
+					"podAngle"
 				];
 				//foreach (string id in groupsWithRockAsWindows) {
 				//	___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<ChangeGlassToRockIfBelowGround>();
@@ -265,15 +271,15 @@ namespace Nicki0.FeatUndergroundBase {
 		}
 
 
-		private static readonly string localizationLadderInsideRock = "LadderInsideRock";
-		public static readonly string localizationCantBeBuildBelowSurface = "CompartmentInsideRock";
+		private static readonly string localizationLadderInsideRock = "Nicki0_FeatundergroundBase_LadderInsideRock";
+		public static readonly string localizationCantBeBuildBelowSurface = "Nicki0_FeatundergroundBase_CompartmentInsideRock";
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionMovePlayer), nameof(ActionMovePlayer.OnAction))]
 		public static bool Prefix_ActionMovePlayer_OnAction(ActionMovePlayer __instance) {
-			if (__instance.gameObject == null || !__instance.gameObject.transform.root.name.Contains("Ladder") || __instance.destination == null || __instance.destination.transform.position.y >= 0) return true;
-
-			foreach (Collider collider in Physics.OverlapSphere(__instance.destination.transform.position, 0)) {
+			if (__instance.gameObject == null || !__instance.gameObject.transform.root.name.Contains("Ladder") || __instance.destination == null || __instance.destination.transform.position.y >= SURFACE_HEIGHT) return true;
+			log.LogInfo($"checked height is {__instance.destination.transform.position}");
+			foreach (Collider collider in Physics.OverlapSphere(__instance.destination.transform.position, 1)) { // radius 1 such that, when the destination is slightly outside the livable area, it still teleports
 				foreach (HomemadeTag homemadeTag in collider.transform.GetComponentsInChildren<HomemadeTag>().Union(collider.transform.GetComponentsInParent<HomemadeTag>())) { // collider.transform.root.GetComponentsInChildren<HomemadeTag>()) {
 					if (homemadeTag.GetHomemadeTag() == DataConfig.HomemadeTag.IsInsideLivable) {
 						return true;
@@ -406,7 +412,7 @@ namespace Nicki0.FeatUndergroundBase {
 	}
 	public class Nicki0_DestroyIfAboveGround : MonoBehaviour {
 		public void Start() {
-			//if (this.transform.position.y >= 0) Destroy(this.gameObject);
+			//if (this.transform.position.y >= SURFACE_HEIGHT) Destroy(this.gameObject);
 
 			Vector3 position = this.transform.position + (-2) * this.transform.up;
 
@@ -429,7 +435,7 @@ namespace Nicki0.FeatUndergroundBase {
 				}
 			}
 
-			if (!(terrainAbove && !anythingBelow) && this.transform.position.y >= 0) {
+			if (!(terrainAbove && !anythingBelow) && this.transform.position.y >= Plugin.SURFACE_HEIGHT) {
 				Destroy(this.gameObject);
 			}
 		}
@@ -482,7 +488,7 @@ namespace Nicki0.FeatUndergroundBase {
 			}
 		}
 		private bool CheckIfInLivable() {
-			foreach (Collider collider in Physics.OverlapSphere(this.transform.position + (-2) * this.transform.up, 0)) {
+			foreach (Collider collider in Physics.OverlapSphere(this.transform.position + (-2) * this.transform.up, 1)) {
 				foreach (HomemadeTag homemadeTag in collider.transform.GetComponentsInChildren<HomemadeTag>().Union(collider.transform.GetComponentsInParent<HomemadeTag>())) {
 					if (homemadeTag.GetHomemadeTag() == DataConfig.HomemadeTag.IsInsideLivable) {
 						return true;
@@ -509,7 +515,7 @@ namespace Nicki0.FeatUndergroundBase {
 		public (int, int) materialRange = (0, -1);
 
 		public void Start() {
-			if (this.transform.position.y >= 0) { return; }
+			if (this.transform.position.y >= Plugin.SURFACE_HEIGHT) { return; }
 			this.StartCoroutine(ChangeMagerialsLater());
 		}
 		public IEnumerator ChangeMagerialsLater() {
@@ -552,7 +558,7 @@ namespace Nicki0.FeatUndergroundBase {
 	}
 
 	public class Nicki0_SetFixedHeight() : MonoBehaviour {
-		public static readonly float height = -151 + 3.3905f; // interior of living compartment is 1 coord higher than it's position; +3.3905 is the offset of the ladder
+		public static readonly float height = /*entry height:*/-250 + (-1) + 3.3905f; // interior of living compartment is 1 coord higher than it's position; +3.3905 is the offset of the ladder
 		public void Start() {
 			float oldHeight = this.transform.position.y;
 

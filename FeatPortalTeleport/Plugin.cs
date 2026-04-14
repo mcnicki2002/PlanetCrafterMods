@@ -30,7 +30,7 @@ namespace Nicki0.FeatPortalTeleport {
 		 *	BUGS:
 		 *	
 		 *	- dot particles play for *every* portal when portal-world portal is opened
-		 *	Clients can close all portals by closing the procedural instance
+		 *	- Clients can close all portals by closing the procedural instance
 		 */
 		private static bool enableKeepPortalOpen = true;
 		private static bool enableColorPortals = true;
@@ -46,7 +46,7 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<string> configItemsCost;
 		public static ConfigEntry<bool> configRequireFullTerraformation;
 		public static ConfigEntry<bool> configDisableOtherRequirements;
-		public static ConfigEntry<bool> configDeletePortalsFromMoonsWhenModIsLost;
+		public static ConfigEntry<bool> configKeepPortalsOnMoon;
 
 		public static ConfigEntry<bool> configKeepPortalsOpen;
 		public static ConfigEntry<bool> configSetColorPortals;
@@ -67,8 +67,8 @@ namespace Nicki0.FeatPortalTeleport {
 			log = Logger;
 			Instance = this;
 
-			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo)) {
-				LibCommon.ModVersionCheck.NotifyUser(this, Logger.LogInfo);
+			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
+				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
@@ -76,7 +76,8 @@ namespace Nicki0.FeatPortalTeleport {
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
 			configDisableOtherRequirements = Config.Bind<bool>("General", "disableOtherRequirements", false, "Disables other requirements, e.g. minimum Terraformation / Purification requirements.");
 			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
-			configDeletePortalsFromMoonsWhenModIsLost = Config.Bind<bool>("Debug", "deleteMoonPortals", true, "Savety mechanism. Portals on Moons will be deleted if the mod doesn't get loaded, as they aren't constructable on moons in the base game.");
+			configKeepPortalsOnMoon = Config.Bind<bool>("Debug", "keepPortalsOnMoons", false, "Savety mechanism. Portals on Moons will be replaced by placeholder signs if the mod doesn't get loaded, as they aren't constructible on moons in the base game.");
+
 
 			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
 			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
@@ -177,7 +178,7 @@ namespace Nicki0.FeatPortalTeleport {
 			if (isOnDevPC) {
 				____scanningTime = 0.25f;
 			}
-			
+
 			// Top Button
 			buttonTabProceduralInstance.GetComponent<Button>().onClick.AddListener(delegate () {
 				if (!enableKeepPortalOpen) {
@@ -667,6 +668,8 @@ namespace Nicki0.FeatPortalTeleport {
 				}
 			}
 
+			Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+
 			// clean stateObject
 			Dictionary<int, int> newWoIdToPlanetDict = new Dictionary<int, int>();
 			foreach (int woid in WorldObjectsHandler.Instance.GetAllWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1")).Select(e => e.GetId())) {
@@ -718,10 +721,22 @@ namespace Nicki0.FeatPortalTeleport {
 				if (woid != -1) {
 					if (GetWoIdsToPlanetIdHashes().TryGetValue(woid, out int planetHash)) {
 						// check if portal still exists
-						if (WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null && !TeleportAnyway()) {
+						bool portalOnOtherPlanetDoesntExistAnymore = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1"), planetHash) == null && !TeleportAnyway();
+						// check if planet is available
+						PlanetData potentialPlanetData = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash);
+						bool planetNotAccessable = potentialPlanetData == null || !Managers.GetManager<PlanetLoader>().planetList.GetIsPlanetPurchased(potentialPlanetData);
+
+						if (portalOnOtherPlanetDoesntExistAnymore || planetNotAccessable) {
+							string reason = "";
+							if (portalOnOtherPlanetDoesntExistAnymore) {
+								reason = "No portal on destination planet";
+							} else if (planetNotAccessable) {
+								reason = (potentialPlanetData == null) ? "Planet not available (Mod removed?)" : "DLC Planet not available";
+							}
+
 							field_PopupsHandler_popupsToPop(Managers.GetManager<PopupsHandler>()).Add(new PopupData(
 								Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0.5f, 0.5f), 100.0f),
-								"No portal on destination planet",
+								reason,
 								5f,
 								true));
 							ClosePortal(__instance.transform.root.GetComponent<MachinePortalGenerator>());
@@ -791,7 +806,39 @@ namespace Nicki0.FeatPortalTeleport {
 				//Managers.GetManager<SavedDataHandler>().IncrementSaveLock(); // semaphore lock saving
 				semaphoreActive = true;
 				PlanetData pd = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetToTeleportToHash);
-				if (pd != null) PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
+				if (pd != null) {
+
+					// --- From MachineDeparturePlaform.SwitchPlanet:
+					NetworkBackendProvider.GetActiveBackend().SetSessionJoinabilityAsync(SessionJoinabilityStatus.PlanetSwitch);
+					// --- From MachineDeparturePlatform.SwitchPlanetClientRpc:
+					PlanetLoader planetLoader = Managers.GetManager<PlanetLoader>();
+
+					Action planetLoadedReplacement = null;
+					planetLoadedReplacement = new Action(delegate () {
+						Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+						Instance.StartCoroutine(ExecuteLater(delegate () {
+							Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+							float defaultDistance = Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck;
+							Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
+							Instance.StartCoroutine(ExecuteLater(delegate () {
+								Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
+							}, 100));
+						}));
+
+						// --- From MachineDeparturePlatform.PlanetLoaded:
+						PlanetLoader manager = Managers.GetManager<PlanetLoader>();
+						manager.planetIsLoaded = (Action)Delegate.Remove(manager.planetIsLoaded, new Action(planetLoadedReplacement));
+						// BlackScreen.Instance.AppearAndFade(2f, 1f); // Only here for comparison to the copied source code
+						CanvasLoading.Instance.Toggle(false);
+						// this._inputMap.Enable(); // Only here for comparison to the copied source code
+						// this._sequenceStarted = false; // Only here for comparison to the copied source code
+						NetworkBackendProvider.GetActiveBackend().SetSessionJoinabilityAsync(SessionJoinabilityStatus.Joinable);
+					});
+
+					planetLoader.planetIsLoaded = (Action)Delegate.Combine(planetLoader.planetIsLoaded, planetLoadedReplacement);
+
+					PlanetNetworkLoader.Instance.SwitchToPlanet(pd);
+				}
 			}
 		}
 
@@ -914,19 +961,41 @@ namespace Nicki0.FeatPortalTeleport {
 		// <--- Activate Portal everywhere ---
 
 		// --- prevent loading of portals on moons --->
-		[HarmonyPostfix]
+		[HarmonyPrefix] // Compatibility with (Save) Async Save
+		[HarmonyPriority(Priority.High)]
+		[HarmonyPatch(typeof(JSONExport), nameof(JSONExport.SaveToJson))]
+		static void JSONExport_SaveToJson(List<JsonableWorldObject> _worldObjects) {
+			foreach (JsonableWorldObject jwo in _worldObjects) {
+				if (!planetsExcludingPortalGenerator.Contains(jwo.planet)) continue;
+				if (jwo.gId != "PortalGenerator1") continue;
+				if (configKeepPortalsOnMoon.Value) continue;
+
+				jwo.gId = "Sign";
+				jwo.text += "PortalGenerator_Moon";
+			}
+		}
+		/*[HarmonyPostfix] // Does NOT work with (Save) Async Save!!!
 		[HarmonyPatch(typeof(JsonablesHelper), "WorldObjectToJsonable")]
 		static void JsonablesHelper_WorldObjectToJsonable(JsonableWorldObject __result) {
 			if (!planetsExcludingPortalGenerator.Contains(__result.planet)) return;
 			if (__result.gId != "PortalGenerator1") return;
-			if (!configDeletePortalsFromMoonsWhenModIsLost.Value) return;
-			__result.gId = "PortalGenerator1_OnMoon";
-		}
+			if (configKeepPortalsOnMoon.Value) return;
+
+			__result.gId = "Sign";
+			__result.text = "PortalGenerator_Moon";
+		}*/
 		[HarmonyPostfix]
+		[HarmonyPriority(Priority.High)]
 		[HarmonyPatch(typeof(JSONExport), nameof(JSONExport.LoadFromJson))]
 		static void JSONExport_LoadFromJson(List<JsonableWorldObject> ____worldObjects) {
 			foreach (JsonableWorldObject jwo in ____worldObjects) {
-				if (jwo.gId == "PortalGenerator1_OnMoon") jwo.gId = "PortalGenerator1";
+				if (jwo.gId == "Sign" && jwo.text != null && jwo.text.Contains("PortalGenerator_Moon", StringComparison.InvariantCultureIgnoreCase)) {
+					jwo.gId = "PortalGenerator1";
+					jwo.text = jwo.text.Replace("PortalGenerator_Moon", "", StringComparison.InvariantCultureIgnoreCase);
+				} else if (jwo.gId == "PortalGenerator1_OnMoon") { // <- old replacement gId
+					jwo.gId = "PortalGenerator1";
+				}
+
 			}
 
 		}
