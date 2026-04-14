@@ -971,7 +971,7 @@ namespace Nicki0.FeatPortalTeleport {
 				if (configKeepPortalsOnMoon.Value) continue;
 
 				jwo.gId = "Sign";
-				jwo.text = "PortalGenerator_Moon";
+				jwo.text += "PortalGenerator_Moon";
 			}
 		}
 		/*[HarmonyPostfix] // Does NOT work with (Save) Async Save!!!
@@ -985,15 +985,17 @@ namespace Nicki0.FeatPortalTeleport {
 			__result.text = "PortalGenerator_Moon";
 		}*/
 		[HarmonyPostfix]
+		[HarmonyPriority(Priority.High)]
 		[HarmonyPatch(typeof(JSONExport), nameof(JSONExport.LoadFromJson))]
 		static void JSONExport_LoadFromJson(List<JsonableWorldObject> ____worldObjects) {
 			foreach (JsonableWorldObject jwo in ____worldObjects) {
-				if (jwo.gId == "PortalGenerator1_OnMoon" // <- old replacement gId
-					|| (jwo.gId == "Sign" && jwo.text == "PortalGenerator_Moon")
-				) {
+				if (jwo.gId == "Sign" && jwo.text != null && jwo.text.Contains("PortalGenerator_Moon", StringComparison.InvariantCultureIgnoreCase)) {
 					jwo.gId = "PortalGenerator1";
-					jwo.text = "";
+					jwo.text = jwo.text.Replace("PortalGenerator_Moon", "", StringComparison.InvariantCultureIgnoreCase);
+				} else if (jwo.gId == "PortalGenerator1_OnMoon") { // <- old replacement gId
+					jwo.gId = "PortalGenerator1";
 				}
+
 			}
 
 		}

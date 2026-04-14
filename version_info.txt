@@ -1,42 +1,42 @@
 # (Cheat) Custom Ore Randomization
-Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0|j3QMfKMsmqMICQaB95N6IiU1tEF+MqUMscwcFWxIBgo=|(Cheat) Custom Ore Randomization
+Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0|0zvY1NNRjCH0bPaeecstYMylJjlminFkchaOJQhmqIM=|(Cheat) Custom Ore Randomization
 # (Cheat) Drone Speed
-Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.0|8TlmzcpC5DOp5IqoLpCDNaHKbqaZIHSOGbvsb9GUnV0=|(Cheat) Drone Speed
+Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.0|vWQrphtfEFXjLqNsWaQe5hiG/S/UvWFajD3BKVx3XcU=|(Cheat) Drone Speed
 # (Cheat) Machine Config
-Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.8.10|zaYE+W3HKKBEaXnamX9q0osAkbsAi2Ikhj3RF3HZhdE=|(Cheat) Machine Config
+Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.8.10|xs6Vyd29MmRZ8f2fJS8jtZBPOULF6sv1Aj7KHLd1uuY=|(Cheat) Machine Config
 # (Cheat) Store Toxins In Toxic Storage
-Nicki0.theplanetcraftermods.CheatStoreToxinsInToxicStorage=1.0.0.10|a6qfsDUbQki3LhnlJzmdksSznHiDc+WeBFMPoWxA5+o=|(Cheat) Store Toxins In Toxic Storage
+Nicki0.theplanetcraftermods.CheatStoreToxinsInToxicStorage=1.0.0.10|toY3N3uaQ+eRe3DP0nao03rnyYVEd2c02bFMdIhUyUA=|(Cheat) Store Toxins In Toxic Storage
 # (Feat) Large Screens
-Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.2.10|tpu6Obq0iKOYpx/kinfVw1HnKh3eUsIWPzYTWznxrp4=|(Feat) Large Screens
+Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.2.10|sKW3FNMhdbBrtoTLZ4JHUwdl5PjH6td3K+wWHUao458=|(Feat) Large Screens
 # (Feat) Planet Selector
-Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.12|sIAWV4AFTyp57Hw8ik64GQz+l79/H4lX2M22pJZYyvM=|(Feat) Planet Selector
+Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.12|8Py9YcPgWtwK+zVvEjAYDz1vzbPxW5IfM9uxU9XUWEo=|(Feat) Planet Selector
 # (Feat) Portal Travel
-Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.10.0|org6T9enaCOUEvpc+x7nWk3Guep97PiSbjIopGlViu8=|(Feat) Portal Travel
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.10.0|1TTOW7uQHfy8TShWQPr1Bu+dXv57aQm0+/LFeJBXMoc=|(Feat) Portal Travel
 # (Feat) Space Station
-Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10|f/SmVCkuHiQynAdTxhM+tRSGERWHliOBXORoe2zJbWo=|(Feat) Space Station
+Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10|wWDaTLfBVryhFlVanZ2FmH5rlTn1mJCn/7PXl7H/BCU=|(Feat) Space Station
 # (Feat) Terrain Height Tool
-Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.10|fgYHnnvXqLubH5UOg5EkHpg0ahBOaC1tGAJsH81Yo5U=|(Feat) Terrain Height Tool
+Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.10|DJDJTJDui9oWkESxfyS1KUFqb6oXsgCDcD3KWlQFvEA=|(Feat) Terrain Height Tool
 # (Feat) Underground Base
-Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.3.0|9aDwRvJlp5Z1Ru/FfVWryXLcd331tZAN/Nci0ChiNKQ=|(Feat) Underground Base
+Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.3.0|8/NniVHHEzhApEuzpdu5MGOC3M79nuX4xDlw6sLZQHM=|(Feat) Underground Base
 # (Fix) Rocket Return
-Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0|AkiKZ7e4BV9fJHLPxaevhw4c+4knCsslINc/pLhkk3M=|(Fix) Rocket Return
+Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0|wbNFmmTjczRZHh9tDua0ZGQWR7SaSVOamtXIIb4rLIk=|(Fix) Rocket Return
 # (Fix) Water Wave Config
-Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.10|PzT6WIqaZHB8/03uMf4mDvLJn0+H8u2q/R2daGMlNZ8=|(Fix) Water Wave Config
+Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.10|Hy8ecMwZ2bysHd0sfsETNBfE1v67bZQLpqEa0//6EFk=|(Fix) Water Wave Config
 # (Item) More Fuses
-Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.3.0|d6hOcnyspZOZSB6LptklpD+fYJ85CTET4CV+KOp8kNo=|(Item) More Fuses
+Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.3.0|wrpI3LjCQ925TvqLR2UPfupHP2PGYZJjprffrq0qoXo=|(Item) More Fuses
 # (QoL) Auto-Logistics
-Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.10|PAh/srf/mYQPIoLtUtU3DnWRWlyZV8swerUddZhjUi8=|(QoL) Auto-Logistics
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.10|qS6e6dXFTTPM4JjSFIRMz+5M/zObC9PBAGWnjwDnRXQ=|(QoL) Auto-Logistics
 # (QoL) Meteor Debris Config
-Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10|JVtmp+bp0f3umPbrL4dH6KvLa8B7/6Ghy2F486AlmIQ=|(QoL) Meteor Debris Config
+Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10|4o8MlojFugk/YYFY+ymW+qUVisXfgF2wyIyALmCgqT8=|(QoL) Meteor Debris Config
 # (QoL) Skip Tutorial
-Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.0.11|/+tgali2VwqYu2h7I9y9BXcmGGiLw37nKBcr1Px/46I=|(QoL) Skip Tutorial
+Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.0.11|DOoJvTBT3vUvZG2cjUAZq83xahq8IBek63TL9m7chtI=|(QoL) Skip Tutorial
 # (UI) Change Music
-Nicki0.theplanetcraftermods.UiChangeMusic=1.0.0.10|wvgFczNQRKUMAQElOXCmnvY58H8RxmE7CvSn/yMu6zE=|(UI) Change Music
+Nicki0.theplanetcraftermods.UiChangeMusic=1.0.0.10|EBlytoRaT4POQeO6J5+mpizNGXO5WdVbId/bUlTeAno=|(UI) Change Music
 # (UI) Confine Mouse
-Nicki0.theplanetcraftermods.UiConfineMouse=1.0.1.10|PPFW1JMQOWjFyCA83uKyBLrUeZakumWoS7HgB56HIFo=|(UI) Confine Mouse
+Nicki0.theplanetcraftermods.UiConfineMouse=1.0.1.10|NDyGJrsQs7BUnpL3LjOWLC8C6eNgBzIhu8BE7vsxm+s=|(UI) Confine Mouse
 # (UI) More Units
-Nicki0.theplanetcraftermods.UiMoreUnits=1.0.1.10|rnkZcqdZAwhKHP9WA08y8ZS+U1bz6UXQsMo3DgdEHc8=|(UI) More Units
+Nicki0.theplanetcraftermods.UiMoreUnits=1.0.1.10|jL0ZnDFvxXiMJpgapXCtTZQCrdfrk6ukFiKQrBrDRJ8=|(UI) More Units
 # (UI) Sound Config
-Nicki0.theplanetcraftermods.UiSoundConfig=1.0.0.10|TCjvO0c66tH125WEQfRiXPWcZRPiKazaS8juaGHp7jw=|(UI) Sound Config
+Nicki0.theplanetcraftermods.UiSoundConfig=1.0.0.10|upjfmoxpSvnaUJukJ2lXTXIErNutAGNzL2Jp9hnAqsA=|(UI) Sound Config
 # (Visual) Hide Objects
-Nicki0.theplanetcraftermods.VisualHideObjects=1.0.1.10|PwcRQpzHeYTYcBx07oosa7/nU3KmcPnB5vMfg7qTNU4=|(Visual) Hide Objects
+Nicki0.theplanetcraftermods.VisualHideObjects=1.0.1.10|/BobC+zVltHWH60of25fYP0lzshUBgdejUBCdL99fOQ=|(Visual) Hide Objects
