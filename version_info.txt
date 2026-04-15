@@ -11,7 +11,7 @@ Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.2.10|sKW3FNMhdbBrtoTLZ4JHUwdl5P
 # (Feat) Planet Selector
 Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.12|8Py9YcPgWtwK+zVvEjAYDz1vzbPxW5IfM9uxU9XUWEo=|(Feat) Planet Selector
 # (Feat) Portal Travel
-Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.10.0|1TTOW7uQHfy8TShWQPr1Bu+dXv57aQm0+/LFeJBXMoc=|(Feat) Portal Travel
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.10.0||(Feat) Portal Travel
 # (Feat) Space Station
 Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10|wWDaTLfBVryhFlVanZ2FmH5rlTn1mJCn/7PXl7H/BCU=|(Feat) Space Station
 # (Feat) Terrain Height Tool
