@@ -121,7 +121,7 @@ Note:
 ### Type: Released
 
 ### Multiplayer compatibility:
-- This mod is not fully multiplayer compatible. It only works for the host, but clients should not experience any problems.
+- This mod is not fully multiplayer compatible. It only works for the host, but clients should not experience any problems. Clients need the mod as well, otherwise they are stuck in the loading screen for 2 minutes!
 
 ## (Feat) Space Station
 Adds a new "Planet": space
