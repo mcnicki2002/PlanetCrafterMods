@@ -46,6 +46,7 @@ namespace Nicki0.FeatPortalTeleport {
 		public static ConfigEntry<string> configItemsCost;
 		public static ConfigEntry<bool> configRequireFullTerraformation;
 		public static ConfigEntry<bool> configDisableOtherRequirements;
+		public static ConfigEntry<bool> configTriggerStoryEventsAfterPlanetSwitch;
 		public static ConfigEntry<bool> configKeepPortalsOnMoon;
 
 		public static ConfigEntry<bool> configKeepPortalsOpen;
@@ -57,6 +58,7 @@ namespace Nicki0.FeatPortalTeleport {
 		static MethodInfo method_PlanetNetworkLoader_SwitchToPlanetClientRpc;
 		static MethodInfo method_MachinePortalGenerator_SetParticles;
 		static MethodInfo method_UiWindowPortalGenerator_SelectFirstButtonInGrid;
+		static MethodInfo method_StoryEventsHandler_TryToLaunchAnEventLogic;
 		static AccessTools.FieldRef<Recipe, List<Group>> field_Recipe_recipe;
 		static AccessTools.FieldRef<WorldInstanceHandler, List<MachinePortalGenerator>> field_WorldInstanceHandler__allMachinePortalGenerator;
 		static AccessTools.FieldRef<PopupsHandler, List<PopupData>> field_PopupsHandler_popupsToPop;
@@ -76,6 +78,7 @@ namespace Nicki0.FeatPortalTeleport {
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
 			configDisableOtherRequirements = Config.Bind<bool>("General", "disableOtherRequirements", false, "Disables other requirements, e.g. minimum Terraformation / Purification requirements.");
 			configEnableDebug = Config.Bind<bool>("Debug", "enableDebug", false, "Enable debug messages");
+			configTriggerStoryEventsAfterPlanetSwitch = Config.Bind<bool>("Debug", "enableStoryAcceleration", false, "Story events get triggered after the planet a loaded, such that e.g. islands on Aqualis rise faster.");
 			configKeepPortalsOnMoon = Config.Bind<bool>("Debug", "keepPortalsOnMoons", false, "Savety mechanism. Portals on Moons will be replaced by placeholder signs if the mod doesn't get loaded, as they aren't constructible on moons in the base game.");
 
 
@@ -92,6 +95,7 @@ namespace Nicki0.FeatPortalTeleport {
 			method_PlanetNetworkLoader_SwitchToPlanetClientRpc = AccessTools.Method(typeof(PlanetNetworkLoader), "SwitchToPlanetClientRpc");
 			method_MachinePortalGenerator_SetParticles = AccessTools.Method(typeof(MachinePortalGenerator), "SetParticles");
 			method_UiWindowPortalGenerator_SelectFirstButtonInGrid = AccessTools.Method(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid");
+			method_StoryEventsHandler_TryToLaunchAnEventLogic = AccessTools.Method(typeof(StoryEventsHandler), "TryToLaunchAnEventLogic");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
 			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
@@ -380,8 +384,9 @@ namespace Nicki0.FeatPortalTeleport {
 
 			SetUiVisibility(true, __instance);
 		}
-		private static IEnumerator ExecuteLater(Action toExecute, int waitFrames = 1) {
+		private static IEnumerator ExecuteLater(Action toExecute, int waitFrames = 1, int waitSeconds = 0) {
 			//yield return new WaitForSeconds(0.01f);
+			if (waitSeconds > 0) yield return new WaitForSeconds(waitSeconds);
 			for (int i = 0; i < waitFrames; i++) yield return new WaitForEndOfFrame();
 			toExecute.Invoke();
 		}
@@ -670,6 +675,15 @@ namespace Nicki0.FeatPortalTeleport {
 
 			Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 
+			// Islands on Aqualis only rise when the player is on them. This should accelerate it.
+			if (configTriggerStoryEventsAfterPlanetSwitch.Value) {
+				Instance.StartCoroutine(ExecuteLater(delegate () {
+					for (int i = 0; i < 10; i++) {
+						method_StoryEventsHandler_TryToLaunchAnEventLogic.Invoke(Managers.GetManager<StoryEventsHandler>(), []);
+					}
+				}, 10, 1));
+			}
+			
 			// clean stateObject
 			Dictionary<int, int> newWoIdToPlanetDict = new Dictionary<int, int>();
 			foreach (int woid in WorldObjectsHandler.Instance.GetAllWorldObjectOfGroup(GroupsHandler.GetGroupViaId("PortalGenerator1")).Select(e => e.GetId())) {
