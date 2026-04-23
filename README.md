@@ -18,6 +18,7 @@ The latest versions of the mods can be found in the releases https://github.com/
 - [(Item) Wall Aquarium](#item-wall-aquarium)
 - [(QoL) Auto-Logistics](#qol-auto-logistics)
 - [(QoL) Meteor Debris Config](#qol-meteor-debris-config)
+- [(QoL) Move Containers](#qol-move-containers)
 - [(QoL) Skip Tutorial](#qol-skip-tutorial)
 - [(UI) Change Music](#ui-change-music)
 - [(UI) Confine Mouse](#ui-confine-mouse)
@@ -323,6 +324,15 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 ### Type: Requested
 ### Multiplayer compatibility:
 - Not yet tested
+
+
+## (QoL) Move Containers
+### Features:
+- Hold the Accessibility Key (default: Ctrl) + Alt, click on a container, move and rotate the ghost and place it down to move the container.
+### Config: (/)
+### Type: Released/Proof of concept
+### Multiplayer compatibility:
+- Does not work
 
 
 ## (QoL) Skip Tutorial
