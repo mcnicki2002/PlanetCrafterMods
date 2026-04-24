@@ -11,13 +11,13 @@ Nicki0.theplanetcraftermods.FeatLargeScreens=1.0.2.10||(Feat) Large Screens
 # (Feat) Planet Selector
 Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.12||(Feat) Planet Selector
 # (Feat) Portal Travel
-Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.11.0||(Feat) Portal Travel
+Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.12.0||(Feat) Portal Travel
 # (Feat) Space Station
 Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10||(Feat) Space Station
 # (Feat) Terrain Height Tool
 Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.10||(Feat) Terrain Height Tool
 # (Feat) Underground Base
-Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.3.0||(Feat) Underground Base
+Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.4.0||(Feat) Underground Base
 # (Fix) Rocket Return
 Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0||(Fix) Rocket Return
 # (Fix) Water Wave Config
@@ -28,6 +28,8 @@ Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.3.0||(Item) More Fuses
 Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.10||(QoL) Auto-Logistics
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10||(QoL) Meteor Debris Config
+# (QoL) Move Containers
+Nicki0.theplanetcraftermods.QoLMoveContainers=1.0.0.0||(QoL) Move Containers
 # (QoL) Skip Tutorial
 Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.0.11||(QoL) Skip Tutorial
 # (UI) Change Music

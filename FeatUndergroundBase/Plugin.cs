@@ -24,8 +24,6 @@ namespace Nicki0.FeatUndergroundBase {
 		 * 
 		 * Rock texture on other domes
 		 * 
-		 * - Add rock to rounded glass
-		 * - Add rock to aquarium glass
 		 * 
 		 * Move bottom death barrier (in a better way)
 		 * 
@@ -73,6 +71,8 @@ namespace Nicki0.FeatUndergroundBase {
 			if (!isInitialized) {
 				GameObject rock02 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_02").gameObject;
 				GameObject rock10 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_10").gameObject;
+				GameObject rock12 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Obstacle_12").gameObject;
+				
 				/*
 				 * Biodome2/Biodome2/Rocks/Boulder_02
 				 * localPos: -0.9418, 1.7855, -3.2127
@@ -110,6 +110,10 @@ namespace Nicki0.FeatUndergroundBase {
 				 * scale: 3.9782f, 0.1f, 2.16f
 				 */
 				GameObject rockForRoofWindow = Instantiate(rock10);
+				foreach (var renderer in rockForRoofWindow.GetComponentsInChildren<Renderer>()) {
+					renderer.material = Instantiate(renderer.material);
+					renderer.material.SetFloat("_Terraformation", 0);
+				}
 				rockForRoofWindow.transform.SetParent(___groupsData.Find(e => e.id == "FloorGlass").associatedGameObject.transform);
 				rockForRoofWindow.transform.localPosition = new Vector3(2.8109f, 4.8545f, 3.3346f);
 				rockForRoofWindow.transform.localRotation = Quaternion.Euler(0.2531f, 180, 179.4737f);
@@ -145,15 +149,101 @@ namespace Nicki0.FeatUndergroundBase {
 				rockForMegadome.transform.localScale = new Vector3(7.6836f, 0.1f, 3.4945f);
 				rockForMegadome.AddComponent<DestroyIfGhost>();
 				rockForMegadome.AddComponent<Nicki0_DestroyIfAboveGround>();
-				rockForMegadome.AddComponent<Nicki0_HideWhenAgainstLivable>();
+				//rockForMegadome.AddComponent<Nicki0_HideWhenAgainstLivable>();
 				/*
-				 * TODO
-				 * - Put rock infront of Biolab panels
-				 * - See if it's possible to put rocks infront of podAngle
+				 * From Left to Right:
+				 * 1.9055, 2.7346, -3.7091
+				 * 90, 8.4363, 0
+				 * 1.2909, 0.1, 1.0364
+				 * ---
+				 * 1.1127, 2.4909, -3.5018
+				 * 0.4949, 288.4479, 269.4908
+				 * 1.7527, 0.01, 1.1309
+				 * ---
+				 * -0.9564, 2.5273, -2.5636
+				 * 270.3466, 34.4343, 180.0003
+				 * 1.5564, 0.1, 1.0655
 				 * 
-				 * - Modify / patch ladder to only lead to places with oxygen when below the surface
-				 * - How to build down?
+				 * 
+				 * 
+				 * -2.7091, 2.7528, -0.7673
+				 * 90, 56.8692, 0
+				 * 1.5928, 0.1, 1.0655
+				 * ---
+				 * -3.7018, 2.8109, 1.38
+				 * 2.4919, 158.8116, 90.5803
+				 * 1.7527, 0.01, 1.1309
+				 * ---
+				 * -3.9054, 2.6255, 2.0236
+				 * 270.7078, 286.31, 337.4538
+				 * 1.3854, 0.1, 1.0364
 				 */
+				(Vector3 localPos, Quaternion localRotation, Vector3 localScale)[] rockSettingsForPodAngle = [
+					(new Vector3(1.9055f,	2.7346f, -3.7091f),	Quaternion.Euler(90,		8.4363f,	0),			new Vector3(1.2909f, 0.1f,	1.0364f)),
+					(new Vector3(1.1127f,	2.4909f, -3.5018f),	Quaternion.Euler(0.4949f,	288.4479f,	269.4908f), new Vector3(1.7527f, 0.01f, 1.1309f)),
+					(new Vector3(-0.9564f,	2.5273f, -2.5636f),	Quaternion.Euler(270.3466f, 34.4343f,	180.0003f), new Vector3(1.5564f, 0.1f,	1.0655f)),
+					(new Vector3(-2.7091f,	2.7528f, -0.7673f),	Quaternion.Euler(90,		56.8692f,	0),			new Vector3(1.5928f, 0.1f,	1.0655f)),
+					(new Vector3(-3.7018f,	2.8109f, 1.38f),	Quaternion.Euler(2.4919f,	158.8116f,	90.5803f),	new Vector3(1.7527f, 0.01f, 1.1309f)),
+					(new Vector3(-3.9054f,	2.6255f, 2.0236f),	Quaternion.Euler(270.7078f, 286.31f,	337.4538f), new Vector3(1.3854f, 0.1f,	1.0364f))
+					];
+				GameObject podAngleGameObject = ___groupsData.Find(e => e.id == "podAngle").associatedGameObject;
+				int livCompCornerCtr = 0;
+				foreach (var setting in rockSettingsForPodAngle) {
+					GameObject rockForPodAngle = Instantiate(rock10);
+					rockForPodAngle.name = "rock10_" + (livCompCornerCtr++);
+					rockForPodAngle.transform.SetParent(podAngleGameObject.transform);
+					rockForPodAngle.transform.localPosition = setting.localPos;
+					rockForPodAngle.transform.localRotation = setting.localRotation;
+					rockForPodAngle.transform.localScale = setting.localScale;
+					rockForPodAngle.AddComponent<DestroyIfGhost>();
+					rockForPodAngle.AddComponent<Nicki0_DestroyIfAboveGround>();
+					rockForPodAngle.AddComponent<Nicki0_HideWhenAgainstLivable>();
+				}
+
+				/*
+				 * -0.8836f, 2.0291f, -3.1327f
+				 * 0, 0, 270
+				 * 2.5963f, 0.1f, 2.1563f
+				 */
+				GameObject rockForWallWaterLife = Instantiate(rock10);
+				rockForWallWaterLife.transform.SetParent(Managers.GetManager<PanelsResources>().GetPanelGameObject(DataConfig.BuildPanelSubType.WallWaterLife).transform);
+				rockForWallWaterLife.transform.localPosition = new Vector3(-0.8836f, 2.0291f, -3.1327f);
+				rockForWallWaterLife.transform.localRotation = Quaternion.Euler(0, 0, 270);
+				rockForWallWaterLife.transform.localScale = new Vector3(2.5963f, 0.1f, 2.1563f);
+				rockForWallWaterLife.AddComponent<DestroyIfGhost>();
+				rockForWallWaterLife.AddComponent<Nicki0_DestroyIfAboveGround>();
+				rockForWallWaterLife.AddComponent<Nicki0_HideWhenAgainstLivable>();
+
+				/* Biodome2(Clone)/Biodome2/Rocks/Obstacle_12
+				 * 3.4709f, -0.98f, 3.5055f
+				 * 0, 200.4151f, 0
+				 * 2.6f, 0.1f, 2.7764f
+				 * 
+				 * 3.4709f, -0.0382f, 3.531f
+				 * 0, 249.3241f, 180
+				 * 2.7f, 0.1f, 2.7764f
+				 */
+				(Vector3 localPos, Quaternion localRotation, Vector3 localScale)[] rockSettingsForFloorAngleGlass = [
+					(new Vector3(3.4709f, -0.98f, 3.5055f), Quaternion.Euler(0, 200.4151f, 0), new Vector3(2.6f, 0.1f, 2.7764f)),
+					(new Vector3(3.4709f, -0.0382f, 3.531f), Quaternion.Euler(0, 249.3241f, 180), new Vector3(2.7f, 0.1f, 2.7764f))
+					];
+				GameObject floorAngleGlassGameObject = Managers.GetManager<PanelsResources>().GetPanelGameObject(DataConfig.BuildPanelSubType.FloorAngleGlass);
+				foreach (var setting in rockSettingsForFloorAngleGlass) {
+					GameObject rockForFloorAngleGlass = Instantiate(rock12);
+					foreach (var renderer in rockForFloorAngleGlass.GetComponentsInChildren<Renderer>()) {
+						renderer.material = Instantiate(renderer.material);
+						renderer.material.SetFloat("_Terraformation", 0);
+					}
+					rockForFloorAngleGlass.transform.SetParent(floorAngleGlassGameObject.transform);
+					rockForFloorAngleGlass.transform.localPosition = setting.localPos;
+					rockForFloorAngleGlass.transform.localRotation = setting.localRotation;
+					rockForFloorAngleGlass.transform.localScale = setting.localScale;
+					rockForFloorAngleGlass.AddComponent<DestroyIfGhost>();
+					rockForFloorAngleGlass.AddComponent<Nicki0_DestroyIfAboveGround>();
+					rockForFloorAngleGlass.AddComponent<Nicki0_HideWhenAgainstLivable>();
+				}
+
+
 				//___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.AddComponent<ConstraintAboveGround>();
 				/*List<string> groupsToDisableBelowTheSurface = [
 					"Pod9xB",
@@ -178,7 +268,7 @@ namespace Nicki0.FeatUndergroundBase {
 					"Pod9xB",
 					"biodome", // <- glass on inside is also replaced...
 					"Megadome1", // <- -"-
-					"podAngle"
+					//"podAngle"
 				];
 				//foreach (string id in groupsWithRockAsWindows) {
 				//	___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<ChangeGlassToRockIfBelowGround>();
@@ -415,6 +505,9 @@ namespace Nicki0.FeatUndergroundBase {
 			//if (this.transform.position.y >= SURFACE_HEIGHT) Destroy(this.gameObject);
 
 			Vector3 position = this.transform.position + (-2) * this.transform.up;
+			if (Vector3.Angle(this.transform.up, Vector3.down) < 10) {
+				position = this.transform.position + (2) * this.transform.up; // When the stone is on the top, then the raycast hits the glass itself, so the position is moved here.
+			}
 
 			bool terrainAbove = Physics.Raycast(position + new Vector3(0, 500, 0), Vector3.down, 500, LayerMask.GetMask(new string[] { GameConfig.layerTerrainName }));
 			/*
