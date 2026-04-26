@@ -3,7 +3,7 @@ Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0||(Cheat) Custom 
 # (Cheat) Drone Speed
 Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.0||(Cheat) Drone Speed
 # (Cheat) Machine Config
-Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.9.0||(Cheat) Machine Config
+Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.9.1||(Cheat) Machine Config
 # (Cheat) Store Toxins In Toxic Storage
 Nicki0.theplanetcraftermods.CheatStoreToxinsInToxicStorage=1.0.0.10||(Cheat) Store Toxins In Toxic Storage
 # (Feat) Large Screens

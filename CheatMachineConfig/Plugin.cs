@@ -232,7 +232,7 @@ namespace Nicki0.CheatMachineConfig {
 								if (ceMachineDisintegratorTime.Value >= 0) componentMachineDisintegrator.breakEveryXSec = ceMachineDisintegratorTime.Value;
 							}
 							if (componentMachineDisintegrator != null && machineDisintegrator_maxItemCount != null && machineDisintegrator_maxItemCount.TryGetValue(groupData.id, out ConfigEntry<int> ceMachineDisintegratorItemCount)) {
-								if (ceMachineDisintegratorItemCount.Value >= 0) componentMachineDisintegrator.breakEveryXSec = ceMachineDisintegratorItemCount.Value;
+								if (ceMachineDisintegratorItemCount.Value >= 0) componentMachineDisintegrator.giveXIngredientsBack = ceMachineDisintegratorItemCount.Value;
 							}
 							break;
 						}
