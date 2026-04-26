@@ -131,7 +131,11 @@
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(ZipOutput)\all\Nicki0 - $(Description)" />
 		<Copy SourceFiles="@(AdditionalModFiles)" DestinationFolder="$(ZipOutput)\all\Nicki0 - $(Description)" />
 	</Target>
-	
+
+	<ItemGroup Condition="'$(Deploy)' == 'true'">
+		<Compile Include="../Nicki0Lib/Utils.cs" Link="Utils.cs" />
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(Deploy)' == 'true'">
 		<Compile Include="$(akarnokdLibCommon)\ModVersionCheck.cs" Link="ModVersionCheck.cs" />
 		<Compile Include="$(akarnokdLibCommon)\HarmonyIntegrityCheck.cs" Link="HarmonyIntegrityCheck.cs" />

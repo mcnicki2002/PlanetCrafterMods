@@ -376,7 +376,7 @@ namespace Nicki0.FeatPortalTeleport {
 				};
 
 				if (buttonTabPortalTravel == null) {// Hide buttonTabPortalTravel because on first load, buttonTabPortalTravel == null
-					Instance.StartCoroutine(ExecuteLater(hideButtonTabPortalTravelOnOpen));
+					Instance.StartCoroutine(Utils.ExecuteLater(hideButtonTabPortalTravelOnOpen));
 				} else {
 					hideButtonTabPortalTravelOnOpen();
 				}
@@ -384,12 +384,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			SetUiVisibility(true, __instance);
 		}
-		private static IEnumerator ExecuteLater(Action toExecute, int waitFrames = 1, int waitSeconds = 0) {
-			//yield return new WaitForSeconds(0.01f);
-			if (waitSeconds > 0) yield return new WaitForSeconds(waitSeconds);
-			for (int i = 0; i < waitFrames; i++) yield return new WaitForEndOfFrame();
-			toExecute.Invoke();
-		}
+		
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), nameof(UiWindowPortalGenerator.ShowOpenedInstance))]
@@ -406,18 +401,18 @@ namespace Nicki0.FeatPortalTeleport {
 					if (buttonTabPortalTravel != null) {
 						buttonTabPortalTravel.SetActive(false);
 					} else {
-						Instance.StartCoroutine(ExecuteLater(delegate () { if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false); }));
+						Instance.StartCoroutine(Utils.ExecuteLater(delegate () { if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false); }));
 					}
 					if (buttonTabProceduralInstance != null) {
 						buttonTabProceduralInstance.SetActive(false);
 					} else {
-						Instance.StartCoroutine(ExecuteLater(delegate () { if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false); }));
+						Instance.StartCoroutine(Utils.ExecuteLater(delegate () { if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false); }));
 					}
 
 					return;
 				}
 				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal), out int planetHash)) {
-					Instance.StartCoroutine(ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
+					Instance.StartCoroutine(Utils.ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
 				}
 			}
 
@@ -677,7 +672,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			// Islands on Aqualis only rise when the player is on them. This should accelerate it.
 			if (configTriggerStoryEventsAfterPlanetSwitch.Value) {
-				Instance.StartCoroutine(ExecuteLater(delegate () {
+				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 					for (int i = 0; i < 10; i++) {
 						method_StoryEventsHandler_TryToLaunchAnEventLogic.Invoke(Managers.GetManager<StoryEventsHandler>(), []);
 					}
@@ -839,11 +834,11 @@ namespace Nicki0.FeatPortalTeleport {
 			Action planetLoadedReplacement = null;
 			planetLoadedReplacement = new Action(delegate () {
 				Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
-				Instance.StartCoroutine(ExecuteLater(delegate () {
+				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 					Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 					float defaultDistance = Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck;
 					Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
-					Instance.StartCoroutine(ExecuteLater(delegate () {
+					Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 						Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
 					}, 100));
 				}));
@@ -1060,7 +1055,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			foreach (ParticleSystem particle in ___particlesOnOpen) {
 				ParticleSystemRenderer particleCircles = particle.GetComponent<ParticleSystemRenderer>();
-				Instance.StartCoroutine(ExecuteLater(delegate () {
+				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 
 					if (__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
 						SetMaterialColor(particleCircles, null);
@@ -1078,7 +1073,7 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 			if (playParticles) { // Color is only changed in next frame, so particles are started only after that
 				playParticles = false;
-				Instance.StartCoroutine(ExecuteLater(delegate () {
+				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 					foreach (ParticleSystem particleSystem in ___particlesOnOpen) {
 						particleSystem.Play();
 					}
@@ -1186,7 +1181,7 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
 		static void Postfix_UiWindowPortalGenerator_SelectFirstButtonInGrid(UiWindowPortalGenerator __instance) {
 			// Select procedural instance buttons when no button in the grid is available (e.g. when opening the PortalGenerator UI on Aqualis)
-			Instance.StartCoroutine(ExecuteLater(delegate () {
+			Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 				if (GamepadConfig.Instance.GetIsUsingController()) {
 					Selectable componentInChildren = __instance.gridForInstances.GetComponentInChildren<Selectable>();
 					if (componentInChildren == null) {
