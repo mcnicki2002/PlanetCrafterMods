@@ -301,6 +301,7 @@ namespace Nicki0.CheatMachineConfig {
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachineRocketBackAndForth), nameof(MachineRocketBackAndForth.SetInventoryRocketBackAndForth))]
 		public static void MachineRocketBackAndForth_SetInventoryRocketBackAndForth(MachineRocketBackAndForth __instance, Inventory inventory) {
+			if (inventory == null) return;
 			if (__instance is MachineRocketBackAndForthTrade) {
 				if (config_TradePlatform1_invSize.Value >= 0) inventory.SetSize(config_TradePlatform1_invSize.Value);
 			} else if (__instance is MachineRocketBackAndForthInterplanetaryExchange) {
