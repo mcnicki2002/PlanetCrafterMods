@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using static UnityEngine.UIElements.TreeViewReorderableDragAndDropController;
 
 namespace Nicki0.CheatMachineConfig {
 
@@ -295,6 +296,16 @@ namespace Nicki0.CheatMachineConfig {
 		}
 		public static float VehicleStationCooldown() {
 			return config_VehicleStation_time.Value >= 0 ? config_VehicleStation_time.Value : 600;
+		}
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(MachineRocketBackAndForth), nameof(MachineRocketBackAndForth.SetInventoryRocketBackAndForth))]
+		public static void MachineRocketBackAndForth_SetInventoryRocketBackAndForth(MachineRocketBackAndForth __instance, Inventory inventory) {
+			if (__instance is MachineRocketBackAndForthTrade) {
+				if (config_TradePlatform1_invSize.Value >= 0) inventory.SetSize(config_TradePlatform1_invSize.Value);
+			} else if (__instance is MachineRocketBackAndForthInterplanetaryExchange) {
+				if (config_InterplanetaryExchangePlatform1_invSize.Value >= 0) inventory.SetSize(config_InterplanetaryExchangePlatform1_invSize.Value);
+			}
 		}
 	}
 }
