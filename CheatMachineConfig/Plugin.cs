@@ -27,23 +27,29 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<string> persistentData;
 
 
-		public static ConfigEntry<float> autocrafter_time;
-		public static ConfigEntry<float> autocrafter_range;
-		public static ConfigEntry<float> incubator_time;
-		public static ConfigEntry<float> dnaManipulator_time;
-		public static ConfigEntry<float> drone1_speed;
-		public static ConfigEntry<float> drone2_speed;
-		public static ConfigEntry<int> t1machineOptimizer_affectedMachineCount;
-		public static ConfigEntry<float> t1machineOptimizer_range;
-		public static ConfigEntry<int> t2machineOptimizer_affectedMachineCount;
-		public static ConfigEntry<float> t2machineOptimizer_range;
-		public static ConfigEntry<float> TradePlatform1_time;
-		public static ConfigEntry<float> InterplanetaryExchangePlatform1_time;
-		public static ConfigEntry<float> VehicleStation_time;
+		public static ConfigEntry<float> config_autocrafter_time;
+		public static ConfigEntry<float> config_autocrafter_range;
+		public static ConfigEntry<float> config_incubator_time;
+		public static ConfigEntry<float> config_dnaManipulator_time;
+		public static ConfigEntry<float> config_drone1_speed;
+		public static ConfigEntry<float> config_drone2_speed;
+		public static ConfigEntry<int> config_t1machineOptimizer_affectedMachineCount;
+		public static ConfigEntry<float> config_t1machineOptimizer_range;
+		public static ConfigEntry<int> config_t2machineOptimizer_affectedMachineCount;
+		public static ConfigEntry<float> config_t2machineOptimizer_range;
+		public static ConfigEntry<float> config_TradePlatform1_time;
+		public static ConfigEntry<float> config_TradePlatform1_returnSpeed;
+		public static ConfigEntry<float> config_InterplanetaryExchangePlatform1_time;
+		public static ConfigEntry<float> config_InterplanetaryExchangePlatform1_returnSpeed;
+		public static ConfigEntry<float> config_VehicleStation_time;
+
+		// Should eventually be moved to a different mod that configures all group values
+		public static ConfigEntry<int> config_TradePlatform1_invSize;
+		public static ConfigEntry<int> config_InterplanetaryExchangePlatform1_invSize;
 
 		private void Awake() {
 			log = Logger;
-			Instance = this;
+			Instance = this;MachineRocket a;
 
 			if (this.IsNewVersion(out Version v)) {
 				if (v < new Version("1.0.9.0")) {
@@ -63,20 +69,24 @@ namespace Nicki0.CheatMachineConfig {
 
 
 
-			autocrafter_time = Config.Bind<float>("Auto-Crafter", "AutoCrafter_time", -1, "[Default: 5] Time to craft an item (in seconds)");
-			autocrafter_range = Config.Bind<float>("Auto-Crafter", "AutoCrafter_range", -1, "[Default: 20] Range of auto crafter");
-			incubator_time = Config.Bind<float>("Incubator", "Incubator_time", -1, "[Default: 1] Time to incubate an item (in minutes)");
-			dnaManipulator_time = Config.Bind<float>("DNA_Manipulator", "DnaManipulator_time", -1, "[Default: 4] Time to dna-manipulate an item (in minutes)");
-			drone1_speed = Config.Bind<float>("Drone", "T1Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
-			drone2_speed = Config.Bind<float>("Drone", "T2Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
-			t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T1MachineOptimizer_MachineCount", -1, "[Default: 5] Optimization Capacity / Max amount of machines per fuse");
-			t1machineOptimizer_range = Config.Bind<float>("Machine_Optimizer", "T1MachineOptimizer_range", -1, "[Default: 120] Range of machine optimizer");
-			t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T2MachineOptimizer_MachineCount", -1, "[Default: 8] Optimization Capacity / Max amount of machines per fuse");
-			t2machineOptimizer_range = Config.Bind<float>("Machine_Optimizer", "T2MachineOptimizer_range", -1, "[Default: 250] Range of machine optimizer");
-			TradePlatform1_time = Config.Bind<float>("RocketBackAndForth", "TradePlatform1_time", -1, "[Default: 600] Time to return of the trade rocket");
-			InterplanetaryExchangePlatform1_time = Config.Bind<float>("RocketBackAndForth", "InterplanetaryExchangePlatform1_time", -1, "[Default: 600] Time to return of the interplanetary exchange shuttle");
-			VehicleStation_time = Config.Bind<float>("VehicleStation", "VehicleStationCooldown_time", -1, "[Default: 600] Cooldown time of the vehicle station");
+			config_autocrafter_time = Config.Bind<float>("Auto-Crafter", "AutoCrafter_time", -1, "[Default: 5] Time to craft an item (in seconds)");
+			config_autocrafter_range = Config.Bind<float>("Auto-Crafter", "AutoCrafter_range", -1, "[Default: 20] Range of auto crafter");
+			config_incubator_time = Config.Bind<float>("Incubator", "Incubator_time", -1, "[Default: 1] Time to incubate an item (in minutes)");
+			config_dnaManipulator_time = Config.Bind<float>("DNA_Manipulator", "DnaManipulator_time", -1, "[Default: 4] Time to dna-manipulate an item (in minutes)");
+			config_drone1_speed = Config.Bind<float>("Drone", "T1Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
+			config_drone2_speed = Config.Bind<float>("Drone", "T2Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
+			config_t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T1MachineOptimizer_MachineCount", -1, "[Default: 5] Optimization Capacity / Max amount of machines per fuse");
+			config_t1machineOptimizer_range = Config.Bind<float>("Machine_Optimizer", "T1MachineOptimizer_range", -1, "[Default: 120] Range of machine optimizer");
+			config_t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T2MachineOptimizer_MachineCount", -1, "[Default: 8] Optimization Capacity / Max amount of machines per fuse");
+			config_t2machineOptimizer_range = Config.Bind<float>("Machine_Optimizer", "T2MachineOptimizer_range", -1, "[Default: 250] Range of machine optimizer");
+			config_TradePlatform1_time = Config.Bind<float>("RocketBackAndForth", "TradePlatform1_time", -1, "[Default: 600] Time to return of the trade rocket");
+			config_TradePlatform1_returnSpeed = Config.Bind<float>("RocketBackAndForth", "TradePlatform1_langingSpeed", -1, "[Default: 20] Landing speed of the trade rocket (in m/s)");
+			config_InterplanetaryExchangePlatform1_time = Config.Bind<float>("RocketBackAndForth", "InterplanetaryExchangePlatform1_time", -1, "[Default: 600] Time to return of the interplanetary exchange shuttle");
+			config_InterplanetaryExchangePlatform1_returnSpeed = Config.Bind<float>("RocketBackAndForth", "InterplanetaryExchangePlatform_langingSpeed", -1, "[Default: 20] Landing speed of the shuttle (in m/s)");
+			config_VehicleStation_time = Config.Bind<float>("VehicleStation", "VehicleStationCooldown_time", -1, "[Default: 600] Cooldown time of the vehicle station");
 
+			config_TradePlatform1_invSize = Config.Bind<int>("RocketBackAndForth", "TradePlatform1_inventorySize", -1, "[Default: 25] Trade rocket inventory size");
+			config_InterplanetaryExchangePlatform1_invSize = Config.Bind<int>("RocketBackAndForth", "InterplanetaryExchangePlatform1_inventorySize", -1, "[Default: 25] Interplanetary exchange shuttle inventory size");
 
 
 			// Plugin startup logic
@@ -104,15 +114,6 @@ namespace Nicki0.CheatMachineConfig {
 		private static float? baseDistanceMinToTarget_Drone2;
 		private static float? baseRotationSpeed_Drone2;
 
-		private static float? autoCrafter_baseRange;
-		private static Vector3? autoCrafter_HorizontalRingSize;
-		private static Vector3? autoCrafter_VerticalRingSize;
-
-		private static float? optimizer1_baseRange;
-		private static Vector3? optimizer1_HorizontalRingSize;
-		private static float? optimizer2_baseRange;
-		private static Vector3? optimizer2_HorizontalRingSize;
-
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
@@ -124,32 +125,23 @@ namespace Nicki0.CheatMachineConfig {
 				switch (groupData.id) {
 					case "AutoCrafter1": {
 							MachineAutoCrafter component = associatedGameObject.GetComponentInChildren<MachineAutoCrafter>();
-							if (autocrafter_time.Value >= 0) component.craftEveryXSec = autocrafter_time.Value;
-							if (autocrafter_range.Value >= 0) {
-								autoCrafter_baseRange ??= component.range;
-								component.range = autocrafter_range.Value;
-								Transform autoCrafter_HorizontalRingTransform = associatedGameObject.transform.Find("RangeViewer");
-								autoCrafter_HorizontalRingSize ??= autoCrafter_HorizontalRingTransform.localScale;
-								Vector3 newScaleHor = (component.range / autoCrafter_baseRange.Value) * autoCrafter_HorizontalRingSize.Value;
-								newScaleHor.y = 1;
-								autoCrafter_HorizontalRingTransform.localScale = newScaleHor;
-
-								Transform autoCrafter_VerticalRingTransform = associatedGameObject.transform.Find("RangeViewer (1)");
-								autoCrafter_VerticalRingSize ??= autoCrafter_VerticalRingTransform.localScale;
-								Vector3 newScaleVert = (component.range / autoCrafter_baseRange.Value) * autoCrafter_HorizontalRingSize.Value;
-								newScaleVert.y = 1;
-								autoCrafter_VerticalRingTransform.localScale = newScaleVert;
+							if (config_autocrafter_time.Value >= 0) component.craftEveryXSec = config_autocrafter_time.Value;
+							if (config_autocrafter_range.Value >= 0) {
+								component.range = config_autocrafter_range.Value;
+								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+									rangeComp.range = component.range;
+								}
 							}
 							break;
 						}
 					case "Incubator1": {
 							MachineGrowerIfLinkedGroup component = associatedGameObject.GetComponentInChildren<MachineGrowerIfLinkedGroup>();
-							if (incubator_time.Value >= 0) component.timeToGrow = incubator_time.Value;
+							if (config_incubator_time.Value >= 0) component.timeToGrow = config_incubator_time.Value;
 							break;
 						}
 					case "GeneticManipulator1": {
 							MachineGrowerIfLinkedGroup component = associatedGameObject.GetComponentInChildren<MachineGrowerIfLinkedGroup>();
-							if (dnaManipulator_time.Value >= 0) component.timeToGrow = dnaManipulator_time.Value;
+							if (config_dnaManipulator_time.Value >= 0) component.timeToGrow = config_dnaManipulator_time.Value;
 							break;
 						}
 					case "Drone1": {
@@ -158,7 +150,7 @@ namespace Nicki0.CheatMachineConfig {
 							baseDistanceMinToTarget_Drone1 ??= component.distanceMinToTarget;
 							baseRotationSpeed_Drone1 ??= component.rotationSpeed;
 
-							float multiplier = drone1_speed.Value;
+							float multiplier = config_drone1_speed.Value;
 							if (multiplier < 0 || multiplier == 1) break;
 							component.forwardSpeed = multiplier * baseForwardSpeed_Drone1.Value;
 							component.distanceMinToTarget = multiplier * baseDistanceMinToTarget_Drone1.Value;
@@ -171,7 +163,7 @@ namespace Nicki0.CheatMachineConfig {
 							baseDistanceMinToTarget_Drone2 ??= component.distanceMinToTarget;
 							baseRotationSpeed_Drone2 ??= component.rotationSpeed;
 
-							float multiplier = drone2_speed.Value;
+							float multiplier = config_drone2_speed.Value;
 							if (multiplier < 0 || multiplier == 1) break;
 							component.forwardSpeed = multiplier * baseForwardSpeed_Drone2.Value;
 							component.distanceMinToTarget = multiplier * baseDistanceMinToTarget_Drone2.Value;
@@ -180,42 +172,46 @@ namespace Nicki0.CheatMachineConfig {
 						}
 					case "Optimizer1": {
 							MachineOptimizer component = associatedGameObject.GetComponentInChildren<MachineOptimizer>();
-							if (t1machineOptimizer_range.Value >= 0) {
-								optimizer1_baseRange ??= component.range;
-								component.range = t1machineOptimizer_range.Value;
+							if (config_t1machineOptimizer_range.Value >= 0) {
+								component.range = config_t1machineOptimizer_range.Value;
 
-								Transform transform = associatedGameObject.transform.Find("RangeViewer");
-								optimizer1_HorizontalRingSize ??= transform.localScale;
-								Vector3 newScale = (component.range / optimizer1_baseRange.Value) * optimizer1_HorizontalRingSize.Value;
-								newScale.y = 1;
-								transform.localScale = newScale;
+								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+									rangeComp.range = component.range;
+								}
 							}
-							if (t1machineOptimizer_affectedMachineCount.Value >= 0) component.maxWorldObjectPerFuse = t1machineOptimizer_affectedMachineCount.Value;
+							if (config_t1machineOptimizer_affectedMachineCount.Value >= 0) component.maxWorldObjectPerFuse = config_t1machineOptimizer_affectedMachineCount.Value;
 							break;
 						}
 					case "Optimizer2": {
 							MachineOptimizer component = associatedGameObject.GetComponentInChildren<MachineOptimizer>();
-							if (t2machineOptimizer_range.Value >= 0) {
-								optimizer2_baseRange ??= component.range;
-								component.range = t2machineOptimizer_range.Value;
+							if (config_t2machineOptimizer_range.Value >= 0) {
+								component.range = config_t2machineOptimizer_range.Value;
 
-								Transform transform = associatedGameObject.transform.Find("RangeViewer");
-								optimizer2_HorizontalRingSize ??= transform.localScale;
-								Vector3 newScale = (component.range / optimizer2_baseRange.Value) * optimizer2_HorizontalRingSize.Value;
-								newScale.y = 1;
-								transform.localScale = newScale;
+								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+									rangeComp.range = component.range;
+								}
 							}
-							if (t2machineOptimizer_affectedMachineCount.Value >= 0) component.maxWorldObjectPerFuse = t2machineOptimizer_affectedMachineCount.Value;
+							if (config_t2machineOptimizer_affectedMachineCount.Value >= 0) component.maxWorldObjectPerFuse = config_t2machineOptimizer_affectedMachineCount.Value;
 							break;
 						}
 					case "TradePlatform1": {
 							MachineRocketBackAndForthTrade component = associatedGameObject.GetComponentInChildren<MachineRocketBackAndForthTrade>();
-							if (TradePlatform1_time.Value >= 0) component.updateGrowthEvery = TradePlatform1_time.Value / 100.0f;
+							if (config_TradePlatform1_time.Value >= 0) component.updateGrowthEvery = config_TradePlatform1_time.Value / 100.0f;
+
+							var componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
+							if (config_TradePlatform1_returnSpeed.Value >= 0) componentLand.speed = config_TradePlatform1_returnSpeed.Value;
+
+							if (config_TradePlatform1_invSize.Value >= 0) groupData.inventorySize = config_TradePlatform1_invSize.Value;
 							break;
 						}
 					case "InterplanetaryExchangePlatform1": {
 							MachineRocketBackAndForthInterplanetaryExchange component = associatedGameObject.GetComponentInChildren<MachineRocketBackAndForthInterplanetaryExchange>();
-							if (t2machineOptimizer_affectedMachineCount.Value >= 0) component.updateGrowthEvery = InterplanetaryExchangePlatform1_time.Value / 100.0f;
+							if (config_InterplanetaryExchangePlatform1_time.Value >= 0) component.updateGrowthEvery = config_InterplanetaryExchangePlatform1_time.Value / 100.0f;
+
+							var componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
+							if (config_InterplanetaryExchangePlatform1_returnSpeed.Value >= 0) componentLand.speed = config_InterplanetaryExchangePlatform1_returnSpeed.Value;
+
+							if (config_InterplanetaryExchangePlatform1_invSize.Value >= 0) groupData.inventorySize = config_InterplanetaryExchangePlatform1_invSize.Value;
 							break;
 						}
 					default: {
@@ -278,9 +274,9 @@ namespace Nicki0.CheatMachineConfig {
 		static void MachineRocketBackAndForth_SetInventoryRocketBackAndForth(MachineRocketBackAndForth __instance, ref float ___updateGrowthEvery) {
 
 			if (__instance is MachineRocketBackAndForthTrade) {
-				if (TradePlatform1_time.Value >= 0) ___updateGrowthEvery = TradePlatform1_time.Value / 100.0f;
+				if (config_TradePlatform1_time.Value >= 0) ___updateGrowthEvery = config_TradePlatform1_time.Value / 100.0f;
 			} else if (__instance is MachineRocketBackAndForthInterplanetaryExchange) {
-				if (t2machineOptimizer_affectedMachineCount.Value >= 0) ___updateGrowthEvery = InterplanetaryExchangePlatform1_time.Value / 100.0f;
+				if (config_InterplanetaryExchangePlatform1_time.Value >= 0) ___updateGrowthEvery = config_InterplanetaryExchangePlatform1_time.Value / 100.0f;
 			}
 		}
 
@@ -298,7 +294,7 @@ namespace Nicki0.CheatMachineConfig {
 			return codeInstructions.AsEnumerable<CodeInstruction>();
 		}
 		public static float VehicleStationCooldown() {
-			return VehicleStation_time.Value >= 0 ? VehicleStation_time.Value : 600;
+			return config_VehicleStation_time.Value >= 0 ? config_VehicleStation_time.Value : 600;
 		}
 	}
 }
