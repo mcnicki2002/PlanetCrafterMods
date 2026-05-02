@@ -17,7 +17,7 @@ Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10||(Feat) Space Station
 # (Feat) Terrain Height Tool
 Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.10||(Feat) Terrain Height Tool
 # (Feat) Underground Base
-Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.5.0||(Feat) Underground Base
+Nicki0.theplanetcraftermods.FeatUndergroundBase=1.0.5.1||(Feat) Underground Base
 # (Fix) Rocket Return
 Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0||(Fix) Rocket Return
 # (Fix) Water Wave Config

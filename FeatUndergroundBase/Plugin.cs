@@ -263,7 +263,7 @@ namespace Nicki0.FeatUndergroundBase {
 				];
 				foreach (string id in groupsToDisableBelowTheSurface) {
 					var constraint = ___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
-					constraint.heightOffsetOfPositionToTest = 3;
+					constraint.heightOffsetOfPositionToTest = 6;
 				}
 
 				List<string> groupsWithRockAsWindows = [
@@ -277,13 +277,13 @@ namespace Nicki0.FeatUndergroundBase {
 				//}
 				Nicki0_ChangeGlassToRockIfBelowGround changeGlassBiodome = ___groupsData.Find(e => e.id == "biodome").associatedGameObject.transform.Find("Container").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
 				changeGlassBiodome.materialRange = (0, 58);
-				changeGlassBiodome.heightOffsetOfPositionToTest = 12;
+				changeGlassBiodome.heightOffsetOfPositionToTest = 10; // top most point: 12
 				Nicki0_ChangeGlassToRockIfBelowGround changeGlassMegadome1 = ___groupsData.Find(e => e.id == "Megadome1").associatedGameObject.transform.Find("City_Dome_Top").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
 				changeGlassMegadome1.materialRange = (0, 58);
-				changeGlassMegadome1.heightOffsetOfPositionToTest = 23;
+				changeGlassMegadome1.heightOffsetOfPositionToTest = 13; // top most point: 23
 				Nicki0_ChangeGlassToRockIfBelowGround changeGlassPod9xB = ___groupsData.Find(e => e.id == "Pod9xB").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
 				changeGlassPod9xB.materialRange = (0, 58);
-				changeGlassPod9xB.heightOffsetOfPositionToTest = 12;
+				changeGlassPod9xB.heightOffsetOfPositionToTest = 9; // top most point: 12
 				/*Nicki0_ChangeGlassToRockIfBelowGround changeGlassPodAngle = ___groupsData.Find(e => e.id == "podAngle").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
 				changeGlassPodAngle.materialRange = (0, 58); */
 
@@ -352,6 +352,11 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder_BottomMove.AddComponent<Nicki0_SpawnStartingRoom>();
 			startLadder_BottomMove.AddComponent<Nicki0_MoveStartingRoomInGhost>();
 			___groupsData.Add(startLadder);
+			foreach (var proxy in startLadder.associatedGameObject.GetComponentsInChildren<ConstructibleProxy>()) { // E.g. on Humble, the ladder disappears...
+				if (!proxy.TryGetComponent<Nicki0_DisableMeshOccluder>(out _)) {
+					proxy.gameObject.AddComponent<Nicki0_DisableMeshOccluder>();
+				}
+			}
 			// <---------- startLadder ----------
 
 			DestroyImmediate(cg);
@@ -508,6 +513,11 @@ namespace Nicki0.FeatUndergroundBase {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ConstraintNotColliding), "Update")]
 		static bool ConstraintNotColliding_Update(ConstraintNotColliding __instance) => __instance.GetComponent<Collider>() != null;
+
+		// Prevent mesh occlusion, e.g. the ladder disappears on Humble
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MeshOccluder), "RegisterMeshOccluder")]
+		static bool MeshOccluder_RegisterMeshOccluder(MeshOccluder __instance) => __instance.GetComponent<Nicki0_DisableMeshOccluder>() == null;
 	}
 
 	public static class Underground_Helpers {
@@ -967,4 +977,6 @@ namespace Nicki0.FeatUndergroundBase {
 			}
 		}
 	}
+
+	public class Nicki0_DisableMeshOccluder : MonoBehaviour { }
 }
