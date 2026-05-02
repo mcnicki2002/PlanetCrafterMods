@@ -840,7 +840,13 @@ namespace Nicki0.FeatPortalTeleport {
 					Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
 					Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
 						Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
-					}, 100));
+					}, waitSeconds: 10));
+
+					for (int i = 1; i < 5; i++) {
+						Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+							Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+						}, waitSeconds: i));
+					}
 				}));
 
 				// --- From MachineDeparturePlatform.PlanetLoaded:
