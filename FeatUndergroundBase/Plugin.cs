@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Nicki0.FeatUndergroundBase {
 
@@ -72,7 +73,7 @@ namespace Nicki0.FeatUndergroundBase {
 				GameObject rock02 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_02").gameObject;
 				GameObject rock10 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_10").gameObject;
 				GameObject rock12 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Obstacle_12").gameObject;
-				
+
 				/*
 				 * Biodome2/Biodome2/Rocks/Boulder_02
 				 * localPos: -0.9418, 1.7855, -3.2127
@@ -110,7 +111,7 @@ namespace Nicki0.FeatUndergroundBase {
 				 * scale: 3.9782f, 0.1f, 2.16f
 				 */
 				GameObject rockForRoofWindow = Instantiate(rock10);
-				foreach (var renderer in rockForRoofWindow.GetComponentsInChildren<Renderer>()) {
+				foreach (Renderer renderer in rockForRoofWindow.GetComponentsInChildren<Renderer>()) {
 					renderer.material = Instantiate(renderer.material);
 					renderer.material.SetFloat("_Terraformation", 0);
 				}
@@ -179,16 +180,16 @@ namespace Nicki0.FeatUndergroundBase {
 				 * 1.3854, 0.1, 1.0364
 				 */
 				(Vector3 localPos, Quaternion localRotation, Vector3 localScale)[] rockSettingsForPodAngle = [
-					(new Vector3(1.9055f,	2.7346f, -3.7091f),	Quaternion.Euler(90,		8.4363f,	0),			new Vector3(1.2909f, 0.1f,	1.0364f)),
-					(new Vector3(1.1127f,	2.4909f, -3.5018f),	Quaternion.Euler(0.4949f,	288.4479f,	269.4908f), new Vector3(1.7527f, 0.01f, 1.1309f)),
-					(new Vector3(-0.9564f,	2.5273f, -2.5636f),	Quaternion.Euler(270.3466f, 34.4343f,	180.0003f), new Vector3(1.5564f, 0.1f,	1.0655f)),
-					(new Vector3(-2.7091f,	2.7528f, -0.7673f),	Quaternion.Euler(90,		56.8692f,	0),			new Vector3(1.5928f, 0.1f,	1.0655f)),
-					(new Vector3(-3.7018f,	2.8109f, 1.38f),	Quaternion.Euler(2.4919f,	158.8116f,	90.5803f),	new Vector3(1.7527f, 0.01f, 1.1309f)),
-					(new Vector3(-3.9054f,	2.6255f, 2.0236f),	Quaternion.Euler(270.7078f, 286.31f,	337.4538f), new Vector3(1.3854f, 0.1f,	1.0364f))
+					(new Vector3(1.9055f,   2.7346f, -3.7091f), Quaternion.Euler(90,        8.4363f,    0),         new Vector3(1.2909f, 0.1f,  1.0364f)),
+					(new Vector3(1.1127f,   2.4909f, -3.5018f), Quaternion.Euler(0.4949f,   288.4479f,  269.4908f), new Vector3(1.7527f, 0.01f, 1.1309f)),
+					(new Vector3(-0.9564f,  2.5273f, -2.5636f), Quaternion.Euler(270.3466f, 34.4343f,   180.0003f), new Vector3(1.5564f, 0.1f,  1.0655f)),
+					(new Vector3(-2.7091f,  2.7528f, -0.7673f), Quaternion.Euler(90,        56.8692f,   0),         new Vector3(1.5928f, 0.1f,  1.0655f)),
+					(new Vector3(-3.7018f,  2.8109f, 1.38f),    Quaternion.Euler(2.4919f,   158.8116f,  90.5803f),  new Vector3(1.7527f, 0.01f, 1.1309f)),
+					(new Vector3(-3.9054f,  2.6255f, 2.0236f),  Quaternion.Euler(270.7078f, 286.31f,    337.4538f), new Vector3(1.3854f, 0.1f,  1.0364f))
 					];
 				GameObject podAngleGameObject = ___groupsData.Find(e => e.id == "podAngle").associatedGameObject;
 				int livCompCornerCtr = 0;
-				foreach (var setting in rockSettingsForPodAngle) {
+				foreach ((Vector3 localPos, Quaternion localRotation, Vector3 localScale) setting in rockSettingsForPodAngle) {
 					GameObject rockForPodAngle = Instantiate(rock10);
 					rockForPodAngle.name = "rock10_" + (livCompCornerCtr++);
 					rockForPodAngle.transform.SetParent(podAngleGameObject.transform);
@@ -228,9 +229,9 @@ namespace Nicki0.FeatUndergroundBase {
 					(new Vector3(3.4709f, -0.0382f, 3.531f), Quaternion.Euler(0, 249.3241f, 180), new Vector3(2.7f, 0.1f, 2.7764f))
 					];
 				GameObject floorAngleGlassGameObject = Managers.GetManager<PanelsResources>().GetPanelGameObject(DataConfig.BuildPanelSubType.FloorAngleGlass);
-				foreach (var setting in rockSettingsForFloorAngleGlass) {
+				foreach ((Vector3 localPos, Quaternion localRotation, Vector3 localScale) setting in rockSettingsForFloorAngleGlass) {
 					GameObject rockForFloorAngleGlass = Instantiate(rock12);
-					foreach (var renderer in rockForFloorAngleGlass.GetComponentsInChildren<Renderer>()) {
+					foreach (Renderer renderer in rockForFloorAngleGlass.GetComponentsInChildren<Renderer>()) {
 						renderer.material = Instantiate(renderer.material);
 						renderer.material.SetFloat("_Terraformation", 0);
 					}
@@ -261,7 +262,8 @@ namespace Nicki0.FeatUndergroundBase {
 					"Aquarium2"
 				];
 				foreach (string id in groupsToDisableBelowTheSurface) {
-					___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
+					var constraint = ___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
+					constraint.heightOffsetOfPositionToTest = 3;
 				}
 
 				List<string> groupsWithRockAsWindows = [
@@ -273,10 +275,17 @@ namespace Nicki0.FeatUndergroundBase {
 				//foreach (string id in groupsWithRockAsWindows) {
 				//	___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<ChangeGlassToRockIfBelowGround>();
 				//}
-				___groupsData.Find(e => e.id == "biodome").associatedGameObject.transform.Find("Container").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
-				___groupsData.Find(e => e.id == "Megadome1").associatedGameObject.transform.Find("City_Dome_Top").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
-				___groupsData.Find(e => e.id == "Pod9xB").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
-				___groupsData.Find(e => e.id == "podAngle").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>().materialRange = (0, 58);
+				Nicki0_ChangeGlassToRockIfBelowGround changeGlassBiodome = ___groupsData.Find(e => e.id == "biodome").associatedGameObject.transform.Find("Container").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
+				changeGlassBiodome.materialRange = (0, 58);
+				changeGlassBiodome.heightOffsetOfPositionToTest = 12;
+				Nicki0_ChangeGlassToRockIfBelowGround changeGlassMegadome1 = ___groupsData.Find(e => e.id == "Megadome1").associatedGameObject.transform.Find("City_Dome_Top").gameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
+				changeGlassMegadome1.materialRange = (0, 58);
+				changeGlassMegadome1.heightOffsetOfPositionToTest = 23;
+				Nicki0_ChangeGlassToRockIfBelowGround changeGlassPod9xB = ___groupsData.Find(e => e.id == "Pod9xB").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
+				changeGlassPod9xB.materialRange = (0, 58);
+				changeGlassPod9xB.heightOffsetOfPositionToTest = 12;
+				/*Nicki0_ChangeGlassToRockIfBelowGround changeGlassPodAngle = ___groupsData.Find(e => e.id == "podAngle").associatedGameObject.AddComponent<Nicki0_ChangeGlassToRockIfBelowGround>();
+				changeGlassPodAngle.materialRange = (0, 58); */
 
 				isInitialized = true;
 			}
@@ -500,14 +509,10 @@ namespace Nicki0.FeatUndergroundBase {
 		[HarmonyPatch(typeof(ConstraintNotColliding), "Update")]
 		static bool ConstraintNotColliding_Update(ConstraintNotColliding __instance) => __instance.GetComponent<Collider>() != null;
 	}
-	public class Nicki0_DestroyIfAboveGround : MonoBehaviour {
-		public void Start() {
-			//if (this.transform.position.y >= SURFACE_HEIGHT) Destroy(this.gameObject);
 
-			Vector3 position = this.transform.position + (-2) * this.transform.up;
-			if (Vector3.Angle(this.transform.up, Vector3.down) < 10) {
-				position = this.transform.position + (2) * this.transform.up; // When the stone is on the top, then the raycast hits the glass itself, so the position is moved here.
-			}
+	public static class Underground_Helpers {
+		public static bool IsBelowGround_ByRaycast(Vector3 position) {
+			if (position.y < Plugin.SURFACE_HEIGHT) { return true; }
 
 			bool terrainAbove = Physics.Raycast(position + new Vector3(0, 500, 0), Vector3.down, 500, LayerMask.GetMask(new string[] { GameConfig.layerTerrainName }));
 			/*
@@ -521,14 +526,28 @@ namespace Nicki0.FeatUndergroundBase {
 			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerPlayerAndRoverExcludeName }).ToArray()));
 			foreach (RaycastHit hit in hitsBelow) {
 				if (hit.collider.GetComponent<MachineGenerationGroupVein>() == null &&
-					hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null
+					hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null &&
+					hit.collider.GetComponent<DamageZone>() == null
 					) {
 					anythingBelow = true;
 					if (Plugin.debugPrint) Console.WriteLine("Collider hit by underground glass cover rock raycase: " + string.Join("/", hit.collider.gameObject.GetComponentsInParent<Transform>().Select(t => t.name).Reverse().ToArray()));
 				}
 			}
 
-			if (!(terrainAbove && !anythingBelow) && this.transform.position.y >= Plugin.SURFACE_HEIGHT) {
+			return terrainAbove && !anythingBelow;
+		}
+	}
+
+	public class Nicki0_DestroyIfAboveGround : MonoBehaviour {
+		public void Start() {
+			//if (this.transform.position.y >= SURFACE_HEIGHT) Destroy(this.gameObject);
+
+			Vector3 position = this.transform.position + (-2) * this.transform.up;
+			if (Vector3.Angle(this.transform.up, Vector3.down) < 10) {
+				position = this.transform.position + (2) * this.transform.up; // When the stone is on the top, then the raycast hits the glass itself, so the position is moved here.
+			}
+
+			if (!Underground_Helpers.IsBelowGround_ByRaycast(position)) {
 				Destroy(this.gameObject);
 			}
 		}
@@ -593,8 +612,13 @@ namespace Nicki0.FeatUndergroundBase {
 	}
 
 	public class Nicki0_ConstraintAboveGround : BuildConstraint {
+		private Vector3 lastPosition = Vector3.zero;
+		public float heightOffsetOfPositionToTest = 0f;
 		public void Update() {
-			base.isConstraintRespected = this.transform.position.y >= 0;
+			if (this != null && this.transform != null && (lastPosition - this.transform.position).magnitude >= 1) {
+				base.isConstraintRespected = !Underground_Helpers.IsBelowGround_ByRaycast(this.transform.position + heightOffsetOfPositionToTest * Vector3.up);//this.transform.position.y >= Plugin.SURFACE_HEIGHT;
+				lastPosition = this.transform.position;
+			}
 
 			if (!base.isConstraintRespected) {
 				Managers.GetManager<BaseHudHandler>().DisplayCursorText(Plugin.localizationCantBeBuildBelowSurface, 0.5f, "", "");
@@ -606,9 +630,10 @@ namespace Nicki0.FeatUndergroundBase {
 		public static string rockMaterialOverwrite = "";
 		public string rockMaterial = "Material_AW_01";
 		public (int, int) materialRange = (0, -1);
-
+		public float heightOffsetOfPositionToTest = 0f;
 		public void Start() {
-			if (this.transform.position.y >= Plugin.SURFACE_HEIGHT) { return; }
+			if (!Underground_Helpers.IsBelowGround_ByRaycast(this.transform.position + heightOffsetOfPositionToTest * Vector3.up)) { return; }//if (this.transform.position.y >= Plugin.SURFACE_HEIGHT) { return; }
+
 			this.StartCoroutine(ChangeMagerialsLater());
 		}
 		public IEnumerator ChangeMagerialsLater() {
