@@ -256,7 +256,7 @@ namespace Nicki0.FeatUndergroundBase {
 					"ButterflyDome1",
 					"Aquarium2"
 				];*/
-				List<string> groupsToDisableBelowTheSurface = [
+				/*List<string> groupsToDisableBelowTheSurface = [
 					"Biodome2",
 					"ButterflyDome1",
 					"Aquarium2"
@@ -264,7 +264,10 @@ namespace Nicki0.FeatUndergroundBase {
 				foreach (string id in groupsToDisableBelowTheSurface) {
 					var constraint = ___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
 					constraint.heightOffsetOfPositionToTest = 6;
-				}
+				}*/
+				___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
+				___groupsData.Find(e => e.id == "ButterflyDome1").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
+				___groupsData.Find(e => e.id == "Aquarium2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = -3;
 
 				List<string> groupsWithRockAsWindows = [
 					"Pod9xB",
