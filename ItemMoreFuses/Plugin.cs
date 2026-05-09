@@ -2,15 +2,20 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Nicki0.ItemMoreFuses {
 	[BepInPlugin("Nicki0.theplanetcraftermods.ItemMoreFuses", "(Item) More Fuses", PluginInfo.PLUGIN_VERSION)]
@@ -74,11 +79,15 @@ namespace Nicki0.ItemMoreFuses {
 
 		static string dir;
 
+		public static Plugin Instance;
 		static ManualLogSource log;
+
+		static ConfigEntry<bool> config_replaceRockets;
 
 		public void Awake() {
 			Logger.LogInfo($"Plugin is enabled.");
 
+			Instance = this;
 			log = Logger;
 
 			if (LibCommon.ModVersionCheck.Check(this, Logger.LogInfo, out bool hashError, out string repoURL)) {
@@ -87,6 +96,8 @@ namespace Nicki0.ItemMoreFuses {
 
 			Assembly me = Assembly.GetExecutingAssembly();
 			dir = Path.GetDirectoryName(me.Location);
+
+			config_replaceRockets = Config.Bind<bool>("Rockets", "replaceRocketsWithCompressedRockets", false, "WARNING: THIS CAN NOT BE UNDONE! The conversion can take a minute (or even longer)! Set this to true to automatically replace 1000 normal rockets with one T2 rocket. This can improve performance if you have many rockets in the save file. ");
 
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 
@@ -133,7 +144,7 @@ namespace Nicki0.ItemMoreFuses {
 
 			groupDataItem.terraformStageUnlock = null;
 			groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
-			groupDataItem.unlockingValue = (float)((fuseId <= 5) ? Math.Pow(1000, fuseId + 1) : Math.Pow(10, 3*6 + fuseId - 5)); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: 10 ETi, T7: 100 ETi
+			groupDataItem.unlockingValue = (float)((fuseId <= 5) ? Math.Pow(1000, fuseId + 1) : Math.Pow(10, 3 * 6 + fuseId - 5)); // T2: GTi, T3: TTi, T4: PTi, T5: ETi, T6: 10 ETi, T7: 100 ETi
 			groupDataItem.tradeValue *= (int)Math.Pow(itemConfig.recipeQuantity, fuseId - 1);
 			groupDataItem.tradeCategory = ((groupDataItem.tradeValue > 0) && (fuseId >= 5) && (groupDataItem.tradeCategory == DataConfig.TradeCategory.Null || groupDataItem.tradeCategory == DataConfig.TradeCategory.tier1)) ? DataConfig.TradeCategory.tier1 : DataConfig.TradeCategory.Null;
 			if (fuseId <= 3 && !groupDataItem.craftableInList.Contains(DataConfig.CraftableIn.CraftStationT3)) groupDataItem.craftableInList.Add(DataConfig.CraftableIn.CraftStationT3);
@@ -218,6 +229,104 @@ namespace Nicki0.ItemMoreFuses {
 			return groupDataItem;
 		}
 
+		[DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		public static extern int MessageBox(
+			IntPtr hWnd,
+			string lpText,
+			string lpCaption,
+			uint uType
+			);
+		static bool ShowMessageBox_ConvertRocket() {
+			int returnValue = Plugin.MessageBox(
+				IntPtr.Zero,
+				"Found >=1000 rockets of one type on a planet. \nDo you want to replace them with compressed rockets? \nInfo: This can take a minute or two.",
+				"[MoreFuses] Replace rockets with compressed rockets?",
+				0x00000134); // 1: NO as default, 3: warning icon, 4: MB_YESNO
+			log.LogInfo("Messagebox ConvertRocket return value: " + returnValue);
+			return (returnValue == 6); // YES=6, NO=7
+		}
+		
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PlanetLoader), "HandleDataAfterLoad")]
+		static void PlanetLoader_HandleDataAfterLoad() {
+			if (config_replaceRockets.Value) {
+				ConvertRockets();
+			}
+		}
+		static void ConvertRockets() {
+			if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) {
+				return;
+			}
+
+			bool okForConvertingRockets = false;
+
+			// compress rockets
+			foreach (KeyValuePair<DataConfig.WorldUnitType, string> kvp_spaceGlobalMultipliersGroupIds in GameConfig.spaceGlobalMultipliersGroupIds) {
+				Group sGMGroup = GroupsHandler.GetGroupViaId(kvp_spaceGlobalMultipliersGroupIds.Value);
+				log.LogError(sGMGroup.id);
+				if (sGMGroup == null) { continue; }
+				List<WorldObject> spaceMultiplierWOs = WorldObjectsHandler.Instance.GetAllWorldObjectOfGroup(sGMGroup);
+				IEnumerable<IGrouping<int, WorldObject>> groupedSpaceMultiplierWOs = spaceMultiplierWOs.GroupBy(e => e.GetPlanetHash());//.ToDictionary(group => group.Key, group => group.ToList());
+
+				foreach (IGrouping<int, WorldObject> rocketGroupLists in groupedSpaceMultiplierWOs) {
+					int planetHash = rocketGroupLists.Key;
+					log.LogWarning(planetHash);
+					foreach (WorldObject rocketItem in rocketGroupLists) {
+						log.LogInfo(rocketItem.GetId());
+						Inventory inventory = InventoriesHandler.Instance.GetInventoryById(rocketItem.GetLinkedInventoryId());
+						if (inventory == null) { continue; }
+
+						IEnumerable<IGrouping<string, WorldObject>> allBasicRocketsGroupedByGroup = inventory.GetInsideWorldObjects().Where(e => !e.GetGroup().GetId().StartsWith("Nicki0ModItem_")).GroupBy(e => e.GetGroup().GetId());
+						foreach (IGrouping<string, WorldObject> rocketOfGroup in allBasicRocketsGroupedByGroup) {
+							string gId = rocketOfGroup.Key;
+							log.LogDebug(gId);
+							IEnumerable<ItemConfig> rocketCompressedConfig = rocketType.Where(e => e.gId == gId);
+							if (!rocketCompressedConfig.Any()) { continue; }
+
+							int t1Equivalent = rocketCompressedConfig.First().baseEfficiencyMultiplierValue;
+
+							int replaceCount = rocketOfGroup.Count() / t1Equivalent;
+							log.LogMessage(replaceCount);
+							if (replaceCount <= 0) { continue; }
+
+							// replaceCount >=1 => Ask if they should be converted.
+							if (!okForConvertingRockets) {
+								bool isOK = false;
+								try {
+									isOK = ShowMessageBox_ConvertRocket();
+								} catch (Exception e) { }
+								
+								if (isOK) {
+									okForConvertingRockets = true;
+
+									SavedDataHandler sdh = Managers.GetManager<SavedDataHandler>();
+									string newSaveFileName = "BeforeRocketConversion_Nicki0-ItemMoreFuses/" + sdh.saveFileName + "_" + DateTime.Now.ToString("yyyy-MM-ddThhmmss");
+									sdh.SaveWorldData(newSaveFileName);
+								} else {
+									return;
+								}
+							}
+
+							string rocketName = GetNameRocket(gId, 2);
+							Group rocketT2Group = GroupsHandler.GetGroupViaId(rocketName);
+							if (rocketT2Group == null) { continue; }
+
+							int destroyCtr = replaceCount * t1Equivalent;
+							foreach (WorldObject rocket in rocketOfGroup) {
+								if (destroyCtr-- <= 0) break;
+								WorldObjectsHandler.Instance.DestroyWorldObject(rocket, true);
+							}
+							for (int i = 0; i < replaceCount; i++) {
+								InventoriesHandler.Instance.AddItemToInventory(rocketT2Group, inventory, null);
+							}
+						}
+					}
+				}
+			}
+
+			Managers.GetManager<RequireEnergyHandler>().UpdateAllEnergyRequesterDelayed(false);
+		}
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(UiWindowRockets), nameof(UiWindowRockets.OnOpen))]
 		private static void UiWindowRockets_OnOpen(List<GroupData> ___rocketsGenerationGroups) {
@@ -230,19 +339,19 @@ namespace Nicki0.ItemMoreFuses {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
-			for (var i = ___groupsData.Count - 1; i >= 0; i--) {
-				var groupData = ___groupsData[i];
+			for (int i = ___groupsData.Count - 1; i >= 0; i--) {
+				GroupData groupData = ___groupsData[i];
 				if (groupData == null || (groupData.associatedGameObject == null && groupData.id.StartsWith(prefixFuse))) {
 					___groupsData.RemoveAt(i);
 				}
 			}
 
-			var existingGroups = ___groupsData.Select(gd => gd.id).ToHashSet();
+			HashSet<string> existingGroups = ___groupsData.Select(gd => gd.id).ToHashSet();
 
 			foreach (ItemConfig fuseConfig in fuseType) {
 				string text = fuseConfig.gId;
 				for (int lvl = 2; lvl <= fuseConfig.count; lvl++) {
-					var fuseGroupDataItem = GetFuseGroupDataItem(___groupsData, fuseConfig, lvl);
+					GroupDataItem fuseGroupDataItem = GetFuseGroupDataItem(___groupsData, fuseConfig, lvl);
 					if (!existingGroups.Contains(fuseGroupDataItem.id)) {
 						___groupsData.Add(fuseGroupDataItem);
 						log.LogInfo("Added " + GetNameFuse(text, lvl));
@@ -266,7 +375,7 @@ namespace Nicki0.ItemMoreFuses {
 		[HarmonyPatch(typeof(Localization), "LoadLocalization")]
 		private static void Localization_LoadLocalization(Dictionary<string, Dictionary<string, string>> ___localizationDictionary, string ___currentLangage) {
 			if (string.IsNullOrEmpty(___currentLangage)) return;
-			if (___localizationDictionary.TryGetValue(/*"english"*/___currentLangage, out var dictionary)) {
+			if (___localizationDictionary.TryGetValue(/*"english"*/___currentLangage, out Dictionary<string, string> dictionary)) {
 				if (dictionary.ContainsKey("GROUP_NAME_Nicki0ModItem_Fuse-FuseProduction2")) {
 					return;
 				}

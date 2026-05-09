@@ -877,6 +877,7 @@ namespace Nicki0.QoLAutoLogistics {
 				TextMeshProUGUI TMProText = priorityLabel.AddComponent<TextMeshProUGUI>();
 				TMProText.alignment = TextAlignmentOptions.Center;
 				TMProText.text = ((GroupCustomIcon)group).priority.ToString();
+				TMProText.rectTransform.sizeDelta = new Vector2(50, 50);
 				priorityLabel.transform.localPosition = Vector3.zero;
 			}
 		}

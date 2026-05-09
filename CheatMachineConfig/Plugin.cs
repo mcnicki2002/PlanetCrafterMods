@@ -2,6 +2,7 @@
 // Licensed under Apache License, Version 2.0
 
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -14,12 +15,14 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using static UnityEngine.UIElements.TreeViewReorderableDragAndDropController;
 
 namespace Nicki0.CheatMachineConfig {
 
 	[BepInPlugin("Nicki0.theplanetcraftermods.CheatMachineConfig", "(Cheat) Machine Config", PluginInfo.PLUGIN_VERSION)]
+	[BepInDependency("fasttraderockets", BepInDependency.DependencyFlags.SoftDependency)]
 	public class Plugin : BaseUnityPlugin {
+
+		const string guid_fasttraderockets = "fasttraderockets";
 
 		static ManualLogSource log;
 		static Plugin Instance;
@@ -50,7 +53,7 @@ namespace Nicki0.CheatMachineConfig {
 
 		private void Awake() {
 			log = Logger;
-			Instance = this;MachineRocket a;
+			Instance = this;
 
 			if (this.IsNewVersion(out Version v)) {
 				if (v < new Version("1.0.9.0")) {
@@ -66,9 +69,11 @@ namespace Nicki0.CheatMachineConfig {
 				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
+			if (Chainloader.PluginInfos.TryGetValue(guid_fasttraderockets, out BepInEx.PluginInfo pi)) {
+				log.LogWarning("The mod FastTradeRockets is installed. All significant configs of that mod (in version 3.8.0) are included in CheatMachineConfig. As it uses a more aggressive way of changing the rocket values, this CheatMachineConfig's configured values likely won't work.");
+			}
+
 			enableMod = Config.Bind<bool>("General", "enable", true, "Enable Mod");
-
-
 
 			config_autocrafter_time = Config.Bind<float>("Auto-Crafter", "AutoCrafter_time", -1, "[Default: 5] Time to craft an item (in seconds)");
 			config_autocrafter_range = Config.Bind<float>("Auto-Crafter", "AutoCrafter_range", -1, "[Default: 20] Range of auto crafter");
@@ -129,7 +134,7 @@ namespace Nicki0.CheatMachineConfig {
 							if (config_autocrafter_time.Value >= 0) component.craftEveryXSec = config_autocrafter_time.Value;
 							if (config_autocrafter_range.Value >= 0) {
 								component.range = config_autocrafter_range.Value;
-								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+								foreach (ActionnableShowRange rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
 									rangeComp.range = component.range;
 								}
 							}
@@ -176,7 +181,7 @@ namespace Nicki0.CheatMachineConfig {
 							if (config_t1machineOptimizer_range.Value >= 0) {
 								component.range = config_t1machineOptimizer_range.Value;
 
-								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+								foreach (ActionnableShowRange rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
 									rangeComp.range = component.range;
 								}
 							}
@@ -188,7 +193,7 @@ namespace Nicki0.CheatMachineConfig {
 							if (config_t2machineOptimizer_range.Value >= 0) {
 								component.range = config_t2machineOptimizer_range.Value;
 
-								foreach (var rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+								foreach (ActionnableShowRange rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
 									rangeComp.range = component.range;
 								}
 							}
@@ -199,7 +204,7 @@ namespace Nicki0.CheatMachineConfig {
 							MachineRocketBackAndForthTrade component = associatedGameObject.GetComponentInChildren<MachineRocketBackAndForthTrade>();
 							if (config_TradePlatform1_time.Value >= 0) component.updateGrowthEvery = config_TradePlatform1_time.Value / 100.0f;
 
-							var componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
+							MachineRocketLand componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
 							if (config_TradePlatform1_returnSpeed.Value >= 0) componentLand.speed = config_TradePlatform1_returnSpeed.Value;
 
 							if (config_TradePlatform1_invSize.Value >= 0) groupData.inventorySize = config_TradePlatform1_invSize.Value;
@@ -209,7 +214,7 @@ namespace Nicki0.CheatMachineConfig {
 							MachineRocketBackAndForthInterplanetaryExchange component = associatedGameObject.GetComponentInChildren<MachineRocketBackAndForthInterplanetaryExchange>();
 							if (config_InterplanetaryExchangePlatform1_time.Value >= 0) component.updateGrowthEvery = config_InterplanetaryExchangePlatform1_time.Value / 100.0f;
 
-							var componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
+							MachineRocketLand componentLand = associatedGameObject.GetComponentInChildren<MachineRocketLand>();
 							if (config_InterplanetaryExchangePlatform1_returnSpeed.Value >= 0) componentLand.speed = config_InterplanetaryExchangePlatform1_returnSpeed.Value;
 
 							if (config_InterplanetaryExchangePlatform1_invSize.Value >= 0) groupData.inventorySize = config_InterplanetaryExchangePlatform1_invSize.Value;

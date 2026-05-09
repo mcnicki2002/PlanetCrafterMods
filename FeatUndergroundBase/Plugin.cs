@@ -33,7 +33,7 @@ namespace Nicki0.FeatUndergroundBase {
 		 * 
 		 */
 
-		private static ManualLogSource log;
+		public static ManualLogSource log;
 		private static Plugin Instance;
 
 		public static readonly string LadderDownId = "Nicki0_LadderDown";
@@ -536,10 +536,13 @@ namespace Nicki0.FeatUndergroundBase {
 			 * 
 			 */
 			bool anythingBelow = false;
-			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerPlayerAndRoverExcludeName }).ToArray()));
+			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerPlayerAndRoverExcludeName, GameConfig.layerDeconstructionName }).ToArray()));
 			foreach (RaycastHit hit in hitsBelow) {
 				if (hit.collider.GetComponent<MachineGenerationGroupVein>() == null &&
-					hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null &&
+					(	hit.collider.transform.root.name.StartsWith("World") || // main scene
+						hit.collider.transform.root.name.StartsWith("Container-") || // sectors; '-' required because of "Container1..2..3"
+						hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null
+					) &&
 					hit.collider.GetComponent<DamageZone>() == null
 					) {
 					anythingBelow = true;
@@ -817,13 +820,16 @@ namespace Nicki0.FeatUndergroundBase {
 					// Problem: Can't revert changes when pods next to each other are deconstructed in the wrong order => no area changes
 					//Dictionary<Vector2, float> heightChanges_ForArea = new Dictionary<Vector2, float>();
 
-
+					
 					int minX_Height = Math.Max(0, (int)Math.Floor((collider.bounds.min.x - terrain.transform.position.x) / td.size.x * (td.heightmapResolution - 1)) - 1);
 					int minZ_Height = Math.Max(0, (int)Math.Floor((collider.bounds.min.z - terrain.transform.position.z) / td.size.z * (td.heightmapResolution - 1)) - 1);
 					int maxX_Height = Math.Min(td.heightmapResolution - 1, (int)Math.Ceiling((collider.bounds.max.x - terrain.transform.position.x) / td.size.x * (td.heightmapResolution - 1)));
 					int maxZ_Height = Math.Min(td.heightmapResolution - 1, (int)Math.Ceiling((collider.bounds.max.z - terrain.transform.position.z) / td.size.z * (td.heightmapResolution - 1)));
 					int arrayWidth_Height = maxX_Height - minX_Height + 1;
 					int arrayHeight_Height = maxZ_Height - minZ_Height + 1;
+					if (arrayWidth_Height < 0 || arrayHeight_Height < 0) { // somehow a layer that isn't below the point got hit; e.g. happens when holding Ctrl...?
+						continue;
+					}
 					float[,] heightMap = td.GetHeights(minX_Height, minZ_Height, arrayWidth_Height, arrayHeight_Height);
 					(int, int)[] heightAreaOffsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
 
