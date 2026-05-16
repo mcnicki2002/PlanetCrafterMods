@@ -11,6 +11,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Nicki0.QoLSkipTutorial {
 
@@ -50,14 +51,18 @@ namespace Nicki0.QoLSkipTutorial {
 		// --- Skip new tutorial --->
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PopupOneTimeInfos), nameof(PopupOneTimeInfos.SetDependingOnStoryEventStatus))]
-		static void PopupOneTimeInfos_SetDependingOnStoryEventStatus(PopupOneTimeInfos __instance) {
-			if (!config_enable.Value) { return; }
-			if (config_SkipTutorial.Value) {
-				StoryEventsHandler manager = Managers.GetManager<StoryEventsHandler>();
-				if (__instance.storyEventForFirstTimeAlert != null && manager != null && manager.GetHasInitedStoryEvent() && !manager.EventHasBeenTriggered(__instance.storyEventForFirstTimeAlert)) {
-					__instance.CloseFirstTimeDisplay();
-				}
+		static bool PopupOneTimeInfos_SetDependingOnStoryEventStatus(PopupOneTimeInfos __instance) {
+			if (!config_enable.Value) { return true; }
+			if (!config_SkipTutorial.Value) { return true; }
+
+			if (__instance.storyEventForFirstTimeAlert != null) {
+				__instance.enabled = true;
+				__instance.CloseFirstTimeDisplay();
 			}
+			__instance.gameObject.SetActive(false);
+			__instance.container.gameObject.SetActive(false);
+			__instance.enabled = false;
+			return false;
 		}
 		// <--- Skip new tutorial ---
 

@@ -31,7 +31,7 @@ Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10||(QoL) Meteor Debris 
 # (QoL) Move Containers
 Nicki0.theplanetcraftermods.QoLMoveContainers=1.0.0.0||(QoL) Move Containers
 # (QoL) Skip Tutorial
-Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.0.11||(QoL) Skip Tutorial
+Nicki0.theplanetcraftermods.QoLSkipTutorial=1.0.1.0||(QoL) Skip Tutorial
 # (UI) Change Music
 Nicki0.theplanetcraftermods.UiChangeMusic=1.0.0.10||(UI) Change Music
 # (UI) Confine Mouse
