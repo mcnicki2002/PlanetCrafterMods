@@ -25,6 +25,8 @@ namespace Nicki0.FeatUndergroundBase {
 		 * 
 		 * Rock texture on other domes
 		 * 
+		 * Exclude some buildings from the terrain change, e.g. the landing pod
+		 * 
 		 * 
 		 * Move bottom death barrier (in a better way)
 		 * 
@@ -786,10 +788,20 @@ namespace Nicki0.FeatUndergroundBase {
 
 
 	class Nicki0_ReMoveTerrain : MonoBehaviour {
+		static HashSet<string> groupsToNotReMoveTerrainOn = new HashSet<string>(["EscapePod", "EscapePodHumble", "EscapePodInterplanetary", "EscapePodToxicity"]);
 		Dictionary<Terrain, ((int, int, int, int), List<Vector2>)> holePositions = new Dictionary<Terrain, ((int, int, int, int), List<Vector2>)>();
 		Dictionary<Terrain, ((int, int, int, int), List<Vector3>)> heightPositions = new Dictionary<Terrain, ((int, int, int, int), List<Vector3>)>();
 
 		public void Start() {
+			if (this.gameObject != null && this?.transform?.root?.GetComponentInChildren<WorldObjectAssociated>() is WorldObjectAssociated woa && woa != null) {
+				if (woa.GetWorldObject() != null) {
+					if (groupsToNotReMoveTerrainOn.Contains(woa.GetWorldObject().GetGroup().GetId())) {
+						return;
+					}
+				}
+			}
+			
+
 			//Vector3 pos = this.transform.position + new Vector3(0, 20, 0);
 
 			Collider collider = this.GetComponent<Collider>();

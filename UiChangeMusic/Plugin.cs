@@ -79,7 +79,11 @@ namespace Nicki0.UiChangeMusic {
 					MusicData md = (MusicData)ScriptableObject.CreateInstance(typeof(MusicData));
 					if (wr.responseCode == 200) {
 						md.musicTrack = dh.audioClip;
-					} else log.LogError("music not found with http code " + wr.responseCode);
+					} else {
+						log.LogError("music not found with http code " + wr.responseCode);
+						Destroy(md);
+						continue;
+					}
 
 					md.name = name;
 					md.musicTrack.name = name;

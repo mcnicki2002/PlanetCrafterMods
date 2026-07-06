@@ -7,6 +7,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,7 +21,7 @@ namespace Nicki0.VisualHideObjects {
 		public static ConfigEntry<Key> occulsionKey;
 		public static ConfigEntry<bool> occulsionPrevent;
 
-		private static string[] occulsionStrings;
+		private static string[] occlusionStrings;
 
 		static ManualLogSource log;
 
@@ -44,13 +45,46 @@ namespace Nicki0.VisualHideObjects {
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 		}
 
+		public void Update() {
+			if (Keyboard.current[occulsionKey.Value].wasPressedThisFrame) {
+				Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+			}
+		}
+
+		private static int occluderCheckCtr = 0;
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MeshOccluderHandler), "Update")]
+		static void MeshOccluderHandler_ProcessSomeRenderers(List<MeshOccluder> ____meshOccluders, int ____startOnlyWhenMoreThanXObjects) {
+			if (!occlusionDistanceEnabled.Value) return;
+			if (____meshOccluders.Count > ____startOnlyWhenMoreThanXObjects) return; // handled by patch below!
+			
+			if (++occluderCheckCtr < 10) {
+				return;
+			}
+			occluderCheckCtr = 0;
+
+			Vector3 playerObjectPosition = Managers.GetManager<PlayersManager>().GetActivePlayerController().transform.position;
+			bool isOcclusionKeyPressed = Keyboard.current[occulsionKey.Value].isPressed;
+
+			foreach (MeshOccluder occluder in ____meshOccluders) {
+				if (occluder == null) continue;
+				foreach (string substring in occlusionStrings) {
+					if (occluder.transform.name.StartsWith(substring, StringComparison.Ordinal)) {
+						occluder.SetRenderersStatus(isOcclusionKeyPressed || Vector3.Distance(playerObjectPosition, occluder.transform.position) < occulsionDistance.Value);
+						break;
+					}
+				}
+			}
+		}
+
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MeshOccluder), nameof(MeshOccluder.TryToOcclude))]
 		public static bool MeshOccluder_TryToOcclude(MeshOccluder __instance, Vector3 playerObjectPosition, int occlusionMask) {
+			bool isOcclusionKeyPressed = Keyboard.current[occulsionKey.Value].isPressed;
 			if (occlusionDistanceEnabled.Value) {
-				foreach (string substring in occulsionStrings) {
+				foreach (string substring in occlusionStrings) {
 					if (__instance.transform.name.StartsWith(substring, StringComparison.Ordinal)) {
-						__instance.SetRenderersStatus(Vector3.Distance(playerObjectPosition, __instance.transform.position) < occulsionDistance.Value || Keyboard.current[occulsionKey.Value].isPressed);
+						__instance.SetRenderersStatus(Vector3.Distance(playerObjectPosition, __instance.transform.position) < occulsionDistance.Value || isOcclusionKeyPressed);
 						return false;
 					}
 				}
@@ -61,10 +95,10 @@ namespace Nicki0.VisualHideObjects {
 
 		private static void UpdateStrings() {
 			if (String.IsNullOrEmpty(occulsionNames.Value)) {
-				occulsionStrings = new string[0];
+				occlusionStrings = new string[0];
 				return;
 			}
-			occulsionStrings = occulsionNames.Value.Split(',');
+			occlusionStrings = occulsionNames.Value.Split(',');
 		}
 
 		public static void OnModConfigChanged(ConfigEntryBase _) {

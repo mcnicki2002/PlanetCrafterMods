@@ -866,11 +866,29 @@ namespace Nicki0.FeatPortalTeleport {
 		// --- Prevent the creation and deletion of capsules --->
 		static bool disablePlanetListGetPlanetIndex = false;
 		static int? planetIndexFromGetPlanetIndex = null;
+		static bool disableGetIsPlanetUnlocked = false;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlanetNetworkLoader), "SwitchToPlanetServerRpc")]
-		private static void Pre_PlanetNetworkLoader_SwitchToPlanetServerRpc() {
+		private static void Pre_PlanetNetworkLoader_SwitchToPlanetServerRpc(int planetHash, List<GroupData> ____departurePlatformGroups, GroupData ____interplanetaryPodGroup) {
 			if (portalCreatedByMod) {
 				disablePlanetListGetPlanetIndex = true;
+			} else {
+				// -- fix capsule set to Vector3.zero -->
+				// copied from PlanetNetworkLoader.SwitchToPlanetServerRpc:
+				PlanetData planetFromIdHash = Managers.GetManager<PlanetLoader>().planetList.GetPlanetFromIdHash(planetHash);
+				if (!disableGetIsPlanetUnlocked && PlanetUnlocker.Instance.GetIsPlanetUnlocked(planetFromIdHash)) { // otherwise, the game will generate the landing spot pod
+					WorldObject worldObject = null;
+					foreach (GroupData groupData in ____departurePlatformGroups) {
+						worldObject = WorldObjectsHandler.Instance.GetFirstWorldObjectOfGroup(GroupsHandler.GetGroupViaId(groupData.id), planetHash);
+						if (worldObject != null) {
+							break;
+						}
+					}
+					if (worldObject == null) { // no departure platform found.
+						disableGetIsPlanetUnlocked = true;
+					}
+				}
+				// <-- fix capsule set to Vector3.zero --
 			}
 		}
 		[HarmonyPostfix]
@@ -881,9 +899,19 @@ namespace Nicki0.FeatPortalTeleport {
 				__result = -1; // return result as if planet doesn't exist
 			}
 		}
+		[HarmonyPostfix] // -- fix capsule set to Vector3.zero --
+		[HarmonyPatch(typeof(PlanetUnlocker), nameof(PlanetUnlocker.GetIsPlanetUnlocked))]
+		private static void Post_PlanetUnlocker_GetIsPlanetUnlocked(ref bool __result) {
+			if (disableGetIsPlanetUnlocked) {
+				__result = false;
+				disableGetIsPlanetUnlocked = false;
+			}
+		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(PlanetNetworkLoader), "SwitchToPlanetServerRpc")]
 		private static void Post_PlanetNetworkLoader_SwitchToPlanetServerRpc(int planetHash, PlanetNetworkLoader __instance, ref NetworkVariable<short> ____planetIndex) {
+			disableGetIsPlanetUnlocked = false;  // -- fix capsule set to Vector3.zero --
+
 			disablePlanetListGetPlanetIndex = false;
 			if (planetIndexFromGetPlanetIndex != null) {
 				____planetIndex.Value = (short)planetIndexFromGetPlanetIndex;
