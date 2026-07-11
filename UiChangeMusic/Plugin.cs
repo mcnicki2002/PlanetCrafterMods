@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -37,9 +38,16 @@ namespace Nicki0.UiChangeMusic {
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 		}
 		// --- add music --->
+		private static List<MusicData> tracksBackup = new List<MusicData>();
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MusicsHandler), "InitMusicHandler")]
 		static void MusicsHandler_InitMusicHandler(MusicsHandler __instance, List<MusicData> availableTracks) {
+			if (tracksBackup.Count <= 0) {
+				foreach (MusicData md in availableTracks) {
+					tracksBackup.Add(md);
+				}
+			}
+
 			string[] musicFiles = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
 			List<(DownloadHandlerAudioClip, UnityWebRequest, string)> downloadhandlers = [];
@@ -95,6 +103,17 @@ namespace Nicki0.UiChangeMusic {
 		}
 		// <--- add music ---
 
-	}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(MusicsHandler), "GetRandomClip")]
+		static void MusicsHandler_GetRandomClip(MusicsHandler __instance, ref MusicData __result, List<MusicData> ____availableTracks) {
+			if (__result == null) {
+				if (____availableTracks.Count > 0) {
+					__result = ____availableTracks[UnityEngine.Random.Range(0, ____availableTracks.Count)];
+				} else {
+					__result = tracksBackup[UnityEngine.Random.Range(0, tracksBackup.Count)];
+				}
+			}
+		}
 
+	}
 }

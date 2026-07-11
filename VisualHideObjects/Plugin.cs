@@ -63,7 +63,9 @@ namespace Nicki0.VisualHideObjects {
 			}
 			occluderCheckCtr = 0;
 
-			Vector3 playerObjectPosition = Managers.GetManager<PlayersManager>().GetActivePlayerController().transform.position;
+			PlayersManager playersManager = Managers.GetManager<PlayersManager>();
+			if (playersManager == null || playersManager.GetActivePlayerController() == null) return;
+			Vector3 playerObjectPosition = playersManager.GetActivePlayerController().transform.position;
 			bool isOcclusionKeyPressed = Keyboard.current[occulsionKey.Value].isPressed;
 
 			foreach (MeshOccluder occluder in ____meshOccluders) {
