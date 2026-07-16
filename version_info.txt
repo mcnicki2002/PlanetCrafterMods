@@ -13,7 +13,7 @@ Nicki0.theplanetcraftermods.FeatPlanetSelector=1.0.6.12||(Feat) Planet Selector
 # (Feat) Portal Travel
 Nicki0.theplanetcraftermods.FeatPortalTeleport=1.2.13.0||(Feat) Portal Travel
 # (Feat) Space Station
-Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.8.10||(Feat) Space Station
+Nicki0.theplanetcraftermods.SpaceStationPlanet=1.0.9.0||(Feat) Space Station
 # (Feat) Terrain Height Tool
 Nicki0.theplanetcraftermods.FeatTerrainHeightTool=1.0.1.10||(Feat) Terrain Height Tool
 # (Feat) Underground Base
@@ -25,7 +25,7 @@ Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.10||(Fix) Water Wave Config
 # (Item) More Fuses
 Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.4.0||(Item) More Fuses
 # (QoL) Auto-Logistics
-Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.24.10||(QoL) Auto-Logistics
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.25.0||(QoL) Auto-Logistics
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10||(QoL) Meteor Debris Config
 # (QoL) Move Containers

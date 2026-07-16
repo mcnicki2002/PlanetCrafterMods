@@ -321,7 +321,7 @@ namespace Nicki0.ToolInfoExtractor {
 			}
 		}
 
-		public class ActionGroupSelector_JSONABLE {
+		/*public class ActionGroupSelector_JSONABLE { // PRE-V2.100
 			public ActionGroupSelector_JSONABLE(ActionGroupSelector script) {
 				this.isAutoCrafter = script.isAutoCrafter;
 				this.isOreExtractor = script.isOreExtractor;
@@ -336,6 +336,14 @@ namespace Nicki0.ToolInfoExtractor {
 			public List<string> oreList;
 			public string _textHoverId;
 			public string _gamepadHint;
+		}*/
+		public class ActionGroupSelector_JSONABLE {
+			public ActionGroupSelector_JSONABLE(ActionGroupSelector script) {
+				this.groupsForSelection = script.groupsForSelection.Select(e => e.id).ToList();
+				_uiSelectorType = _uiSelectorType.ToString();
+			}
+			public List<string /*GroupItem*/> groupsForSelection;
+			public string /*DataConfig.UiGroupSelectorType*/ _uiSelectorType;
 		}
 
 
