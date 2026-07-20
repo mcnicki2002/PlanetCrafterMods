@@ -306,7 +306,7 @@ namespace Nicki0.FeatUndergroundBase {
 			GroupDataConstructible downwardsLadder = Instantiate(ladderGDC);
 			downwardsLadder.id = LadderDownId;
 			downwardsLadder.associatedGameObject = Instantiate(downwardsLadder.associatedGameObject);
-			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
+			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
 			downwardsLadder.recipeIngredients.Reverse();
 			Texture2D textureLadderDown = new Texture2D(2, 2);
 			ImageConversion.LoadImage(textureLadderDown, Properties.Resources.LadderDown);
@@ -325,7 +325,7 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder.id = LadderStartId;
 			startLadder.recipeIngredients.AddRange(___groupsData.Find(e => e.id == "pod").recipeIngredients);
 			startLadder.associatedGameObject = Instantiate(startLadder.associatedGameObject);
-			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
+			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
 			Destroy(startLadder.associatedGameObject.GetComponent<ConstructibleGhost>());
 			startLadder.associatedGameObject.name = startLadder.id;
 			Texture2D textureStartLadder = new Texture2D(2, 2);

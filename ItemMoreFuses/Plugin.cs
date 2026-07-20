@@ -59,6 +59,7 @@ namespace Nicki0.ItemMoreFuses {
 		};
 		static readonly List<ItemConfig> rocketType = new List<ItemConfig> {
 			new RocketItemConfig("RocketOxygen1"),
+			new RocketItemConfig("RocketOxygen2"),
 			new RocketItemConfig("RocketHeat1"),
 			new RocketItemConfig("RocketHeat2"),
 			new RocketItemConfig("RocketPressure1"),
@@ -68,6 +69,7 @@ namespace Nicki0.ItemMoreFuses {
 			new RocketItemConfig("RocketInsects1"),
 			new RocketItemConfig("RocketInsects2"),
 			new RocketItemConfig("RocketAnimals1"),
+			new RocketItemConfig("RocketAnimals2"),
 			new RocketItemConfig("RocketPurification1")
 		};
 
@@ -199,6 +201,8 @@ namespace Nicki0.ItemMoreFuses {
 
 			groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
 			groupDataItem.unlockingValue = 0;
+			groupDataItem.terraformStageUnlock = null;
+			groupDataItem.unlockInPlanets?.Clear();
 
 			//groupDataItem.terraformStageUnlock = null;
 			//groupDataItem.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;

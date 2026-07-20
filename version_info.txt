@@ -1,3 +1,5 @@
+# (Cheat) Auto Convert Genetic Extractor
+Nicki0.theplanetcraftermods.CheatAutoConvertGeneticExtractor=1.0.0.0||(Cheat) Auto Convert Genetic Extractor
 # (Cheat) Custom Ore Randomization
 Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0||(Cheat) Custom Ore Randomization
 # (Cheat) Drone Speed
@@ -23,7 +25,7 @@ Nicki0.theplanetcraftermods.FixRocketReturn=1.0.0.0||(Fix) Rocket Return
 # (Fix) Water Wave Config
 Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.10||(Fix) Water Wave Config
 # (Item) More Fuses
-Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.4.0||(Item) More Fuses
+Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.5.0||(Item) More Fuses
 # (QoL) Auto-Logistics
 Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.25.0||(QoL) Auto-Logistics
 # (QoL) Meteor Debris Config
