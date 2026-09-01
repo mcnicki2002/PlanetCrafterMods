@@ -109,6 +109,16 @@
 			<HintPath>$(GameManaged)\GameOptions.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="UnityEngine.Rendering">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Beautify.Universal">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>$(GameManaged)\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -138,7 +148,7 @@
 	</Target>
 
 	<ItemGroup Condition="'$(Deploy)' == 'true'">
-		<Compile Include="../Nicki0Lib/Utils.cs" Link="Utils.cs" />
+		<Compile Include="../Nicki0Lib/Nicki0Utils.cs" Link="Nicki0Utils.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Deploy)' == 'true'">

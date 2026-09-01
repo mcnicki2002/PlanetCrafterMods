@@ -47,7 +47,7 @@ namespace Nicki0.VisualHideObjects {
 
 		public void Update() {
 			if (Keyboard.current[occulsionKey.Value].wasPressedThisFrame) {
-				Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
+				Managers.GetManager<MeshOccluderHandler>()?.SpeedUpProcess(25);
 			}
 		}
 

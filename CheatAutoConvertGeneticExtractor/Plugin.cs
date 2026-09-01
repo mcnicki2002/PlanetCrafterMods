@@ -56,6 +56,7 @@ namespace Nicki0.CheatAutoConvertGeneticExtractor {
 		[HarmonyPrefix] // enable ACs to take from the inventory
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
 		private static void StaticDataHandler_LoadStaticData(List<GroupData> ___groupsData) {
+			if (!config_enable.Value) { return; }
 			GroupDataConstructible genExtractor1 = ___groupsData.Find(e => e.id == "GeneticExtractor1") as GroupDataConstructible;
 			if (genExtractor1 != null) {
 				genExtractor1.logisticInterplanetaryType = DataConfig.LogisticInterplanetaryType.EnabledOnAllInventories;
