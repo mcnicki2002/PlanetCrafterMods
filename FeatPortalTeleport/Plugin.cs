@@ -26,6 +26,9 @@ namespace Nicki0.FeatPortalTeleport {
 		/*
 		 *	TODO:
 		 *	
+		 *	Skeo possible colors:
+		 *		Magnetar-purple: 20, 0, 60, 1
+		 *		Dark Bone: 36, 26, 13, 1
 		 *	
 		 *	BUGS:
 		 *	
@@ -73,6 +76,8 @@ namespace Nicki0.FeatPortalTeleport {
 				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
+			bool isNewVersion = this.IsNewVersion(out Version oldVersion);
+
 			configRequireCost = Config.Bind<bool>("General", "requireCost", false, "Opening the Portal to another planet costs one Fusion Energy Cell");
 			configItemsCost = Config.Bind<string>("General", "costItems", "FusionEnergyCell", "Cost to open a portal (Comma separated list of item IDs)");
 			configRequireFullTerraformation = Config.Bind<bool>("General", "requireFullTerraformation", true, "Requires the source and destination planet to be terraformed to stage \"Complete\"");
@@ -87,6 +92,24 @@ namespace Nicki0.FeatPortalTeleport {
 			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1; Toxicity: 192, 192, 0, 1", "Color of a portal connected to a planet (RGB/RGBA)");
 			configEnableStrudel = Config.Bind<bool>("Color", "coneShapedPortals", true, "Activate cone shape of the portal");
 			configTimeInPortal = Config.Bind<float>("General", "timeInPortal", 0, "Time in seconds for how long the player remains inside the portal animation. Default time: 5s. Set to 0 to use default time.");
+
+			if (isNewVersion) {
+				log.LogInfo($"Updated from: {oldVersion.ToString()}");
+				if (oldVersion < new Version("1.2.14.0")) {
+					if (!configColorPortalsColors.Value.Contains("Toxicity")) {
+						configColorPortalsColors.Value = "Toxicity: 192, 192, 0, 1; " + configColorPortalsColors.Value;
+						log.LogInfo("Added color for Toxicity");
+					}
+					if (!configColorPortalsColors.Value.Contains("Skeo")) {
+						configColorPortalsColors.Value = "Skeo: 36, 26, 13, 1; " + configColorPortalsColors.Value;
+						log.LogInfo("Added color for Skeo");
+					}
+					//if (!configColorPortalsColors.Value.Contains("Orbital")) {
+					//	configColorPortalsColors.Value = "Orbital: -5, -5, -5, 1; " + configColorPortalsColors.Value;
+					//	log.LogInfo("Added color for Orbital");
+					//}
+				}
+			}
 
 			enableKeepPortalOpen = configKeepPortalsOpen.Value;
 			enableColorPortals = configSetColorPortals.Value;
@@ -376,7 +399,7 @@ namespace Nicki0.FeatPortalTeleport {
 				};
 
 				if (buttonTabPortalTravel == null) {// Hide buttonTabPortalTravel because on first load, buttonTabPortalTravel == null
-					Instance.StartCoroutine(Utils.ExecuteLater(hideButtonTabPortalTravelOnOpen));
+					Instance.StartCoroutine(Nicki0Utils.ExecuteLater(hideButtonTabPortalTravelOnOpen));
 				} else {
 					hideButtonTabPortalTravelOnOpen();
 				}
@@ -401,18 +424,18 @@ namespace Nicki0.FeatPortalTeleport {
 					if (buttonTabPortalTravel != null) {
 						buttonTabPortalTravel.SetActive(false);
 					} else {
-						Instance.StartCoroutine(Utils.ExecuteLater(delegate () { if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false); }));
+						Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () { if (buttonTabPortalTravel != null) buttonTabPortalTravel.SetActive(false); }));
 					}
 					if (buttonTabProceduralInstance != null) {
 						buttonTabProceduralInstance.SetActive(false);
 					} else {
-						Instance.StartCoroutine(Utils.ExecuteLater(delegate () { if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false); }));
+						Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () { if (buttonTabProceduralInstance != null) buttonTabProceduralInstance.SetActive(false); }));
 					}
 
 					return;
 				}
 				if ((containerToShow == __instance.uiPortalsList) && GetWoIdsToPlanetIdHashes().TryGetValue(PortalToWoId(lastMachinePortalGeneratorInteractedWith.machinePortal), out int planetHash)) {
-					Instance.StartCoroutine(Utils.ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
+					Instance.StartCoroutine(Nicki0Utils.ExecuteLater(() => buttonTabPortalTravel.GetComponent<Button>().onClick.Invoke()));
 				}
 			}
 
@@ -672,7 +695,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			// Islands on Aqualis only rise when the player is on them. This should accelerate it.
 			if (configTriggerStoryEventsAfterPlanetSwitch.Value) {
-				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+				Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 					for (int i = 0; i < 10; i++) {
 						method_StoryEventsHandler_TryToLaunchAnEventLogic.Invoke(Managers.GetManager<StoryEventsHandler>(), []);
 					}
@@ -834,16 +857,16 @@ namespace Nicki0.FeatPortalTeleport {
 			Action planetLoadedReplacement = null;
 			planetLoadedReplacement = new Action(delegate () {
 				Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
-				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+				Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 					Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 					float defaultDistance = Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck;
 					Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
-					Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+					Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 						Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
 					}, waitSeconds: 10));
 
 					for (int i = 1; i < 5; i++) {
-						Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+						Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 							Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 						}, waitSeconds: i));
 					}
@@ -1057,7 +1080,7 @@ namespace Nicki0.FeatPortalTeleport {
 		 */
 		private static void SetColorConfig() {
 			PlanetColor.Clear();
-			foreach (string planetSplit in ("SpaceStation: -5, -5, -5, 1; Toxicity: 192, 192, 0, 1; " + configColorPortalsColors.Value).Split(';')) {
+			foreach (string planetSplit in ("SpaceStation: -5, -5, -5, 1; " + configColorPortalsColors.Value).Split(';')) {
 				string[] attributeSplit = planetSplit.Split(':');
 				if (attributeSplit.Length != 2) continue;
 				string planet = attributeSplit[0].Trim();
@@ -1089,7 +1112,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			foreach (ParticleSystem particle in ___particlesOnOpen) {
 				ParticleSystemRenderer particleCircles = particle.GetComponent<ParticleSystemRenderer>();
-				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+				Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 
 					if (__instance.machinePortal == null || __instance.machinePortal != null && PortalToWoId(__instance.machinePortal) == -1) {
 						SetMaterialColor(particleCircles, null);
@@ -1107,7 +1130,7 @@ namespace Nicki0.FeatPortalTeleport {
 			}
 			if (playParticles) { // Color is only changed in next frame, so particles are started only after that
 				playParticles = false;
-				Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+				Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 					foreach (ParticleSystem particleSystem in ___particlesOnOpen) {
 						particleSystem.Play();
 					}
@@ -1215,7 +1238,7 @@ namespace Nicki0.FeatPortalTeleport {
 		[HarmonyPatch(typeof(UiWindowPortalGenerator), "SelectFirstButtonInGrid")]
 		static void Postfix_UiWindowPortalGenerator_SelectFirstButtonInGrid(UiWindowPortalGenerator __instance) {
 			// Select procedural instance buttons when no button in the grid is available (e.g. when opening the PortalGenerator UI on Aqualis)
-			Instance.StartCoroutine(Utils.ExecuteLater(delegate () {
+			Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
 				if (GamepadConfig.Instance.GetIsUsingController()) {
 					Selectable componentInChildren = __instance.gridForInstances.GetComponentInChildren<Selectable>();
 					if (componentInChildren == null) {

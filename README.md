@@ -3,6 +3,7 @@
 
 The latest versions of the mods can be found in the releases https://github.com/mcnicki2002/PlanetCrafterMods/releases
 ## Mods
+- [(Cheat) Auto Convert Genetic Extractor](#cheat-auto-convert-genetic-extractor)
 - [(Cheat) Custom Ore Randomization](#cheat-custom-ore-randomization)
 - [(Cheat) Machine Config](#cheat-machine-config)
 - [(Cheat) Store Toxins in Toxic Storage](#cheat-store-toxins-in-toxic-storage)
@@ -38,6 +39,18 @@ The latest versions of the mods can be found in the releases https://github.com/
 - PROOFN'T OF CONCEPT: This mod probably never really worked. If something breaks, please contact me, but I do not promise to fix it.
 - Not yet finished: This mod is not yet finished due to various possible reasons (e.g. lack of knowledge etc.)
 - Discontinued: This mod is discontinued, probably because it is a native feature now. Will not receive updates.
+
+
+## (Cheat) Auto Convert Genetic Extractor
+### Features:
+- Automatically converts items inside genetic extractors to their genetic trait.
+- Makes genetic extractor inventories reachable for Auto-Crafters.
+### Config:
+- `runEveryXSeconds`: Sets the frequency of the conversion coroutine. The coroutine will always finish before it starts the next iteration.
+- `processNExtractorsPerFrame`: Sets the number of genetic extractors processed per Frame. Decrease to reduce lag.
+### Type: Released
+### Multiplayer compatibility:
+- Not yet tested
 
 
 ## (Cheat) Custom Ore Randomization

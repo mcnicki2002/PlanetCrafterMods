@@ -1003,6 +1003,16 @@ namespace Nicki0.QoLAutoLogistics {
 				if (enableNotification.Value) SendNotification("Set selected Group", SpritePaste); // [missing translation]
 			}
 		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(UiWindowGroupSelector), nameof(UiWindowGroupSelector.OnOpenGroupSelectorUi))]
+		public static void UiWindowGroupSelector_OnOpenGroupSelectorUi(UiWindowGroupSelector __instance, Inventory ____inventoryRight, List<GroupData> groupItems) {
+			if (!enableMod.Value) return;
+
+			if (!Keyboard.current[pasteLogisticsKey.Value].isPressed) return;
+
+			SetSelectedGroupFromCopy(__instance, ____inventoryRight, groupItems);
+		}
+		/* Pre-Skeo / Pre-v2.100
 		[HarmonyPrefix] // OnOpen or SetGroupSelectorWorldObject not possible because ActionGroupSelector.OpenInventories calls SetInventories after them
 		[HarmonyPatch(typeof(UiWindowGroupSelector), nameof(UiWindowGroupSelector.OnOpenAutoCrafter))]
 		public static void UiWindowGroupSelector_OnOpenAutoCrafter(UiWindowGroupSelector __instance, Inventory ____inventoryRight) {
@@ -1032,7 +1042,7 @@ namespace Nicki0.QoLAutoLogistics {
 			if (!Keyboard.current[pasteLogisticsKey.Value].isPressed) return;
 
 			SetSelectedGroupFromCopy(__instance, ____inventoryRight);
-		}
+		}*/
 
 		// Fix if group item has less ingredients than there are logistic Icons displayed
 		[HarmonyPrefix]

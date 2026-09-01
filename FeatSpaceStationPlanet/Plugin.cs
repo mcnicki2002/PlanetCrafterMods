@@ -138,7 +138,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			//newPlanet.mossPotentialColors.Clear();
 
 			//newPlanet.meteoEvents.Clear();
-			newPlanet.evolutionners.Clear();
+			//newPlanet.evolutionners.Clear();
 			newPlanet.disableMusicsSectorsLimitations = true;
 			newPlanet.availableGeneticTraits.Clear();
 			newPlanet.tutorialSteps.Clear();
@@ -276,14 +276,14 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		private static List<GroupData> asteroidOresForHarvestingRobot = new List<GroupData>();
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(ActionGroupSelector), "OpenInventories")]
-		private static void ActionGroupSelector_OpenInventories(WorldObject worldObject, List<GroupData> ___oreList) {
+		private static void ActionGroupSelector_OpenInventories(WorldObject worldObject, List<GroupData> ___groupsForSelection) {
 			if (worldObject?.GetGroup()?.GetId() == "HarvestingRobot1" &&
 				worldObject?.GetPlanetHash() == planetName.GetStableHashCode()
 			) {
 				if (asteroidOresForHarvestingRobot.Count == 0) {
 					log.LogWarning("asteroid list is empty!!!");
 				}
-				___oreList.AddRange(asteroidOresForHarvestingRobot);
+				___groupsForSelection.AddRange(asteroidOresForHarvestingRobot);
 			}
 		}
 
@@ -366,7 +366,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 
 			// make Aquarium2 be able to grow algae
 			GroupData aquarium2 = ___groupsData.Find(e => e.id == "Aquarium2");
-			GameObject waterGO = aquarium2.associatedGameObject.transform.Find("BiodomeBase/Volumes/Water/MeshColliderWater").gameObject;
+			GameObject waterGO = aquarium2.associatedGameObject.transform.Find("BiodomeBase/Water/MeshColliderWater").gameObject;
 			if (waterGO == null) { return; }
 			if (!waterGO.TryGetComponent<HomemadeTag>(out _)) return;
 			waterGO.layer = LayerMask.NameToLayer(GameConfig.layerWaterName);
@@ -386,13 +386,13 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		private static float lastJetpackFactor = 1;
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(PlayerMovable), nameof(PlayerMovable.UpdatePlayerMovement))]
-		static void Pre_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, float ___jetpackFactor, ref float ___JumpImpulse, int ___jumpStatusInAir) {
+		static void Pre_PlayerMovable_UpdatePlayerMovement(ref float[] __state, ref float ___PlayerWeight, float ____jetpackFactor, ref float ___JumpImpulse, int ____jumpStatusInAir) {
 			__state = new float[] { ___PlayerWeight, ___JumpImpulse };
-			lastJetpackFactor = ___jetpackFactor;
+			lastJetpackFactor = ____jetpackFactor;
 
 			if (IsOnPlanet()) {
 				___PlayerWeight *= 0.1f;
-				if (___jumpStatusInAir == 2) ___JumpImpulse *= 0.2f;
+				if (____jumpStatusInAir == 2) ___JumpImpulse *= 0.2f;
 			}
 		}
 		[HarmonyPostfix]
@@ -419,7 +419,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 						directionChangeHeight = (cameraPointUpDown + 0.7f) / (0.3f) * 20;
 					}
 
-					directionChangeHeight *= Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable().lastMoveAxis.y;
+					directionChangeHeight *= Managers.GetManager<PlayersManager>().GetActivePlayerController().GetPlayerMovable()._lastMoveAxis.y;
 
 					__result = 15 - directionChangeHeight; //15 - 5 - 0.1f;//vehicleJetpackUpdate_height.Value - 0.1f;
 				}

@@ -34,6 +34,8 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<float> config_autocrafter_time;
 		public static ConfigEntry<float> config_autocrafter_range;
 		public static ConfigEntry<float> config_incubator_time;
+		public static ConfigEntry<float> config_incubator2_time;
+		public static ConfigEntry<float> config_incubator2_range;
 		public static ConfigEntry<float> config_dnaManipulator_time;
 		public static ConfigEntry<float> config_drone1_speed;
 		public static ConfigEntry<float> config_drone2_speed;
@@ -78,6 +80,8 @@ namespace Nicki0.CheatMachineConfig {
 			config_autocrafter_time = Config.Bind<float>("Auto-Crafter", "AutoCrafter_time", -1, "[Default: 5] Time to craft an item (in seconds)");
 			config_autocrafter_range = Config.Bind<float>("Auto-Crafter", "AutoCrafter_range", -1, "[Default: 20] Range of auto crafter");
 			config_incubator_time = Config.Bind<float>("Incubator", "Incubator_time", -1, "[Default: 1] Time to incubate an item (in minutes)");
+			config_incubator2_time = Config.Bind<float>("Incubator", "T2Incubator_time", -1, "[Default: 6] Time to craft an item (in seconds)");
+			config_incubator2_range = Config.Bind<float>("Incubator", "T2Incubator_range", -1, "[Default: 20] Range of T2 Incubator");
 			config_dnaManipulator_time = Config.Bind<float>("DNA_Manipulator", "DnaManipulator_time", -1, "[Default: 4] Time to dna-manipulate an item (in minutes)");
 			config_drone1_speed = Config.Bind<float>("Drone", "T1Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
 			config_drone2_speed = Config.Bind<float>("Drone", "T2Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
@@ -143,6 +147,17 @@ namespace Nicki0.CheatMachineConfig {
 					case "Incubator1": {
 							MachineGrowerIfLinkedGroup component = associatedGameObject.GetComponentInChildren<MachineGrowerIfLinkedGroup>();
 							if (config_incubator_time.Value >= 0) component.timeToGrow = config_incubator_time.Value;
+							break;
+						}
+					case "Incubator2": {
+							MachineAutoCrafter component = associatedGameObject.GetComponentInChildren<MachineAutoCrafter>();
+							if (config_incubator2_time.Value >= 0) component.craftEveryXSec = config_incubator2_time.Value;
+							if (config_incubator2_range.Value >= 0) {
+								component.range = config_incubator2_range.Value;
+								foreach (ActionnableShowRange rangeComp in component.transform.root.GetComponentsInChildren<ActionnableShowRange>()) {
+									rangeComp.range = component.range;
+								}
+							}
 							break;
 						}
 					case "GeneticManipulator1": {

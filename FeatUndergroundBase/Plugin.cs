@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
 
 namespace Nicki0.FeatUndergroundBase {
@@ -54,6 +56,8 @@ namespace Nicki0.FeatUndergroundBase {
 				LibCommon.ModVersionCheck.NotifyUser(this, hashError, repoURL, Logger.LogInfo);
 			}
 
+
+
 			Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 		}
@@ -72,6 +76,17 @@ namespace Nicki0.FeatUndergroundBase {
 			if (new StackTrace(true).ToString().Contains("CreateNewFile", StringComparison.InvariantCultureIgnoreCase)) return;
 
 			if (!isInitialized) {
+				// --- Waterproof --->
+				List<string> ToWaterproof = ["pod", "Pod4x", "Pod9xA", "Pod9xB", "Pod9xC", "podAngle", "biodome", "Biodome2", "ButterflyDome1", "Megadome1", "Pod9xB"];
+				foreach (string toWaterproof in ToWaterproof) {
+					GroupData gdToWaterproof = ___groupsData.Find(e => e.id == toWaterproof);
+					if (gdToWaterproof == null) { continue; }
+					if (!gdToWaterproof.associatedGameObject.TryGetComponent<Nicki0_Waterproof>(out _)) gdToWaterproof.associatedGameObject.AddComponent<Nicki0_Waterproof>();
+				}
+				// <--- Waterproof ---
+
+
+
 				GameObject rock02 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_02").gameObject;
 				GameObject rock10 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Boulder_10").gameObject;
 				GameObject rock12 = ___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.transform.Find("Biodome2/Rocks/Obstacle_12").gameObject;
@@ -105,6 +120,8 @@ namespace Nicki0.FeatUndergroundBase {
 				rockForDoor.AddComponent<DestroyIfGhost>();
 				rockForDoor.AddComponent<Nicki0_DestroyIfAboveGround>();
 				rockForDoor.AddComponent<Nicki0_HideWhenAgainstLivable>();
+
+				Destroy(___groupsData.Find(e => e.id == "door").associatedGameObject.GetComponent<ConstraintCantBuildUnderground>()); // let door be constructed below ground
 
 				/*
 				 * Biodome2/Biodome2/Rocks/Boulder_10
@@ -202,6 +219,8 @@ namespace Nicki0.FeatUndergroundBase {
 					rockForPodAngle.AddComponent<Nicki0_DestroyIfAboveGround>();
 					rockForPodAngle.AddComponent<Nicki0_HideWhenAgainstLivable>();
 				}
+				SwitchVisibilityIfUnderground podAngle_sviu = podAngleGameObject.GetComponent<SwitchVisibilityIfUnderground>();
+				podAngle_sviu.DestroyUndergroundObject();
 
 				/*
 				 * -0.8836f, 2.0291f, -3.1327f
@@ -267,9 +286,9 @@ namespace Nicki0.FeatUndergroundBase {
 					var constraint = ___groupsData.Find(e => e.id == id).associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>();
 					constraint.heightOffsetOfPositionToTest = 6;
 				}*/
-				___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
-				___groupsData.Find(e => e.id == "ButterflyDome1").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
-				___groupsData.Find(e => e.id == "Aquarium2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = -3;
+				//___groupsData.Find(e => e.id == "Biodome2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
+				//___groupsData.Find(e => e.id == "ButterflyDome1").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = 3;
+				//___groupsData.Find(e => e.id == "Aquarium2").associatedGameObject.AddComponent<Nicki0_ConstraintAboveGround>().heightOffsetOfPositionToTest = -3;
 
 				List<string> groupsWithRockAsWindows = [
 					"Pod9xB",
@@ -299,6 +318,9 @@ namespace Nicki0.FeatUndergroundBase {
 
 			GroupDataConstructible ladderGDC = ___groupsData.Find(e => e.id == "Ladder") as GroupDataConstructible;
 
+			Destroy(ladderGDC.associatedGameObject.GetComponent<ConstraintCantBuildUnderground>());
+			ladderGDC.associatedGameObject.GetComponent<SwitchVisibilityIfUnderground>().DestroyUndergroundObject();
+
 			ConstructibleGhost cg = ladderGDC.associatedGameObject.AddComponent<ConstructibleGhost>();
 
 
@@ -306,7 +328,7 @@ namespace Nicki0.FeatUndergroundBase {
 			GroupDataConstructible downwardsLadder = Instantiate(ladderGDC);
 			downwardsLadder.id = LadderDownId;
 			downwardsLadder.associatedGameObject = Instantiate(downwardsLadder.associatedGameObject);
-			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
+			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
 			downwardsLadder.recipeIngredients.Reverse();
 			Texture2D textureLadderDown = new Texture2D(2, 2);
 			ImageConversion.LoadImage(textureLadderDown, Properties.Resources.LadderDown);
@@ -325,7 +347,7 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder.id = LadderStartId;
 			startLadder.recipeIngredients.AddRange(___groupsData.Find(e => e.id == "pod").recipeIngredients);
 			startLadder.associatedGameObject = Instantiate(startLadder.associatedGameObject);
-			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation;
+			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
 			Destroy(startLadder.associatedGameObject.GetComponent<ConstructibleGhost>());
 			startLadder.associatedGameObject.name = startLadder.id;
 			Texture2D textureStartLadder = new Texture2D(2, 2);
@@ -357,7 +379,7 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder_BottomMove.AddComponent<Nicki0_SpawnStartingRoom>();
 			startLadder_BottomMove.AddComponent<Nicki0_MoveStartingRoomInGhost>();
 			___groupsData.Add(startLadder);
-			foreach (var proxy in startLadder.associatedGameObject.GetComponentsInChildren<ConstructibleProxy>()) { // E.g. on Humble, the ladder disappears...
+			foreach (ConstructibleProxy proxy in startLadder.associatedGameObject.GetComponentsInChildren<ConstructibleProxy>()) { // E.g. on Humble, the ladder disappears...
 				if (!proxy.TryGetComponent<Nicki0_DisableMeshOccluder>(out _)) {
 					proxy.gameObject.AddComponent<Nicki0_DisableMeshOccluder>();
 				}
@@ -490,6 +512,7 @@ namespace Nicki0.FeatUndergroundBase {
 			return true;
 		}
 
+		// Disable death barrier; IsUnderTerrain LimitUnder
 		[HarmonyTranspiler]
 		[HarmonyPatch(typeof(PlayerDirectEnvironment), "OnTriggerEnter")]
 		static IEnumerable<CodeInstruction> Transpiler_PlayerDirectEnvironment_OnTriggerEnter(IEnumerable<CodeInstruction> instructions) {
@@ -523,6 +546,83 @@ namespace Nicki0.FeatUndergroundBase {
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MeshOccluder), "RegisterMeshOccluder")]
 		static bool MeshOccluder_RegisterMeshOccluder(MeshOccluder __instance) => __instance.GetComponent<Nicki0_DisableMeshOccluder>() == null;
+
+		// adapt to v2.1 undergroud stuff
+		// use mod's panels
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PanelsResources), nameof(PanelsResources.GetPanelUndergroundGameObject))]
+		static void PanelsResources_GetPanelUndergroundGameObject(PanelsResources __instance, ref GameObject __result, DataConfig.BuildPanelSubType _subPanelType) {
+			__result = __instance.GetPanelGameObject(_subPanelType);
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(ConstraintCantBuildUnderground), "LateUpdate")]
+		static void ConstraintCantBuildUnderground_LateUpdate(ConstraintCantBuildUnderground __instance) {
+			AccessTools.FieldRefAccess<ConstraintCantBuildUnderground, bool>(__instance, "isConstraintRespected") = true; // __instance.isConstraintRespected = true;
+			Destroy(__instance);
+		}
+
+		// --- Waterproof --->
+		/*[HarmonyPrefix]
+		[HarmonyPatch(typeof(RequireEnergy), "ChangeComponentsStatuts")]
+		static void RequireEnergy_ChangeComponentsStatuts(RequireEnergy __instance, ref bool _disableCauseUnderWater) {
+			if (_disableCauseUnderWater) {
+				if (__instance.transform.root.GetComponentInChildren<Nicki0_Waterproof>() != null) {
+					_disableCauseUnderWater = false;
+				}
+			}
+		}*/
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(WaterHandler), nameof(WaterHandler.IsUnderWater))]
+		static void WaterHandler_IsUnderWater(ref bool __result, Vector3 position) {
+			foreach (Collider collider in Physics.OverlapSphere(position, 1)) {
+				foreach (HomemadeTag homemadeTag in collider.transform.GetComponentsInChildren<HomemadeTag>().Union(collider.transform.GetComponentsInParent<HomemadeTag>())) {
+					if (homemadeTag.GetHomemadeTag() == DataConfig.HomemadeTag.IsInsideLivable) {
+						__result = false;
+						return;
+					}
+				}
+			}
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PlayerDirectEnvironment), nameof(PlayerDirectEnvironment.GetIsUnderwater))]
+		static void PlayerDirectEnvironment_GetIsUnderwater(PlayerDirectEnvironment __instance, ref bool __result) {
+			if (__result) {
+				__result = !__instance.GetIsInLivable();
+			}
+		}
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(PlayerDirectEnvironment), "SendColliderInfos")]
+		static void Pre_PlayerDirectEnvironment_GetIsUnderwater(PlayerDirectEnvironment __instance, ref List<DataConfig.HomemadeTag> ____collidersEnteredTags, ref List<DataConfig.HomemadeTag> __state) {
+			if (__instance == null || ____collidersEnteredTags == null) {
+				__state = null;
+				return;
+			}
+			if (____collidersEnteredTags.Contains(DataConfig.HomemadeTag.IsInsideLivable) || ____collidersEnteredTags.Contains(DataConfig.HomemadeTag.IsInsideBreathableArea)) {
+				__state = ____collidersEnteredTags;
+				____collidersEnteredTags = new List<DataConfig.HomemadeTag>(____collidersEnteredTags);
+				//if (____collidersEnteredTags.Remove(DataConfig.HomemadeTag.IsUnderWater)) __state.Add(DataConfig.HomemadeTag.IsUnderWater);
+				//if (____collidersEnteredTags.Remove(DataConfig.HomemadeTag.IsTouchingWater)) __state.Add(DataConfig.HomemadeTag.IsTouchingWater);
+				____collidersEnteredTags.Remove(DataConfig.HomemadeTag.IsUnderWater);
+				____collidersEnteredTags.Remove(DataConfig.HomemadeTag.IsTouchingWater);
+			}
+		}
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(PlayerDirectEnvironment), "SendColliderInfos")]
+		static void Post_PlayerDirectEnvironment_GetIsUnderwater(PlayerDirectEnvironment __instance, ref List<DataConfig.HomemadeTag> ____collidersEnteredTags, ref List<DataConfig.HomemadeTag> __state) {
+			if (__state != null) ____collidersEnteredTags = __state;
+		}
+		// <--- Waterproof ---
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(Volume), "OnEnable")]
+		static void bla(Volume __instance) {
+			if (__instance.profile.TryGet<ChromaticAberration>(out ChromaticAberration chromaticAberration)) {
+				chromaticAberration.intensity.value = 0f;
+				chromaticAberration.active = false; 
+			}
+			if (__instance.profile.TryGet<FilmGrain>(out FilmGrain filmGrain)) {
+				filmGrain.active = false;
+			}
+		}
 	}
 
 	public static class Underground_Helpers {
@@ -541,7 +641,7 @@ namespace Nicki0.FeatUndergroundBase {
 			RaycastHit[] hitsBelow = Physics.RaycastAll(position, Vector3.down, 500, ~LayerMask.GetMask(GameConfig.commonIgnoredAndWater.Union(new string[] { "Occlusion", GameConfig.layerToxicName, GameConfig.layerPlayerAndRoverExcludeName, GameConfig.layerDeconstructionName }).ToArray()));
 			foreach (RaycastHit hit in hitsBelow) {
 				if (hit.collider.GetComponent<MachineGenerationGroupVein>() == null &&
-					(	hit.collider.transform.root.name.StartsWith("World") || // main scene
+					(hit.collider.transform.root.name.StartsWith("World") || // main scene
 						hit.collider.transform.root.name.StartsWith("Container-") || // sectors; '-' required because of "Container1..2..3"
 						hit.collider.transform.root.GetComponentInChildren<WorldObjectAssociated>() == null
 					) &&
@@ -610,6 +710,9 @@ namespace Nicki0.FeatUndergroundBase {
 					}
 					this.GetComponent<Collider>().enabled = false;
 				}
+				if (Managers.GetManager<PlayersManager>()?.GetActivePlayerController() == null) { // Hopefully prevents NRE
+					yield return wait;
+				}
 				if ((Managers.GetManager<PlayersManager>().GetActivePlayerController().transform.position - this.transform.position).magnitude > 50) {
 					yield return waitLong;
 				} else {
@@ -651,7 +754,7 @@ namespace Nicki0.FeatUndergroundBase {
 		public float heightOffsetOfPositionToTest = 0f;
 		public void Start() {
 			if (!Underground_Helpers.IsBelowGround_ByRaycast(this.transform.position + heightOffsetOfPositionToTest * Vector3.up)) { return; }//if (this.transform.position.y >= Plugin.SURFACE_HEIGHT) { return; }
-
+			return;
 			this.StartCoroutine(ChangeMagerialsLater());
 		}
 		public IEnumerator ChangeMagerialsLater() {
@@ -800,7 +903,7 @@ namespace Nicki0.FeatUndergroundBase {
 					}
 				}
 			}
-			
+
 
 			//Vector3 pos = this.transform.position + new Vector3(0, 20, 0);
 
@@ -832,7 +935,7 @@ namespace Nicki0.FeatUndergroundBase {
 					// Problem: Can't revert changes when pods next to each other are deconstructed in the wrong order => no area changes
 					//Dictionary<Vector2, float> heightChanges_ForArea = new Dictionary<Vector2, float>();
 
-					
+
 					int minX_Height = Math.Max(0, (int)Math.Floor((collider.bounds.min.x - terrain.transform.position.x) / td.size.x * (td.heightmapResolution - 1)) - 1);
 					int minZ_Height = Math.Max(0, (int)Math.Floor((collider.bounds.min.z - terrain.transform.position.z) / td.size.z * (td.heightmapResolution - 1)) - 1);
 					int maxX_Height = Math.Min(td.heightmapResolution - 1, (int)Math.Ceiling((collider.bounds.max.x - terrain.transform.position.x) / td.size.x * (td.heightmapResolution - 1)));
@@ -1000,4 +1103,19 @@ namespace Nicki0.FeatUndergroundBase {
 	}
 
 	public class Nicki0_DisableMeshOccluder : MonoBehaviour { }
+
+	public static class Nicki0_FeatUndergroundBase_ExtensionMethods {
+		public static void DestroyUndergroundObject(this SwitchVisibilityIfUnderground sviu) {
+			if (sviu != null) {
+				if (sviu.gameOjectsToShowIfUnderground != null) {
+					foreach (GameObject go in sviu.gameOjectsToShowIfUnderground) {
+						UnityEngine.Object.Destroy(go);
+					}
+				}
+				UnityEngine.Object.Destroy(sviu);
+			}
+		}
+	}
+
+	public class Nicki0_Waterproof : MonoBehaviour { }
 }
