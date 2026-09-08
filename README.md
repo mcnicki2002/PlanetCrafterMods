@@ -49,6 +49,7 @@ The latest versions of the mods can be found in the releases https://github.com/
 - `runEveryXSeconds`: Sets the frequency of the conversion coroutine. The coroutine will always finish before it starts the next iteration.
 - `processNExtractorsPerFrame`: Sets the number of genetic extractors processed per Frame. Decrease to reduce lag.
 ### Type: Released
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -61,6 +62,8 @@ The latest versions of the mods can be found in the releases https://github.com/
 - `OreConfig`: a Semicolon `;` separated list of `oreToReplace:replacementOre` pairs
   - Example: `Uranim:Iridium;Iridium:Uranim;Alloy:Alloy` changes uranium to iridium, iridium to uranium and keeps super alloy where it should be
 ### Type: Requested
+### Risks when uninstalling: 
+- The set randomization is not applied anymore and the game will use the vanilla randomization.
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -72,6 +75,7 @@ The latest versions of the mods can be found in the releases https://github.com/
 ### Config:
 - See config file
 ### Type: Released
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -81,6 +85,8 @@ The latest versions of the mods can be found in the releases https://github.com/
 ### Config:
 - `gIDsToStoreInToxicStorage`: list of IDs that can be stored in Toxic containers
 ### Type: Requested/Released
+### Risks when uninstalling: 
+- When the toxic storage demands Toxins, they could be deleted by the game when the mod doesn't allow them to go in the storage.
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -93,6 +99,7 @@ The latest versions of the mods can be found in the releases https://github.com/
 ### Config:
 - `FontSize`: Font size
 ### Type: Requested/Released
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -105,6 +112,7 @@ Click on the Planet Viewer and select the planet that you want to see on it.
 ### Config:
 - `sunAngle`: Set at which angle the Planet Viewer is eluminated
 ### Type: Released
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -133,7 +141,9 @@ Note:
   - `costItems`: items that are required to open a portal (default: 1 fusion energy cell)
 
 ### Type: Released
-
+### Risks when uninstalling: 
+- Traveling to **<ins>already visited</ins>** planets that have no extraction platform might result in spawning at 0:0:0 and loosing the interplanetary escape pod. Make sure each planet has an extraction platform before you uninstall the mod, or do not put any resources in the interplanetary travel rocket's inventory when traveling before you can place an extraction platform on the destination.
+- Portal generators on moons are removed by default. 
 ### Multiplayer compatibility:
 - This mod is not fully multiplayer compatible. It only works for the host, but clients should not experience any problems. Clients need the mod as well, otherwise they are stuck in the loading screen for 2 minutes!
 
@@ -159,7 +169,8 @@ Note:
 
 ### Type: Not yet finished
 - The features work, but the map is not nearly finished.
-
+### Risks when uninstalling: 
+- Your save file might not load anymore. Edit the save file and remove the planet state line of the space station planet at the beginning.
 ### Multiplayer compatibility:
 - (Not yet tested)
 
@@ -173,7 +184,9 @@ Change the terrain height
 ### Config:
 (/)
 ### Type: PROOFN'T OF CONCEPT
-- The save file size, the lag and that other mountains/ores/... aren't moved is just not properly usable. 
+- The save file size, the lag and that other mountains/ores/... aren't moved is just not properly usable.
+### Risks when uninstalling:
+- The terrain is reverted and the save file will stay huge.
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -187,6 +200,8 @@ Change the terrain height
 (/)
 ### Type: Proof of concept
 - You will notice that you can look below the map at various places, but in general the mod should work. Consider it "Released" with the limitation that you can look below the ground at some places.
+### Risks when uninstalling: 
+- You loose access to the underground base
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -197,6 +212,7 @@ Change the terrain height
 ### Config:
 (/)
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -207,6 +223,7 @@ Change the terrain height
 - `aqualisOceanDisplacement`: Set the wave height on Aqualis
 - `aqualisOceanHeightOffset`: Set the height of the water surface on Aqualis
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -218,6 +235,8 @@ Change the terrain height
 (only by editing and recompiling the source code)
 ### Type: Released
 - The rockets are for personal use, so it's best to ignore them.
+### Risks when uninstalling: 
+- All items and compressed rockets are lost without replacement.
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -231,6 +250,8 @@ Change the terrain height
 - `cleanMoss`: Removes the moss that is present in procedural wrecks
 ### Type: Discontinued
 - It's now a native feature
+### Risks when uninstalling: 
+- You might not be able to place any other walls in the now open space, so you will need to deconstruct the whole living compartment.
 ### Multiplayer compatibility:
 - Fully compatible
 
@@ -324,6 +345,8 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 
 ### Type: Released
 
+### Risks when uninstalling: None
+
 ### Multiplayer compatibility:
 - Should work for the host.
 - Does not work on client side. It is on my todo list.
@@ -335,6 +358,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 ### Config:
 - `multiplier`: Multiplier for how long debris exists. Example: 0.1 => debris disappears 10 times faster.
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -344,6 +368,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 - Hold the Accessibility Key (default: Ctrl) + Alt, click on a container, move and rotate the ghost and place it down to move the container.
 ### Config: (/)
 ### Type: Released/Proof of concept
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Does not work
 
@@ -355,6 +380,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 - `skipNewTutorial`: Skips new tutorials
 - `skipBlueSkyTutorial`: Hides the Blue Sky tutorial steps
 ### Type: Released
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -372,6 +398,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 ### Config:
 - `addInsteadOfReplace`: Add music instead of replacing it.
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested, but should be Client-side only
 
@@ -382,6 +409,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 - E.g. helpful with multiple monitors or when using compatibility layers that break mouse movement
 ### Config:
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -393,6 +421,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 - strings of the units displayed
 ### Type: Not yet finished
 - It's more of a personal project
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not compatible, will likely lead to silent crashes when different configs are used
 
@@ -403,6 +432,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 ### Config:
 - Volume configs for the sounds: UiHover, UiMove, UiOpen, UiClose, UiSelectElement, AlertLow, AlertCritical, CheckTutorial, EnergyLack, EnergyRestored, DropObject, CantDo, Teleport
 ### Type: Requested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested, but should be Client-side only
 
@@ -415,6 +445,7 @@ Copy and paste (drone) logistic settings and automatically supply generated item
 - `preventOcculsion`: Prevent occulsion in occulsion colliders (e.g. in the maze and the region north of it)
 ### Type: Released (/Requested)
 - Distance/Button-enabled occlusion isn't actively tested
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
 
@@ -428,5 +459,6 @@ Merge save files with different planet(s) into one combined save file
 ### Features:
 ### Config:
 ### Type: [Requested/Released/Proof of concept/PROOFN'T OF CONCEPT/Not yet finished/Discontinued]
+### Risks when uninstalling: None
 ### Multiplayer compatibility:
 - Not yet tested
