@@ -39,6 +39,7 @@ namespace Nicki0.CheatMachineConfig {
 		public static ConfigEntry<float> config_dnaManipulator_time;
 		public static ConfigEntry<float> config_drone1_speed;
 		public static ConfigEntry<float> config_drone2_speed;
+		public static ConfigEntry<float> config_drone3_speed;
 		public static ConfigEntry<int> config_t1machineOptimizer_affectedMachineCount;
 		public static ConfigEntry<float> config_t1machineOptimizer_range;
 		public static ConfigEntry<int> config_t2machineOptimizer_affectedMachineCount;
@@ -83,8 +84,9 @@ namespace Nicki0.CheatMachineConfig {
 			config_incubator2_time = Config.Bind<float>("Incubator", "T2Incubator_time", -1, "[Default: 6] Time to craft an item (in seconds)");
 			config_incubator2_range = Config.Bind<float>("Incubator", "T2Incubator_range", -1, "[Default: 20] Range of T2 Incubator");
 			config_dnaManipulator_time = Config.Bind<float>("DNA_Manipulator", "DnaManipulator_time", -1, "[Default: 4] Time to dna-manipulate an item (in minutes)");
-			config_drone1_speed = Config.Bind<float>("Drone", "T1Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
-			config_drone2_speed = Config.Bind<float>("Drone", "T2Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of drones");
+			config_drone1_speed = Config.Bind<float>("Drone", "T1Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of T1 drones");
+			config_drone2_speed = Config.Bind<float>("Drone", "T2Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of T2 drones");
+			config_drone3_speed = Config.Bind<float>("Drone", "T3Drone_SpeedMultiplier", 1f, "[Default: 1] Speed multiplier of T3 drones");
 			config_t1machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T1MachineOptimizer_MachineCount", -1, "[Default: 5] Optimization Capacity / Max amount of machines per fuse");
 			config_t1machineOptimizer_range = Config.Bind<float>("Machine_Optimizer", "T1MachineOptimizer_range", -1, "[Default: 120] Range of machine optimizer");
 			config_t2machineOptimizer_affectedMachineCount = Config.Bind<int>("Machine_Optimizer", "T2MachineOptimizer_MachineCount", -1, "[Default: 8] Optimization Capacity / Max amount of machines per fuse");
@@ -123,6 +125,9 @@ namespace Nicki0.CheatMachineConfig {
 		private static float? baseForwardSpeed_Drone2;
 		private static float? baseDistanceMinToTarget_Drone2;
 		private static float? baseRotationSpeed_Drone2;
+		private static float? baseForwardSpeed_Drone3;
+		private static float? baseDistanceMinToTarget_Drone3;
+		private static float? baseRotationSpeed_Drone3;
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
@@ -170,7 +175,7 @@ namespace Nicki0.CheatMachineConfig {
 							baseForwardSpeed_Drone1 ??= component.forwardSpeed;
 							baseDistanceMinToTarget_Drone1 ??= component.distanceMinToTarget;
 							baseRotationSpeed_Drone1 ??= component.rotationSpeed;
-
+							log.LogFatal($"T1 : {baseForwardSpeed_Drone1.Value}");
 							float multiplier = config_drone1_speed.Value;
 							if (multiplier < 0 || multiplier == 1) break;
 							component.forwardSpeed = multiplier * baseForwardSpeed_Drone1.Value;
@@ -183,12 +188,27 @@ namespace Nicki0.CheatMachineConfig {
 							baseForwardSpeed_Drone2 ??= component.forwardSpeed;
 							baseDistanceMinToTarget_Drone2 ??= component.distanceMinToTarget;
 							baseRotationSpeed_Drone2 ??= component.rotationSpeed;
-
+							log.LogFatal($"T2 : {baseForwardSpeed_Drone2.Value}");
 							float multiplier = config_drone2_speed.Value;
 							if (multiplier < 0 || multiplier == 1) break;
 							component.forwardSpeed = multiplier * baseForwardSpeed_Drone2.Value;
 							component.distanceMinToTarget = multiplier * baseDistanceMinToTarget_Drone2.Value;
 							component.rotationSpeed = /*multiplier **/ baseRotationSpeed_Drone2.Value;
+							break;
+						}
+					case "Drone3": {
+							Drone component = associatedGameObject.GetComponentInChildren<Drone>();
+							baseForwardSpeed_Drone3 ??= component.forwardSpeed;
+							baseDistanceMinToTarget_Drone3 ??= component.distanceMinToTarget;
+							baseRotationSpeed_Drone3 ??= component.rotationSpeed;
+
+							log.LogFatal($"T3 : {baseForwardSpeed_Drone3.Value}");
+
+							float multiplier = config_drone3_speed.Value;
+							if (multiplier < 0 || multiplier == 1) break;
+							component.forwardSpeed = multiplier * baseForwardSpeed_Drone3.Value;
+							component.distanceMinToTarget = multiplier * baseDistanceMinToTarget_Drone3.Value;
+							component.rotationSpeed = /*multiplier **/ baseRotationSpeed_Drone3.Value;
 							break;
 						}
 					case "Optimizer1": {

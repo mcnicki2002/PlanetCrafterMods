@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Nicki0.CheatDroneSpeed {
@@ -24,39 +25,44 @@ namespace Nicki0.CheatDroneSpeed {
 			Harmony.CreateAndPatchAll(typeof(Plugin));
 		}
 
-		private static bool baseInitialized = false;
-		private static float baseForwardSpeed;
-		private static float baseDistanceMinToTarget;
-		private static float baseRotationSpeed;
-		private static float baseForwardSpeedIntervalModifier;
+		struct BaseDroneConfig {
+			public float baseForwardSpeed;
+			public float baseDistanceMinToTarget;
+			public float baseRotationSpeed;
+			public float baseForwardSpeedIntervalModifier;
+		}
+		private static Dictionary<string, BaseDroneConfig> baseConfigDict;
 
 		public static ConfigEntry<float> droneSpeedMultiplier;
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(Drone), "Awake")]
-		public static void Drone_Awake(ref float ___forwardSpeed, ref float ___distanceMinToTarget, ref float ___rotationSpeed, ref float ___forwardSpeedIntervalModifier) {
+		public static void Drone_Awake(Drone __instance, ref float ___forwardSpeed, ref float ___distanceMinToTarget, ref float ___rotationSpeed, ref float ___forwardSpeedIntervalModifier) {
 
-			if (!baseInitialized) {
-				baseForwardSpeed = ___forwardSpeed;
-				baseDistanceMinToTarget = ___distanceMinToTarget;
-				baseRotationSpeed = ___rotationSpeed;
-				baseForwardSpeedIntervalModifier = ___forwardSpeedIntervalModifier;
-				baseInitialized = true;
+
+			if (!baseConfigDict.TryGetValue(__instance.name, out var baseDroneConfig)) {
+				BaseDroneConfig bdc = new BaseDroneConfig();
+				bdc.baseForwardSpeed = ___forwardSpeed;
+				bdc.baseDistanceMinToTarget = ___distanceMinToTarget;
+				bdc.baseRotationSpeed = ___rotationSpeed;
+				bdc.baseForwardSpeedIntervalModifier = ___forwardSpeedIntervalModifier;
+				baseConfigDict.Add(__instance.name, bdc);
+				baseDroneConfig = bdc;
 			}
 
 			float multiplier = droneSpeedMultiplier.Value;
-			___forwardSpeed = multiplier * baseForwardSpeed;
-			___distanceMinToTarget = multiplier * baseDistanceMinToTarget;
-			___rotationSpeed = /*Mathf.Sqrt(multiplier) * */baseRotationSpeed;
+			___forwardSpeed = multiplier * baseDroneConfig.baseForwardSpeed;
+			___distanceMinToTarget = multiplier * baseDroneConfig.baseDistanceMinToTarget;
+			___rotationSpeed = /*Mathf.Sqrt(multiplier) * */baseDroneConfig.baseRotationSpeed;
 		}
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(LogisticManager), nameof(LogisticManager.AddDroneToFleet))]
 		private static void LogisticManager_AddRoneToFleet(Drone drone) {
 			return; // TODO HÄÄÄÄÄÄÄÄÄÄÄ???????????????
-			drone.forwardSpeed = droneSpeedMultiplier.Value * baseForwardSpeed;
-			drone.distanceMinToTarget = droneSpeedMultiplier.Value * baseDistanceMinToTarget;
-			drone.rotationSpeed = droneSpeedMultiplier.Value * baseRotationSpeed;
+			//drone.forwardSpeed = droneSpeedMultiplier.Value * baseForwardSpeed;
+			//drone.distanceMinToTarget = droneSpeedMultiplier.Value * baseDistanceMinToTarget;
+			//drone.rotationSpeed = droneSpeedMultiplier.Value * baseRotationSpeed;
 		}
 
 		// "look rotation viewing vector is zero"-fix

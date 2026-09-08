@@ -858,15 +858,18 @@ namespace Nicki0.FeatPortalTeleport {
 			planetLoadedReplacement = new Action(delegate () {
 				Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 				Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
+					if (Managers.GetManager<MeshOccluderHandler>() == null) return;
 					Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 					float defaultDistance = Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck;
 					Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = 0;
 					Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
+						if (Managers.GetManager<MeshOccluderHandler>() == null) return;
 						Managers.GetManager<MeshOccluderHandler>().distanceBeforeCheck = defaultDistance;
 					}, waitSeconds: 10));
 
 					for (int i = 1; i < 5; i++) {
 						Instance.StartCoroutine(Nicki0Utils.ExecuteLater(delegate () {
+							if (Managers.GetManager<MeshOccluderHandler>() == null) return;
 							Managers.GetManager<MeshOccluderHandler>().SpeedUpProcess(25);
 						}, waitSeconds: i));
 					}
