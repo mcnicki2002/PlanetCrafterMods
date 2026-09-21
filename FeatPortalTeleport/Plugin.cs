@@ -480,7 +480,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 
 			foreach (PlanetData pd in Managers.GetManager<PlanetLoader>().planetList.GetPlanetList(teleportAnyway)) {
-				if (!isCurrentPlanetTerraformed) break;
+				if (!teleportAnyway && !isCurrentPlanetTerraformed) break;
 
 				if (pd.GetPlanetId() == Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetId() && !teleportAnyway) continue;
 

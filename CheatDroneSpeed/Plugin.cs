@@ -31,7 +31,7 @@ namespace Nicki0.CheatDroneSpeed {
 			public float baseRotationSpeed;
 			public float baseForwardSpeedIntervalModifier;
 		}
-		private static Dictionary<string, BaseDroneConfig> baseConfigDict;
+		private static Dictionary<string, BaseDroneConfig> baseConfigDict = new Dictionary<string, BaseDroneConfig>();
 
 		public static ConfigEntry<float> droneSpeedMultiplier;
 
