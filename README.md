@@ -133,6 +133,17 @@ Note:
 - Portals on moons, which shouldn't exist in the base game, will get turned into signs (new v1.2.10.0, previously the portals got removed) if the mod is removed and those signs are loaded as portal generators when the mod is installed again. This is a safety mechanism to prevent that procedural instances can be opened on the moons after the mod is removed/isn't functional anymore.
 - Portal-traveling will close active portals
 
+<details>
+  <summary>Color choice</summary>
+  Prime: Early stage orange color<br>
+  Humble: Ice white<br>
+  Selenea: Pre-v2.0, Selenea became completely green at full terraformation<br>
+  Aqualis: Blue water<br>
+  Toxicity: Toxic yellow<br>
+  Skeo: Bone yellow<br>
+  SpaceStation: Space black<br>
+</details>
+
 ### Config
 - configurable:
   - `requireFullTerraformation`: set to false: travel before full terraformation is reached
