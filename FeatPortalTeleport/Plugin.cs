@@ -89,7 +89,7 @@ namespace Nicki0.FeatPortalTeleport {
 
 			configKeepPortalsOpen = Config.Bind<bool>("General", "keepPortalsOpen", true, "Keep portal open instead of closing them after traveling");
 			configSetColorPortals = Config.Bind<bool>("Color", "activateColoredPortals", true, "Opened Portals are colored depending on their destination. Only works if keepPortalsOpen = true");
-			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1; Toxicity: 192, 192, 0, 1", "Color of a portal connected to a planet (RGB/RGBA)");
+			configColorPortalsColors = Config.Bind<string>("Color", "portalDestinationColors", "Prime: 200, 55, 0, 1; Humble: 30, 30, 25, 1; Selenea: 32, 80, 16, 1; Aqualis: 0, 100, 100, 1; Toxicity: 192, 192, 0, 1; Skeo: 36, 26, 13, 1; Magnetaris: 20, 0, 60, 1", "Color of a portal connected to a planet (RGB/RGBA)");
 			configEnableStrudel = Config.Bind<bool>("Color", "coneShapedPortals", true, "Activate cone shape of the portal");
 			configTimeInPortal = Config.Bind<float>("General", "timeInPortal", 0, "Time in seconds for how long the player remains inside the portal animation. Default time: 5s. Set to 0 to use default time.");
 
@@ -100,14 +100,21 @@ namespace Nicki0.FeatPortalTeleport {
 						configColorPortalsColors.Value = "Toxicity: 192, 192, 0, 1; " + configColorPortalsColors.Value;
 						log.LogInfo("Added color for Toxicity");
 					}
-					if (!configColorPortalsColors.Value.Contains("Skeo")) {
-						configColorPortalsColors.Value = "Skeo: 36, 26, 13, 1; " + configColorPortalsColors.Value;
-						log.LogInfo("Added color for Skeo");
-					}
+					
 					//if (!configColorPortalsColors.Value.Contains("Orbital")) {
 					//	configColorPortalsColors.Value = "Orbital: -5, -5, -5, 1; " + configColorPortalsColors.Value;
 					//	log.LogInfo("Added color for Orbital");
 					//}
+				}
+				if (oldVersion < new Version("1.2.15.0")) {
+					if (!configColorPortalsColors.Value.Contains("Skeo")) {
+						configColorPortalsColors.Value = "Skeo: 36, 26, 13, 1; " + configColorPortalsColors.Value;
+						log.LogInfo("Added color for Skeo");
+					}
+					if (!configColorPortalsColors.Value.Contains("Magnetaris")) {
+						configColorPortalsColors.Value = "Magnetaris: 20, 0, 60, 1; " + configColorPortalsColors.Value;
+						log.LogInfo("Added color for Magnetaris");
+					}
 				}
 			}
 
@@ -121,7 +128,7 @@ namespace Nicki0.FeatPortalTeleport {
 			method_StoryEventsHandler_TryToLaunchAnEventLogic = AccessTools.Method(typeof(StoryEventsHandler), "TryToLaunchAnEventLogic");
 			field_Recipe_recipe = AccessTools.FieldRefAccess<Recipe, List<Group>>("_ingredientsGroups");
 			field_WorldInstanceHandler__allMachinePortalGenerator = AccessTools.FieldRefAccess<WorldInstanceHandler, List<MachinePortalGenerator>>("_allMachinePortalGenerator");
-			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("popupsToPop");
+			field_PopupsHandler_popupsToPop = AccessTools.FieldRefAccess<PopupsHandler, List<PopupData>>("_popupsToPop");
 
 			saveState = new SaveState(typeof(Plugin), DataFormatVersion);
 
@@ -747,7 +754,7 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 		[HarmonyPrefix] // do not execute WorldInstanceHandler.SetWorldInstanceActive(true)
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref GoInsidePortalState __state, ref MachinePortal __instance, ref float ____timeInTunnel) {
+		private static bool Pre_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref GoInsidePortalState __state, ref MachinePortal __instance, ref float ___timeInTunnel) {
 			if (enableKeepPortalOpen) {
 				int woid = PortalToWoId(__instance);
 				if (woid != -1) {
@@ -790,25 +797,25 @@ namespace Nicki0.FeatPortalTeleport {
 			__state.tunnelChanged = false; // init value
 			if (portalCreatedByMod) {
 				if (configTimeInPortal.Value >= 0.001f) {
-					____timeInTunnel = configTimeInPortal.Value;
+					___timeInTunnel = configTimeInPortal.Value;
 				}
 
 				____enterPortal = false;
 
-				__state.portalTunnel = Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject();
-				SetPortalTunnelColor();
+				__state.portalTunnel = __instance.portalTunnel;//Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject();
+				SetPortalTunnelColor(__instance);
 				__state.tunnelChanged = true;
 			}
 			return true;
 		}
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(MachinePortal), "GoInsidePortal")]
-		private static void Post_MachinePortal_GoInsidePortal(ref bool ____enterPortal, ref GoInsidePortalState __state) {
+		private static void Post_MachinePortal_GoInsidePortal(MachinePortal __instance, ref bool ____enterPortal, ref GoInsidePortalState __state) {
 			____enterPortal = __state.enterPortal;
 
 			if (__state.tunnelChanged) {
-				Destroy(Managers.GetManager<VisualsResourcesHandler>().portalTunnel, configTimeInPortal.Value);
-				Managers.GetManager<VisualsResourcesHandler>().portalTunnel = __state.portalTunnel;
+				Destroy(__instance.portalTunnel, configTimeInPortal.Value);
+				__instance.portalTunnel = __state.portalTunnel;
 			}
 		}
 		[HarmonyPrefix]
@@ -1199,9 +1206,9 @@ namespace Nicki0.FeatPortalTeleport {
 		}
 		// <--- Color Portals ---
 		// --- Color Portal Tunnel --->
-		private static void SetPortalTunnelColor() {
-			GameObject configuredPortalTunnel = Instantiate(Managers.GetManager<VisualsResourcesHandler>().GetPortalTunnelGameObject());
-			Managers.GetManager<VisualsResourcesHandler>().portalTunnel = configuredPortalTunnel;
+		private static void SetPortalTunnelColor(MachinePortal machinePortal) {
+			GameObject configuredPortalTunnel = Instantiate(machinePortal.portalTunnel);
+			machinePortal.portalTunnel = configuredPortalTunnel;
 
 			if (!PlanetColor.TryGetValue(Managers.GetManager<PlanetLoader>().GetCurrentPlanetData().GetPlanetHash(), out Color sourcePlanetColor)) {
 				sourcePlanetColor = DefaultPortalColor;

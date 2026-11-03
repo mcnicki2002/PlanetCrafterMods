@@ -328,7 +328,7 @@ namespace Nicki0.FeatUndergroundBase {
 			GroupDataConstructible downwardsLadder = Instantiate(ladderGDC);
 			downwardsLadder.id = LadderDownId;
 			downwardsLadder.associatedGameObject = Instantiate(downwardsLadder.associatedGameObject);
-			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
+			downwardsLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -200000, 0);
 			downwardsLadder.recipeIngredients.Reverse();
 			Texture2D textureLadderDown = new Texture2D(2, 2);
 			ImageConversion.LoadImage(textureLadderDown, Properties.Resources.LadderDown);
@@ -347,7 +347,7 @@ namespace Nicki0.FeatUndergroundBase {
 			startLadder.id = LadderStartId;
 			startLadder.recipeIngredients.AddRange(___groupsData.Find(e => e.id == "pod").recipeIngredients);
 			startLadder.associatedGameObject = Instantiate(startLadder.associatedGameObject);
-			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -2000, 0);
+			startLadder.associatedGameObject.transform.position = GameConfig.spaceLocation - new Vector3(0, -200000, 0);
 			Destroy(startLadder.associatedGameObject.GetComponent<ConstructibleGhost>());
 			startLadder.associatedGameObject.name = startLadder.id;
 			Texture2D textureStartLadder = new Texture2D(2, 2);
@@ -469,7 +469,9 @@ namespace Nicki0.FeatUndergroundBase {
 				if (pod_WO != null) {
 					DeconstructStatus status = pod_WO.GetGameObject().GetComponentInChildren<ActionDeconstructible>().CheckDeconstructOnServer();
 					if (status == DeconstructStatus.Ok) {
-						pod_WO.GetGameObject().GetComponentInChildren<ActionDeconstructible>().OnAction();
+						var podActionDeconstructible = pod_WO.GetGameObject().GetComponentInChildren<ActionDeconstructible>();
+						podActionDeconstructible.OnHover(); // sets _hover to true. Otherwise, the pod is not deconstructed and this ends in a recursive call hell.
+						podActionDeconstructible.OnAction();
 						__instance.StartCoroutine(ExecuteLater(delegate () {
 							if (deconstructionSoundTimer != null && deconstructionSoundTimer.IsRunning) {
 								deconstructionSoundTimer.Stop();
@@ -492,7 +494,6 @@ namespace Nicki0.FeatUndergroundBase {
 			} else {
 				return true;
 			}
-
 
 			return false;
 		}

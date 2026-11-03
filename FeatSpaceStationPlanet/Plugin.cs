@@ -25,7 +25,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		 *	TODO:
 		 *	- Map Background should be black, not dust-orange
 		 *	First fall quite extreme... bug in TPC: game does not reset fall speed while standing.
-		 *	
+		 *	- Update "static void VehicleController_OnEnable(VehicleController __instance) {" to use the v2.1 anti gravity stuff
 		 *	
 		 *	
 		 *	
@@ -120,7 +120,8 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			neverStage.icon = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f); //AccessTools.FieldRefAccess<TerraformStage, Sprite>(neverStage, "icon") = Sprite.Create(Texture2D.blackTexture, new Rect(0.0f, 0.0f, 4, 4), new Vector2(0f, 0f), 100.0f);
 
 			newPlanet.skyChangeTerraStage = neverStage;
-			newPlanet.startCloudsTerraStage = neverStage;
+			//newPlanet.startCloudsTerraStage = neverStage;
+			newPlanet.noCloudsAtTheStart = true;
 			newPlanet.fullCloudsTerraStage = neverStage;
 			newPlanet.startMossTerraStage = neverStage;
 			newPlanet.endMossTerraStage = neverStage;
@@ -436,7 +437,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 			Rigidbody body = __instance.GetComponent<Rigidbody>();
 			ActionTakeControl action = __instance.GetComponentInChildren<ActionTakeControl>();
 			if (float.IsNaN(originalBaseForceApplied)) originalBaseForceApplied = action._baseForceApplied;
-			log.LogFatal("OnEnable called");
+			log.LogFatal("OnEnable called"); // This should probably be updated to just use the anti v2.1 anti gravity thing.
 			if (IsOnPlanet()) {
 				action._baseForceApplied = -10;
 				action._forceToUpdateWhenNotGrounded.force = action._baseForceApplied * Vector3.up;
@@ -578,7 +579,7 @@ namespace Nicki0.FeatSpaceStationPlanet {
 		}
 
 		[HarmonyPrefix]
-		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(float), typeof(float) })]
+		[HarmonyPatch(typeof(PlayerCameraShake), nameof(PlayerCameraShake.SetShaking), new Type[] {typeof(float), typeof(float), typeof(bool) })]
 		static void PlayerCameraShake_SetShaking(ref float shakeValue) {
 			if (IsOnPlanet()) {
 				shakeValue *= 0.2f;
