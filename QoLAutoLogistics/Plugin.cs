@@ -216,6 +216,7 @@ namespace Nicki0.QoLAutoLogistics {
 		[HarmonyPatch(typeof(UiWindowGroupSelector), "OnGroupSelected")]
 		public static void UiWindowGroupSelector_OnGroupSelected(ref Inventory ____inventoryRight, Group group) {
 			if (!enableMod.Value) return;
+			if (____inventoryRight == null) return; // e.g. the t2 launch platform doesn't have an inventory.
 
 			____inventoryRight.GetLogisticEntity().ClearSupplyGroups();
 			if (group != null) {

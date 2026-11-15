@@ -5,7 +5,7 @@ Nicki0.theplanetcraftermods.CheatCustomOreRandomization=1.0.2.0||(Cheat) Custom 
 # (Cheat) Drone Speed
 Nicki0.theplanetcraftermods.CheatDroneSpeed=1.0.1.0||(Cheat) Drone Speed
 # (Cheat) Machine Config
-Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.12.0||(Cheat) Machine Config
+Nicki0.theplanetcraftermods.CheatMachineConfig=1.0.13.0||(Cheat) Machine Config
 # (Cheat) Store Toxins In Toxic Storage
 Nicki0.theplanetcraftermods.CheatStoreToxinsInToxicStorage=1.0.0.10||(Cheat) Store Toxins In Toxic Storage
 # (Feat) Large Screens
@@ -27,7 +27,7 @@ Nicki0.theplanetcraftermods.FixWaterWaveConfig=1.0.0.10||(Fix) Water Wave Config
 # (Item) More Fuses
 Nicki0.theplanetcraftermods.ItemMoreFuses=1.1.5.0||(Item) More Fuses
 # (QoL) Auto-Logistics
-Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.26.0||(QoL) Auto-Logistics
+Nicki0.theplanetcraftermods.QoLAutoLogistics=1.0.27.0||(QoL) Auto-Logistics
 # (QoL) Meteor Debris Config
 Nicki0.theplanetcraftermods.QoLMeteorDebrisConfig=1.0.0.10||(QoL) Meteor Debris Config
 # (QoL) Move Containers
