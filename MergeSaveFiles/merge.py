@@ -50,7 +50,7 @@ import os
 #
 # Script author: Nicki0
 # 	Contact: Nicki0 on the Planet Crafter (MijuGames) discord server; Or open an issue in the github repo.
-# Script version: 8
+# Script version: 9
 # 
 # Changelog v2:
 # - fixed drone inventories not being merged properly
@@ -77,6 +77,21 @@ import os
 # - Fix UTF-8 BOM problems
 # - Removed layer section to adapt to v2.00X save file format changes
 #
+# Changelog v9:
+# - Fix possible collisions after sampling new IDs and collisions with objects in the seconds save file
+# - v2.2 magnetic addition
+#
+
+
+# 
+# TODO:
+# ... merging same planets isn't recommended
+# - Item of scene inventory: when in secondary deconstructed, but in primary not, then the merged file will have it deconstructed as well... possible loss of items.
+# - Doubled scene inventories... possible to merge?
+# 
+
+
+
 
 # - start config
 primaryFileName = "Survival-1.json" # replace with first file name, preferably use the bigger save file
@@ -144,11 +159,15 @@ for i in range(len(itemsP[3])):
 	a,b = itemsP[3][i].split(',', 1)
 	dictIdsP[a] = b
 
+
 ctr = 0
 print("-----------")
 itemsS = []
 for i in range(len(sectionsS)):
 	itemsS.append(sectionsS[i].split('|'));
+allIds = set(dictIdsP.keys()) # fix "replacement IDs can collide with secondary-save IDs"
+for i in range(len(itemsS[3])):
+	allIds.add(itemsS[3][i].split(',', 1)[0])
 # give colliding items new ids
 for i in range(len(itemsS[3])):
 	a,b = itemsS[3][i].split(',', 1)
@@ -159,7 +178,8 @@ for i in range(len(itemsS[3])):
 			continue
 		while True:
 			newId = random.randint(200000000, 209999999)
-			if ("{\"id\":" + str(newId)) not in dictIdsP:
+			if ("{\"id\":" + str(newId)) not in allIds: #dictIdsP:
+				allIds.add("{\"id\":" + str(newId)) # track new id
 				oldId = a.strip()[-9:]
 				dictIdsSChange[oldId] = str(newId)
 				itemsS[3][i] = itemsS[3][i].replace("{\"id\":" + oldId, "{\"id\":" + str(newId))
@@ -244,8 +264,9 @@ for i in range(len(itemsP[1])):
 	unitPlantsLevel = itemsP[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
 	unitInsectsLevel = itemsP[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
 	unitAnimalsLevel = itemsP[1][i].split('unitAnimalsLevel":', 1)[1].split(',', 1)[0]
-	unitPurificationLevel = itemsP[1][i].split('unitPurificationLevel":', 1)[1].split('}', 1)[0]
-	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel]
+	unitPurificationLevel = itemsP[1][i].split('unitPurificationLevel":', 1)[1].split(',', 1)[0]
+	unitMagneticStabilizationLevel = itemsP[1][i].split('unitMagneticStabilizationLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel, unitMagneticStabilizationLevel]
 	planets.append(planet)
 for i in range(len(itemsS[1])):
 	planetId = itemsS[1][i].split('"planetId":"', 1)[1].split('"', 1)[0]
@@ -255,8 +276,9 @@ for i in range(len(itemsS[1])):
 	unitPlantsLevel = itemsS[1][i].split('unitPlantsLevel":', 1)[1].split(',', 1)[0]
 	unitInsectsLevel = itemsS[1][i].split('unitInsectsLevel":', 1)[1].split(',', 1)[0]
 	unitAnimalsLevel = itemsS[1][i].split('unitAnimalsLevel":', 1)[1].split(',', 1)[0]
-	unitPurificationLevel = itemsS[1][i].split('unitPurificationLevel":', 1)[1].split('}', 1)[0]
-	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel]
+	unitPurificationLevel = itemsS[1][i].split('unitPurificationLevel":', 1)[1].split(',', 1)[0]
+	unitMagneticStabilizationLevel = itemsS[1][i].split('unitMagneticStabilizationLevel":', 1)[1].split('}', 1)[0]
+	planet = [planetId, unitOxygenLevel, unitHeatLevel, unitPressureLevel, unitPlantsLevel, unitInsectsLevel, unitAnimalsLevel, unitPurificationLevel, unitMagneticStabilizationLevel]
 	planetExistsInPlanets = False
 	for j in range(len(planets)):
 		if planets[j][0] == planetId:
@@ -265,11 +287,13 @@ for i in range(len(itemsS[1])):
 			for k in range(1, len(planet)):
 				if float(planets[j][k]) == -1 or float(planet[k]) == -2:
 					planets[j][k] = str(-1) # for disabled units (e.g. Purification on Prime)
+				elif planet[k] == "-3.4028234663852887e38":
+					planets[j][k] = "-3.4028234663852887e38"
 				else:
 					planets[j][k] = str(float(planets[j][k]) + float(planet[k]))
 	if not planetExistsInPlanets:
 		planets.append(planet)
-items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + ',"unitPurificationLevel":' + str(planets[i][7]) + '}' for i in range(len(planets))]
+items[1] = ['{"planetId":"' + str(planets[i][0]) + '","unitOxygenLevel":' + str(planets[i][1]) + ',"unitHeatLevel":' + str(planets[i][2]) + ',"unitPressureLevel":' + str(planets[i][3]) + ',"unitPlantsLevel":' + str(planets[i][4]) + ',"unitInsectsLevel":' + str(planets[i][5]) + ',"unitAnimalsLevel":' + str(planets[i][6]) + ',"unitPurificationLevel":' + str(planets[i][7]) + ',"unitMagneticStabilizationLevel":' + str(planets[i][8]) + '}' for i in range(len(planets))]
 
 # Combine crafted item count
 ciP = itemsP[5][0].split(',', 1)[0][18:]
@@ -298,7 +322,7 @@ for key in dictIdsP.keys():
 	pass
 	#print(key, dictIdsP[key])
 with open(primaryFilePath[:-5] + "-merged.json", 'w', encoding="utf8") as outputFile:
-	outputFile.write('\n' + ('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))])))
+	outputFile.write('\r' + ('\r@\r'.join(['|\n'.join(items[i]) for i in range(len(items))])))
 
 print("done")
 
