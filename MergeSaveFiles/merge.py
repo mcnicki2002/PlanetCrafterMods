@@ -77,6 +77,12 @@ import os
 # - Fix UTF-8 BOM problems
 # - Removed layer section to adapt to v2.00X save file format changes
 #
+# Changelog v9:
+# - Fix possible collisions after sampling new IDs and collisions with objects in the seconds save file
+# - v2.2 magnetic addition
+#
+
+
 
 # - start config
 primaryFileName = "Survival-1.json" # replace with first file name, preferably use the bigger save file
@@ -144,11 +150,15 @@ for i in range(len(itemsP[3])):
 	a,b = itemsP[3][i].split(',', 1)
 	dictIdsP[a] = b
 
+
 ctr = 0
 print("-----------")
 itemsS = []
 for i in range(len(sectionsS)):
 	itemsS.append(sectionsS[i].split('|'));
+allIds = set(dictIdsP.keys()) # fix "replacement IDs can collide with secondary-save IDs"
+for i in range(len(itemsS[3])):
+	allIds.add(itemsS[3][i].split(',', 1)[0])
 # give colliding items new ids
 for i in range(len(itemsS[3])):
 	a,b = itemsS[3][i].split(',', 1)
@@ -159,7 +169,8 @@ for i in range(len(itemsS[3])):
 			continue
 		while True:
 			newId = random.randint(200000000, 209999999)
-			if ("{\"id\":" + str(newId)) not in dictIdsP:
+			if ("{\"id\":" + str(newId)) not in allIds: #dictIdsP:
+				allIds.add("{\"id\":" + str(newId)) # track new id
 				oldId = a.strip()[-9:]
 				dictIdsSChange[oldId] = str(newId)
 				itemsS[3][i] = itemsS[3][i].replace("{\"id\":" + oldId, "{\"id\":" + str(newId))
@@ -298,7 +309,7 @@ for key in dictIdsP.keys():
 	pass
 	#print(key, dictIdsP[key])
 with open(primaryFilePath[:-5] + "-merged.json", 'w', encoding="utf8") as outputFile:
-	outputFile.write('\n' + ('\n@\n'.join(['|\n'.join(items[i]) for i in range(len(items))])))
+	outputFile.write('\r' + ('\r@\r'.join(['|\n'.join(items[i]) for i in range(len(items))])))
 
 print("done")
 
